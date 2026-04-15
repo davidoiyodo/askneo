@@ -1,20 +1,98 @@
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { useFonts } from 'expo-font';
+import {
+  Manrope_400Regular,
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+  Manrope_800ExtraBold,
+} from '@expo-google-fonts/manrope';
+import {
+  Sniglet_400Regular,
+  Sniglet_800ExtraBold,
+} from '@expo-google-fonts/sniglet';
+import { View, ActivityIndicator } from 'react-native';
 
-export default function App() {
+import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
+import { AppProvider, useAppContext } from './src/hooks/useAppContext';
+import { DailyLogsProvider } from './src/hooks/useDailyLogs';
+
+import SplashScreen from './src/screens/onboarding/SplashScreen';
+import WelcomeScreen from './src/screens/onboarding/WelcomeScreen';
+import UserTypeScreen from './src/screens/onboarding/UserTypeScreen';
+import BasicInfoScreen from './src/screens/onboarding/BasicInfoScreen';
+import EmergencyContactsScreen from './src/screens/onboarding/EmergencyContactsScreen';
+import PartnerInviteScreen from './src/screens/onboarding/PartnerInviteScreen';
+import SignInScreen from './src/screens/onboarding/SignInScreen';
+import MainNavigator from './src/navigation/MainNavigator';
+
+const Stack = createNativeStackNavigator();
+
+function RootNavigator() {
+  const { user, isLoading } = useAppContext();
+  const { isDark } = useTheme();
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#35010C' }}>
+        <ActivityIndicator color="#E9A8B3" />
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
+        {user?.onboardingComplete ? (
+          <Stack.Screen name="MainApp" component={MainNavigator} />
+        ) : (
+          <>
+            <Stack.Screen name="Splash" component={SplashScreen} />
+            <Stack.Screen name="Welcome" component={WelcomeScreen} />
+            <Stack.Screen name="UserType" component={UserTypeScreen} />
+            <Stack.Screen name="BasicInfo" component={BasicInfoScreen as any} />
+            <Stack.Screen name="EmergencyContacts" component={EmergencyContactsScreen as any} />
+            <Stack.Screen name="PartnerInvite" component={PartnerInviteScreen as any} />
+            <Stack.Screen name="SignIn" component={SignInScreen} />
+          </>
+        )}
+      </Stack.Navigator>
+    </>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default function App() {
+  const [fontsLoaded] = useFonts({
+    Manrope_400Regular,
+    Manrope_500Medium,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
+    Manrope_800ExtraBold,
+    Sniglet_400Regular,
+    Sniglet_800ExtraBold,
+  });
+
+  if (!fontsLoaded) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#35010C' }}>
+        <ActivityIndicator color="#E9A8B3" />
+      </View>
+    );
+  }
+
+  return (
+    <ThemeProvider>
+      <AppProvider>
+        <DailyLogsProvider>
+          <NavigationContainer>
+            <RootNavigator />
+          </NavigationContainer>
+        </DailyLogsProvider>
+      </AppProvider>
+    </ThemeProvider>
+  );
+}
