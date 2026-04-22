@@ -1,5 +1,9 @@
 import { responses, fallbackResponse, NeoResponse, ChatTab } from '../data/responses';
 import { DailyLog } from '../types/symptomLog';
+import { AppUser, GoalId } from '../hooks/useAppContext';
+import { getGoalById } from '../data/goals';
+import { RoutineItem } from '../data/routineItems';
+import { ANCVisit } from '../hooks/useANCVisits';
 
 type HistoryEntry = { sender: 'user' | 'neo'; text: string };
 
@@ -155,6 +159,98 @@ export function buildVisitContext(logs: Record<string, DailyLog>, stage: string)
   }
 
   return lines.join('\n');
+}
+
+// ─── Routine context builder ──────────────────────────────────────────────────
+
+const ROUTINE_KEYWORDS = [
+  'routine', 'habit', 'goal', 'goals', 'daily', 'supplement', 'exercise',
+  'kegel', 'vitamin', 'kick count', 'pelvic', 'omega', 'dha', 'iron',
+  'what should i do', 'what can i do', 'should i be doing', 'am i on track',
+];
+
+export function isRoutineQuery(input: string): boolean {
+  const lower = input.toLowerCase();
+  return ROUTINE_KEYWORDS.some(k => lower.includes(k));
+}
+
+export function buildRoutineContext(
+  user: AppUser,
+  todayItems: RoutineItem[],
+  todayCompletions: string[],
+): string {
+  if (!user.goals || user.goals.length === 0 || todayItems.length === 0) return '';
+
+  const goalLabels = user.goals
+    .map(id => getGoalById(id)?.label)
+    .filter(Boolean)
+    .join(', ');
+
+  const doneItems = todayItems.filter(i => todayCompletions.includes(i.id));
+  const pendingItems = todayItems.filter(i => !todayCompletions.includes(i.id));
+
+  const lines: string[] = [
+    `User's active goals: ${goalLabels}.`,
+    `Today's routine: ${doneItems.length} of ${todayItems.length} items complete.`,
+  ];
+
+  if (pendingItems.length > 0) {
+    lines.push(`Still to do today: ${pendingItems.map(i => i.title).join(', ')}.`);
+  }
+  if (doneItems.length > 0) {
+    lines.push(`Completed today: ${doneItems.map(i => i.title).join(', ')}.`);
+  }
+
+  return lines.join(' ');
+}
+
+// ─── ANC context builder ──────────────────────────────────────────────────────
+
+const ANC_KEYWORDS = [
+  'antenatal', 'anc', 'prenatal visit', 'clinic', 'midwife', 'matron',
+  'fundal', 'blood pressure', 'bp', 'gestational week', 'heart rate',
+  'kick count', 'urine', 'hospital visit', 'next appointment', 'next visit',
+  'scan', 'check-up', 'pregnancy check',
+];
+
+export function isANCQuery(input: string): boolean {
+  const lower = input.toLowerCase();
+  return ANC_KEYWORDS.some(k => lower.includes(k));
+}
+
+export function buildANCContext(visits: ANCVisit[], totalCount: number): string {
+  if (visits.length === 0) return '';
+
+  const lines: string[] = [`Total ANC visits: ${totalCount} (${visits.length} logged in app).`];
+
+  const latest = visits[0]; // already sorted desc
+  lines.push(`Most recent visit: ${latest.date}${latest.gestationalWeek ? ` (Week ${latest.gestationalWeek})` : ''}.`);
+
+  if (latest.bloodPressureSys !== null && latest.bloodPressureDia !== null) {
+    const bpHigh = latest.bloodPressureSys >= 140 || latest.bloodPressureDia >= 90;
+    lines.push(`Last BP: ${latest.bloodPressureSys}/${latest.bloodPressureDia} mmHg${bpHigh ? ' (elevated — flagged)' : ''}.`);
+  }
+  if (latest.fundalHeight !== null) {
+    lines.push(`Last fundal height: ${latest.fundalHeight} cm.`);
+  }
+  if (latest.babyHeartRate !== null) {
+    lines.push(`Last baby heart rate: ${latest.babyHeartRate} bpm.`);
+  }
+  if (latest.concernFlagged) {
+    lines.push(`Concern was flagged at last visit${latest.referredToDoctor ? ' — referred to doctor' : ''}.`);
+  }
+  if (latest.nextAppointmentDate) {
+    lines.push(`Next appointment: ${latest.nextAppointmentDate}.`);
+  }
+
+  // BP trend across last 3 visits
+  const bpVisits = visits.filter(v => v.bloodPressureSys !== null).slice(0, 3);
+  if (bpVisits.length >= 2) {
+    const trend = bpVisits.map(v => `${v.bloodPressureSys}/${v.bloodPressureDia}`).join(' → ');
+    lines.push(`Recent BP trend: ${trend}.`);
+  }
+
+  return lines.join(' ');
 }
 
 export function getBabyAgeLabel(dob: Date): string {

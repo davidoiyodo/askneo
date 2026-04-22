@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 
-const REMINDERS_KEY = 'askneo_reminder_timestamps';
 const TASKS_KEY = 'askneo_tasks';
 
 export interface TaskItem {
@@ -13,10 +12,38 @@ export interface TaskItem {
   addedAt: number;
 }
 
-// Record<reminderId, completedAt timestamp (ms)>
-export type ReminderLog = Record<string, number>;
-
 export type UserStage = 'ttc' | 'pregnancy' | 'newmom' | 'partner';
+
+export type GoalId =
+  // Pregnancy
+  | 'safe-delivery'
+  | 'natural-birth'
+  | 'baby-development'
+  | 'breastfeeding-readiness'
+  | 'staying-active'
+  // Newmom
+  | 'feeding-success'
+  | 'baby-growth'
+  | 'sleep-patterns'
+  | 'mom-recovery'
+  // TTC
+  | 'cycle-awareness'
+  | 'conception-optimisation'
+  | 'emotional-wellbeing'
+  // Partner
+  | 'supporting-partner'
+  | 'birth-preparation'
+  | 'newborn-readiness';
+
+export type SubGoalId =
+  | 'brain-development'
+  | 'vision-development'
+  | 'bone-development'
+  | 'immune-development'
+  | 'heart-development';
+
+export type BirthIntention = 'natural' | 'caesarean' | 'undecided';
+export type FeedingIntention = 'breast' | 'formula' | 'undecided';
 
 export interface WishlistItem {
   id: string;
@@ -56,6 +83,12 @@ export interface AppUser {
   visitPrepQuestions?: string[]; // user-curated questions for next visit
   emergencyContacts: EmergencyContact[];
   onboardingComplete: boolean;
+  // Goals & personalisation
+  goals?: GoalId[];
+  subGoals?: SubGoalId[];
+  birthIntention?: BirthIntention;
+  feedingIntention?: FeedingIntention;
+  personalIntentions?: string[];
 }
 
 interface AppContextType {
@@ -78,11 +111,6 @@ interface AppContextType {
   deleteFromCart: (id: string) => void;
   clearCart: () => void;
   setCustomBundle: (bundle: CustomBundle | null) => void;
-  reminderLog: ReminderLog;
-  logReminder: (id: string, resetAfterHours?: number, label?: string) => void;
-  clearReminder: (id: string) => void;
-  isReminderDone: (id: string, resetAfterHours?: number) => boolean;
-  reminderDueIn: (id: string, resetAfterHours?: number) => number | null; // minutes remaining, null if not done
   tasks: TaskItem[];
   addTask: (text: string, sourceSessionId?: string) => void;
   toggleTask: (id: string) => void;
@@ -119,11 +147,6 @@ const AppContext = createContext<AppContextType>({
   deleteFromCart: () => {},
   clearCart: () => {},
   setCustomBundle: () => {},
-  reminderLog: {},
-  logReminder: () => {},
-  clearReminder: () => {},
-  isReminderDone: () => false,
-  reminderDueIn: () => null,
   tasks: [],
   addTask: () => {},
   toggleTask: () => {},
@@ -142,35 +165,11 @@ Notifications.setNotificationHandler({
   }),
 });
 
-async function requestNotificationPermission() {
-  const { status } = await Notifications.requestPermissionsAsync();
-  return status === 'granted';
-}
-
-async function scheduleReminderNotification(id: string, label: string, afterHours: number) {
-  // Cancel any existing notification for this reminder
-  await Notifications.cancelScheduledNotificationAsync(id).catch(() => {});
-  const canNotify = await requestNotificationPermission();
-  if (!canNotify) return;
-  await Notifications.scheduleNotificationAsync({
-    identifier: id,
-    content: {
-      title: 'Time to log again',
-      body: label,
-    },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-      seconds: Math.round(afterHours * 3600),
-      repeats: false,
-    },
-  });
-}
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUserState] = useState<AppUser | null>(null);
   const [highlights, setHighlights] = useState<string[]>([]);
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
-  const [reminderLog, setReminderLog] = useState<ReminderLog>({});
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [cart, setCartState] = useState<Record<string, number>>({});
   const [customBundle, setCustomBundleState] = useState<CustomBundle | null>(null);
@@ -181,60 +180,19 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       AsyncStorage.getItem('askneo_user'),
       AsyncStorage.getItem('askneo_highlights'),
       AsyncStorage.getItem('askneo_wishlist'),
-      AsyncStorage.getItem(REMINDERS_KEY),
       AsyncStorage.getItem(TASKS_KEY),
       AsyncStorage.getItem('askneo_cart'),
       AsyncStorage.getItem('askneo_custom_bundle'),
-    ]).then(([userVal, highlightsVal, wishlistVal, remindersVal, tasksVal, cartVal, customBundleVal]) => {
+    ]).then(([userVal, highlightsVal, wishlistVal, tasksVal, cartVal, customBundleVal]) => {
       if (userVal) setUserState(JSON.parse(userVal));
       if (highlightsVal) setHighlights(JSON.parse(highlightsVal));
       if (wishlistVal) setWishlist(JSON.parse(wishlistVal));
-      if (remindersVal) setReminderLog(JSON.parse(remindersVal));
       if (tasksVal) setTasks(JSON.parse(tasksVal));
       if (cartVal) setCartState(JSON.parse(cartVal));
       if (customBundleVal) setCustomBundleState(JSON.parse(customBundleVal));
       setIsLoading(false);
     });
   }, []);
-
-  // ── Reminder helpers ───────────────────────────────────────────────────
-
-  const isReminderDone = (id: string, resetAfterHours?: number): boolean => {
-    const ts = reminderLog[id];
-    if (!ts) return false;
-    if (!resetAfterHours) return true; // no reset — stays done
-    return Date.now() - ts < resetAfterHours * 3600_000;
-  };
-
-  // Returns minutes until reset (null if not currently done)
-  const reminderDueIn = (id: string, resetAfterHours?: number): number | null => {
-    const ts = reminderLog[id];
-    if (!ts || !resetAfterHours) return null;
-    const msLeft = resetAfterHours * 3600_000 - (Date.now() - ts);
-    if (msLeft <= 0) return null;
-    return Math.ceil(msLeft / 60_000);
-  };
-
-  const logReminder = (id: string, resetAfterHours?: number, label?: string) => {
-    const now = Date.now();
-    setReminderLog(prev => {
-      const next = { ...prev, [id]: now };
-      AsyncStorage.setItem(REMINDERS_KEY, JSON.stringify(next));
-      return next;
-    });
-    if (resetAfterHours && label) {
-      scheduleReminderNotification(id, label, resetAfterHours);
-    }
-  };
-
-  const clearReminder = (id: string) => {
-    Notifications.cancelScheduledNotificationAsync(id).catch(() => {});
-    setReminderLog(prev => {
-      const { [id]: _, ...next } = prev;
-      AsyncStorage.setItem(REMINDERS_KEY, JSON.stringify(next));
-      return next;
-    });
-  };
 
   // ── Task helpers ───────────────────────────────────────────────────────
 
@@ -318,6 +276,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   const setUser = (u: AppUser) => {
     setUserState(u);
+    AsyncStorage.multiRemove(['askneo_anc_visits', 'askneo_anc_setup_count']);
     AsyncStorage.setItem('askneo_user', JSON.stringify(u));
   };
 
@@ -340,7 +299,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = () => {
-    AsyncStorage.multiRemove(['askneo_user', 'askneo_highlights', 'askneo_chat_history', 'askneo_wishlist', 'askneo_cart', 'askneo_custom_bundle']);
+    AsyncStorage.multiRemove(['askneo_user', 'askneo_highlights', 'askneo_chat_history', 'askneo_wishlist', 'askneo_cart', 'askneo_custom_bundle', 'askneo_anc_visits', 'askneo_anc_setup_count']);
     setUserState(null);
     setHighlights([]);
     setWishlist([]);
@@ -385,7 +344,6 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       highlights, addHighlight, removeHighlight,
       wishlist, addToWishlist, removeFromWishlist,
       cart, customBundle, addToCart, removeFromCart, deleteFromCart, clearCart, setCustomBundle,
-      reminderLog, logReminder, clearReminder, isReminderDone, reminderDueIn,
       tasks, addTask, toggleTask, removeTask, markVisitComplete,
     }}>
       {children}

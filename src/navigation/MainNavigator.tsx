@@ -21,6 +21,12 @@ import FacilityMapScreen from '../screens/main/FacilityMapScreen';
 import SymptomLogScreen from '../screens/main/SymptomLogScreen';
 import BabyDevelopmentScreen from '../screens/main/BabyDevelopmentScreen';
 import CartScreen from '../screens/main/CartScreen';
+import RoutineScreen from '../screens/main/RoutineScreen';
+import EditGoalsScreen from '../screens/main/EditGoalsScreen';
+import RoutineItemScreen from '../screens/main/RoutineItemScreen';
+import GoalStoryScreen from '../screens/main/GoalStoryScreen';
+import StreakDetailScreen from '../screens/main/StreakDetailScreen';
+import ANCVisitsScreen from '../screens/main/ANCVisitsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -153,6 +159,36 @@ export default function MainNavigator() {
         name="Cart"
         component={CartScreen}
         options={{ animation: 'slide_from_bottom' }}
+      />
+      <Stack.Screen
+        name="Routine"
+        component={RoutineScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="EditGoals"
+        component={EditGoalsScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="RoutineItem"
+        component={RoutineItemScreen}
+        options={{ animation: 'slide_from_bottom' }}
+      />
+      <Stack.Screen
+        name="GoalStory"
+        component={GoalStoryScreen}
+        options={{ animation: 'slide_from_bottom' }}
+      />
+      <Stack.Screen
+        name="StreakDetail"
+        component={StreakDetailScreen}
+        options={{ animation: 'slide_from_bottom' }}
+      />
+      <Stack.Screen
+        name="ANCVisits"
+        component={ANCVisitsScreen}
+        options={{ animation: 'slide_from_right' }}
       />
     </Stack.Navigator>
   );

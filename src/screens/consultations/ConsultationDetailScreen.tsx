@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   ChevronLeft, Calendar, Pill, ClipboardList, FileText,
-  RotateCcw, Trash2, ChevronDown, ChevronUp, PlusCircle, MinusCircle,
+  RotateCcw, Trash2, ChevronDown, ChevronUp, PlusCircle, MinusCircle, ScanLine,
 } from 'lucide-react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import { Typography, Spacing, Radius, Shadow } from '../../theme';
@@ -107,6 +107,36 @@ export default function ConsultationDetailScreen({ navigation, route }: { naviga
           <View style={[styles.summaryCard, { backgroundColor: theme.accent.sky.bg, borderColor: theme.accent.sky.border }]}>
             <Text style={[styles.summaryLabel, { color: theme.accent.sky.text }]}>Summary</Text>
             <Text style={[styles.summaryText, { color: theme.text.primary }]}>{session.summary}</Text>
+          </View>
+        )}
+
+        {/* Scan details */}
+        {session.sessionType === 'scan' && (session.scanType || session.gestationalWeek || session.imagingFacility) && (
+          <View style={styles.section}>
+            <SectionHeader
+              icon={<ScanLine size={16} color={theme.text.brand} strokeWidth={2} />}
+              label="Scan details"
+            />
+            <View style={[styles.scanCard, { backgroundColor: theme.accent.gold.bg, borderColor: theme.accent.gold.border }]}>
+              {session.scanType && (
+                <View style={styles.scanRow}>
+                  <Text style={[styles.scanRowLabel, { color: theme.accent.gold.text }]}>Scan type</Text>
+                  <Text style={[styles.scanRowValue, { color: theme.text.primary }]}>{session.scanType}</Text>
+                </View>
+              )}
+              {session.gestationalWeek !== undefined && (
+                <View style={[styles.scanRow, session.scanType ? { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.accent.gold.border } : undefined]}>
+                  <Text style={[styles.scanRowLabel, { color: theme.accent.gold.text }]}>Gestational week</Text>
+                  <Text style={[styles.scanRowValue, { color: theme.text.primary }]}>{session.gestationalWeek} weeks</Text>
+                </View>
+              )}
+              {session.imagingFacility && (
+                <View style={[styles.scanRow, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.accent.gold.border }]}>
+                  <Text style={[styles.scanRowLabel, { color: theme.accent.gold.text }]}>Facility</Text>
+                  <Text style={[styles.scanRowValue, { color: theme.text.primary }]}>{session.imagingFacility}</Text>
+                </View>
+              )}
+            </View>
           </View>
         )}
 
@@ -213,7 +243,11 @@ export default function ConsultationDetailScreen({ navigation, route }: { naviga
           <View style={styles.section}>
             <SectionHeader
               icon={<ClipboardList size={16} color={theme.text.brand} strokeWidth={2} />}
-              label="Doctor's instructions"
+              label={
+                session.sessionType === 'midwife' ? "Midwife's instructions" :
+                session.sessionType === 'scan'    ? 'Notes from scan' :
+                "Doctor's instructions"
+              }
             />
             <View style={[styles.card, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}>
               {ex.instructions.map((inst, i) => (
@@ -334,6 +368,20 @@ const styles = StyleSheet.create({
     padding: Spacing[4],
   },
   appointmentDate: { fontFamily: Typography.fontFamily.bodySemibold, fontSize: Typography.size.lg },
+  scanCard: {
+    borderRadius: Radius.xl,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  scanRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: Spacing[4],
+    paddingVertical: Spacing[3],
+  },
+  scanRowLabel: { fontFamily: Typography.fontFamily.bodyMedium, fontSize: Typography.size.sm },
+  scanRowValue: { fontFamily: Typography.fontFamily.bodySemibold, fontSize: Typography.size.sm },
   medRow: {
     flexDirection: 'row',
     alignItems: 'center',

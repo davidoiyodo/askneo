@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch, Alert, TextInput,
+  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Pencil, Check, X, Plus, Trash2 } from 'lucide-react-native';
@@ -13,6 +14,7 @@ import DatePickerField from '../../components/ui/DatePickerField';
 import AddContactModal from '../../components/modals/AddContactModal';
 import PartnerInviteModal from '../../components/modals/PartnerInviteModal';
 import { getBabyAgeLabel, getGestationalWeek } from '../../utils/chatEngine';
+import { getGoalById } from '../../data/goals';
 
 const SUBSCRIPTION_FEATURES = {
   free: [
@@ -206,6 +208,7 @@ export default function ProfileScreen({ navigation }: { navigation: any }) {
   const contacts = user?.emergencyContacts ?? [];
 
   return (
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg.app }]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
@@ -301,6 +304,43 @@ export default function ProfileScreen({ navigation }: { navigation: any }) {
             )}
           </Card>
         </View>
+
+        {/* My Goals */}
+        {(user?.goals ?? []).length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionLabel, { color: theme.text.tertiary }]}>MY GOALS</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('EditGoals')} activeOpacity={0.7} style={styles.editBtn}>
+                <Pencil size={14} color={theme.text.link} strokeWidth={2} />
+                <Text style={[styles.editBtnLabel, { color: theme.text.link }]}>Edit</Text>
+              </TouchableOpacity>
+            </View>
+            <Card padding="none">
+              {(user!.goals!).map((goalId, i) => {
+                const goal = getGoalById(goalId);
+                if (!goal) return null;
+                return (
+                  <Row
+                    key={goalId}
+                    label={`${goal.icon} ${goal.label}`}
+                    last={i === user!.goals!.length - 1}
+                  />
+                );
+              })}
+            </Card>
+            {(user?.personalIntentions ?? []).length > 0 && (
+              <Card padding="none">
+                {(user!.personalIntentions!).map((intention, i) => (
+                  <Row
+                    key={i}
+                    label={`✦ ${intention}`}
+                    last={i === user!.personalIntentions!.length - 1}
+                  />
+                ))}
+              </Card>
+            )}
+          </View>
+        )}
 
         {/* My records */}
         <View style={styles.section}>
@@ -581,6 +621,7 @@ export default function ProfileScreen({ navigation }: { navigation: any }) {
         <PartnerInviteModal visible={partnerModalVisible} onClose={() => setPartnerModalVisible(false)} />
       </ScrollView>
     </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 

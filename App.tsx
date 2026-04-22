@@ -19,6 +19,7 @@ import { View, ActivityIndicator } from 'react-native';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { AppProvider, useAppContext } from './src/hooks/useAppContext';
 import { DailyLogsProvider } from './src/hooks/useDailyLogs';
+import { RoutineProvider } from './src/hooks/useRoutine';
 
 import SplashScreen from './src/screens/onboarding/SplashScreen';
 import WelcomeScreen from './src/screens/onboarding/WelcomeScreen';
@@ -26,6 +27,7 @@ import UserTypeScreen from './src/screens/onboarding/UserTypeScreen';
 import BasicInfoScreen from './src/screens/onboarding/BasicInfoScreen';
 import EmergencyContactsScreen from './src/screens/onboarding/EmergencyContactsScreen';
 import PartnerInviteScreen from './src/screens/onboarding/PartnerInviteScreen';
+import GoalsScreen from './src/screens/onboarding/GoalsScreen';
 import SignInScreen from './src/screens/onboarding/SignInScreen';
 import MainNavigator from './src/navigation/MainNavigator';
 
@@ -57,6 +59,7 @@ function RootNavigator() {
             <Stack.Screen name="BasicInfo" component={BasicInfoScreen as any} />
             <Stack.Screen name="EmergencyContacts" component={EmergencyContactsScreen as any} />
             <Stack.Screen name="PartnerInvite" component={PartnerInviteScreen as any} />
+            <Stack.Screen name="Goals" component={GoalsScreen as any} />
             <Stack.Screen name="SignIn" component={SignInScreen} />
           </>
         )}
@@ -88,9 +91,11 @@ export default function App() {
     <ThemeProvider>
       <AppProvider>
         <DailyLogsProvider>
-          <NavigationContainer>
-            <RootNavigator />
-          </NavigationContainer>
+          <RoutineProvider>
+            <NavigationContainer>
+              <RootNavigator />
+            </NavigationContainer>
+          </RoutineProvider>
         </DailyLogsProvider>
       </AppProvider>
     </ThemeProvider>

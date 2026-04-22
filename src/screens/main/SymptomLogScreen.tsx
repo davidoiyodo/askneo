@@ -1,18 +1,20 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
-  StyleSheet, Alert,
+  StyleSheet, Alert, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Calendar } from 'react-native-calendars';
 import {
-  ChevronLeft, ChevronDown, ChevronUp, Plus, X, CheckCircle, Circle, Pencil,
+  ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, X, CheckCircle, Circle, Pencil, CalendarDays,
 } from 'lucide-react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext } from '../../hooks/useAppContext';
 import { useDailyLogs, toDateKey } from '../../hooks/useDailyLogs';
+import { useRoutine } from '../../hooks/useRoutine';
+import { getGoalById } from '../../data/goals';
 import { Typography, Spacing, Radius, Shadow } from '../../theme';
 import { SYMPTOMS_BY_STAGE, DEFAULT_SYMPTOMS, BABY_SYMPTOMS } from '../../data/symptoms';
 import {
@@ -92,15 +94,20 @@ const sectionStyles = StyleSheet.create({
 
 export default function SymptomLogScreen({ navigation }: { navigation: any }) {
   const { theme } = useTheme();
-  const { user, logReminder } = useAppContext();
+  const { user } = useAppContext();
   const { logs, todayLog, saveDayLog } = useDailyLogs();
+  const { completeItem } = useRoutine();
   const stage = user?.stage ?? 'pregnancy';
   const symptomList = SYMPTOMS_BY_STAGE[stage] ?? DEFAULT_SYMPTOMS;
   const isPregnancy = stage === 'pregnancy';
   const isNewmom = stage === 'newmom';
-
-  // ── Tab ─────────────────────────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState<'log' | 'calendar'>('log');
+  const isTTC = stage === 'ttc';
+  const userGoals = user?.goals ?? [];
+  const hasGoal = (id: string) => userGoals.length === 0 || userGoals.includes(id as any);
+  const goalLabel = (id: string) => {
+    const g = getGoalById(id as any);
+    return g ? `${g.icon} ${g.label}` : null;
+  };
 
   // ── Log state ───────────────────────────────────────────────────────────────
   const [mood, setMood]                   = useState<MoodLevel | null>(null);
@@ -120,12 +127,15 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
   const [babySymSeverity, setBabySymSev]  = useState<SymptomSeverity | null>(null);
   const [showBabySymptoms, setShowBabySymptoms] = useState(false);
   const [notes, setNotes]                 = useState('');
+  const [waterGlasses, setWaterGlasses]   = useState<number | null>(null);
   const [showSymptoms, setShowSymptoms]   = useState(false);
   const [saving, setSaving]               = useState(false);
 
   // ── Calendar state ───────────────────────────────────────────────────────────
   const todayKey = toDateKey();
   const [selectedDate, setSelectedDate] = useState<string>(todayKey);
+  const [weekStripOffset, setWeekStripOffset] = useState(0);
+  const [showFullCalendar, setShowFullCalendar] = useState(false);
 
   // ── Pre-fill form from today's log whenever screen is focused ────────────────
   const prefillFromLog = useCallback((log: DailyLog | null) => {
@@ -142,6 +152,7 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
     setBabyMood(log?.babyMood ?? null);
     setBabySymptoms(log?.babySymptoms ?? []);
     setBabySymSev(log?.babySymptomSeverity ?? null);
+    setWaterGlasses(log?.waterGlasses ?? null);
     setNotes(log?.notes ?? '');
     setShowSymptoms(false);
     setShowBabySymptoms(false);
@@ -237,27 +248,39 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
       babyMood: isNewmom ? babyMood : null,
       babySymptoms: isNewmom ? babySymptoms : [],
       babySymptomSeverity: isNewmom && babySymptoms.length > 0 ? babySymSeverity : null,
+      waterGlasses,
       notes: notes.trim(),
     };
     await saveDayLog(log);
     setSaving(false);
 
-    // Mark related Today reminders as done
-    logReminder('daily-checkin', 24, 'Complete your daily check-in');
-    if (isPregnancy && kickCount !== null) logReminder('kick-count', 24, 'Do your kick count');
-    if (isNewmom) {
-      if (babyFeedings !== null && babyFeedings > 0) logReminder('log-feed', 2, 'Log a feeding session');
-      if (babyNappies !== null && babyNappies > 0)   logReminder('log-nappy', 3, 'Log a nappy change');
-      if (babySleepHours !== null)                   logReminder('log-baby-sleep', 4, 'Log a baby sleep');
-    }
+    // Auto-complete matching routine items
+    completeItem('daily-checkin');
+    if (isPregnancy && kickCount !== null && kickCount > 0) completeItem('kick-count');
+    if (medications.some(m => /prenatal|vitamin|supplement/i.test(m.name))) completeItem('prenatal-vitamins');
+    if (isNewmom && medications.some(m => /iron/i.test(m.name))) completeItem('postnatal-iron');
+    if (isNewmom && babyFeedings !== null && babyFeedings > 0) completeItem('log-feed');
+    if (isNewmom && babyNappies !== null && babyNappies > 0)   completeItem('log-nappy');
+    if (isNewmom && babySleepHours !== null)                   completeItem('log-baby-sleep');
+    if (isTTC) completeItem('ttc-cycle-log');
 
-    Alert.alert('Saved ✓', todayLog ? 'Today\'s check-in updated.' : 'Check-in saved.', [
-      { text: 'View calendar', onPress: () => setActiveTab('calendar') },
-      { text: 'Done' },
-    ]);
-  }, [canSave, todayKey, stage, mood, energy, symptoms, symptomSeverity, medications, sleepHours, sleepQuality, kickCount, babyFeedings, babyNappies, babySleepHours, babyMood, babySymptoms, babySymSeverity, notes, isPregnancy, isNewmom, saveDayLog, logReminder, todayLog]);
+    Alert.alert('Saved ✓', todayLog ? 'Today\'s entry updated.' : 'Diary entry saved.');
+  }, [canSave, todayKey, stage, mood, energy, symptoms, symptomSeverity, medications, sleepHours, sleepQuality, kickCount, babyFeedings, babyNappies, babySleepHours, babyMood, babySymptoms, babySymSeverity, notes, isPregnancy, isNewmom, isTTC, saveDayLog, todayLog, completeItem]);
+
 
   // ── Calendar helpers ─────────────────────────────────────────────────────────
+  const streak = useMemo(() => {
+    let count = 0;
+    const d = new Date();
+    while (true) {
+      const key = toDateKey(d);
+      if (!logs[key]) break;
+      count++;
+      d.setDate(d.getDate() - 1);
+    }
+    return count;
+  }, [logs]);
+
   const markedDates = useMemo(() => {
     const marks: Record<string, any> = {};
     for (const key of Object.keys(logs)) {
@@ -275,9 +298,24 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
   }, [logs, selectedDate, theme.interactive.primary]);
 
 
+  // ── Week strip (all dates computed in UTC to match toDateKey) ────────────────
+  const [todayY, todayM, todayD] = todayKey.split('-').map(Number);
+  const todayUTC = new Date(Date.UTC(todayY, todayM - 1, todayD));
+  const stripDow = todayUTC.getUTCDay();
+  const stripDsm = stripDow === 0 ? 6 : stripDow - 1;
+  const mondayUTC = new Date(todayUTC);
+  mondayUTC.setUTCDate(todayUTC.getUTCDate() - stripDsm + weekStripOffset * 7);
+  const weekStripDates = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(mondayUTC);
+    d.setUTCDate(mondayUTC.getUTCDate() + i);
+    return d;
+  });
+  const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
     <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: theme.bg.app }]}>
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
@@ -290,28 +328,103 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
             <ChevronLeft size={20} color={theme.text.primary} strokeWidth={2} />
             <Text style={[styles.backLabel, { color: theme.text.primary }]}>Back</Text>
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: theme.text.brand }]}>Daily Check-in</Text>
+          <View style={styles.headerRight}>
+            <Text style={[styles.headerTitle, { color: theme.text.brand }]}>Wellness Diary</Text>
+            {streak > 0 && (
+              <View style={[styles.streakBadge, { backgroundColor: theme.accent.gold.bg }]}>
+                <Text style={[styles.streakText, { color: theme.accent.gold.text }]}>🔥 {streak}d</Text>
+              </View>
+            )}
+            <TouchableOpacity
+              onPress={() => setShowFullCalendar(v => !v)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              style={[styles.calIconBtn, { backgroundColor: showFullCalendar ? theme.bg.subtle : 'transparent' }]}
+              activeOpacity={0.7}
+            >
+              <CalendarDays size={18} color={showFullCalendar ? theme.text.brand : theme.text.secondary} strokeWidth={2} />
+            </TouchableOpacity>
+          </View>
         </View>
 
-        <View style={[styles.tabBar, { backgroundColor: theme.bg.subtle }]}>
-          {(['log', 'calendar'] as const).map(t => {
-            const active = activeTab === t;
+        {/* ── Week strip or full calendar ──────────────────────────────── */}
+        {showFullCalendar ? (
+        <Calendar
+          current={selectedDate}
+          onDayPress={(day: any) => { setSelectedDate(day.dateString); setShowFullCalendar(false); }}
+          markedDates={markedDates}
+          theme={{
+            backgroundColor: 'transparent',
+            calendarBackground: 'transparent',
+            textSectionTitleColor: theme.text.tertiary,
+            selectedDayBackgroundColor: theme.interactive.primary,
+            selectedDayTextColor: '#fff',
+            todayTextColor: theme.text.brand,
+            dayTextColor: theme.text.primary,
+            textDisabledColor: theme.border.default,
+            dotColor: theme.interactive.primary,
+            selectedDotColor: '#fff',
+            monthTextColor: theme.text.primary,
+            arrowColor: theme.interactive.primary,
+            textMonthFontFamily: Typography.fontFamily.bodyBold,
+            textDayFontFamily: Typography.fontFamily.bodyMedium,
+            textDayHeaderFontFamily: Typography.fontFamily.bodySemibold,
+          }}
+        />
+        ) : (
+        <View style={styles.weekStrip}>
+          <TouchableOpacity
+            onPress={() => setWeekStripOffset(p => p - 1)}
+            hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+            activeOpacity={0.5}
+          >
+            <ChevronLeft size={16} color={theme.text.secondary} strokeWidth={2.5} />
+          </TouchableOpacity>
+
+          {weekStripDates.map((d, i) => {
+            const key = d.toISOString().slice(0, 10);
+            const isToday = key === todayKey;
+            const isSelected = key === selectedDate;
+            const isFuture = d > todayUTC;
+            const hasEntry = !!logs[key];
             return (
               <TouchableOpacity
-                key={t}
-                onPress={() => setActiveTab(t)}
-                style={[styles.tab, active && [styles.tabActive, { backgroundColor: theme.bg.surface, ...Shadow.sm }]]}
+                key={i}
+                onPress={() => { if (!isFuture) setSelectedDate(key); }}
+                activeOpacity={isFuture ? 1 : 0.7}
+                style={styles.stripCell}
               >
-                <Text style={[styles.tabLabel, { color: active ? theme.text.brand : theme.text.tertiary }]}>
-                  {t === 'log' ? "Today's log" : 'Calendar'}
+                <Text style={[styles.stripDayLbl, { color: isSelected ? theme.text.brand : theme.text.tertiary }]}>
+                  {DAY_LABELS[i]}
                 </Text>
+                <View style={[
+                  styles.stripDayCircle,
+                  isSelected && { backgroundColor: theme.interactive.primary },
+                  isToday && !isSelected && { borderWidth: 1.5, borderColor: theme.interactive.primary },
+                ]}>
+                  <Text style={[styles.stripDayNum, {
+                    color: isSelected ? '#fff' : isToday ? theme.text.brand : isFuture ? theme.border.default : theme.text.secondary,
+                  }]}>
+                    {d.getUTCDate()}
+                  </Text>
+                </View>
+                <View style={[styles.stripDot, hasEntry && !isSelected && { backgroundColor: theme.interactive.primary }]} />
               </TouchableOpacity>
             );
           })}
+
+          <TouchableOpacity
+            onPress={() => setWeekStripOffset(p => Math.min(p + 1, 0))}
+            hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+            activeOpacity={weekStripOffset < 0 ? 0.5 : 1}
+            disabled={weekStripOffset === 0}
+          >
+            <ChevronRight size={16} color={weekStripOffset < 0 ? theme.text.secondary : theme.border.default} strokeWidth={2.5} />
+          </TouchableOpacity>
         </View>
+        )}
       </View>
 
-      {activeTab === 'log' ? (
+      {selectedDate === todayKey ? (
         <ScrollView
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
@@ -377,9 +490,10 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
               <SectionHeader>
                 {`Any symptoms? ${symptoms.length > 0 ? `(${symptoms.length} selected)` : ''}`}
               </SectionHeader>
-              <Text style={[styles.collapseChevron, { color: theme.text.tertiary }]}>
-                {showSymptoms ? '▲' : '▼'}
-              </Text>
+              {showSymptoms
+                ? <ChevronUp size={16} color={theme.text.tertiary} strokeWidth={2} />
+                : <ChevronDown size={16} color={theme.text.tertiary} strokeWidth={2} />
+              }
             </TouchableOpacity>
 
             {showSymptoms && (
@@ -536,10 +650,55 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
             </View>
           </View>
 
-          {/* ── 6. Baby log (newmom only) ────────────────────────────────── */}
+          {/* ── 6. Water intake ──────────────────────────────────────────── */}
+          <View style={[styles.section, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}>
+            <SectionHeader>Hydration — glasses of water</SectionHeader>
+            <View style={styles.waterRow}>
+              <View style={styles.sleepCounter}>
+                <TouchableOpacity
+                  onPress={() => setWaterGlasses(prev => Math.max(0, (prev ?? 0) - 1))}
+                  activeOpacity={0.7}
+                  style={[styles.counterBtn, { borderColor: theme.border.default }]}
+                >
+                  <Text style={[styles.counterBtnText, { color: theme.text.primary }]}>−</Text>
+                </TouchableOpacity>
+                <View style={styles.sleepValueWrap}>
+                  <Text style={[styles.sleepValue, { color: waterGlasses !== null && waterGlasses >= 8 ? theme.accent.sage.text : theme.text.primary }]}>
+                    {waterGlasses !== null ? waterGlasses : '—'}
+                  </Text>
+                  <Text style={[styles.sleepValueSub, { color: theme.text.tertiary }]}>glasses</Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => setWaterGlasses(prev => (prev ?? 0) + 1)}
+                  activeOpacity={0.7}
+                  style={[styles.counterBtn, { borderColor: theme.border.default }]}
+                >
+                  <Text style={[styles.counterBtnText, { color: theme.text.primary }]}>+</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.waterGoalWrap}>
+                <View style={[styles.waterGoalBar, { backgroundColor: theme.border.subtle }]}>
+                  <View style={[styles.waterGoalFill, {
+                    backgroundColor: waterGlasses !== null && waterGlasses >= 8 ? theme.accent.sage.text : theme.interactive.primary,
+                    width: `${Math.min(100, ((waterGlasses ?? 0) / 8) * 100)}%`,
+                  }]} />
+                </View>
+                <Text style={[styles.waterGoalLabel, { color: theme.text.tertiary }]}>Goal: 8 glasses</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* ── 7. Baby log (newmom only) ────────────────────────────────── */}
           {isNewmom && (
             <View style={[styles.section, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}>
-              <SectionHeader>Your baby today</SectionHeader>
+              <View style={styles.sectionLabelRow}>
+                <SectionHeader>Your baby today</SectionHeader>
+                {(hasGoal('feeding-success') || hasGoal('baby-growth') || hasGoal('sleep-patterns')) && (
+                  <Text style={[styles.goalTag, { color: theme.text.tertiary }]}>
+                    {[hasGoal('feeding-success') && goalLabel('feeding-success'), hasGoal('baby-growth') && goalLabel('baby-growth')].filter(Boolean).join(' · ')}
+                  </Text>
+                )}
+              </View>
 
               {/* Feedings */}
               <View style={styles.babyRow}>
@@ -650,9 +809,10 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
                   <SectionHeader>
                     {`Any symptoms in baby? ${babySymptoms.length > 0 ? `(${babySymptoms.length} selected)` : ''}`}
                   </SectionHeader>
-                  <Text style={[styles.collapseChevron, { color: theme.text.tertiary }]}>
-                    {showBabySymptoms ? '▲' : '▼'}
-                  </Text>
+                  {showBabySymptoms
+                    ? <ChevronUp size={16} color={theme.text.tertiary} strokeWidth={2} />
+                    : <ChevronDown size={16} color={theme.text.tertiary} strokeWidth={2} />
+                  }
                 </TouchableOpacity>
 
                 {showBabySymptoms && (
@@ -714,7 +874,12 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
           {/* ── 7. Kick count (pregnancy only) ───────────────────────────── */}
           {isPregnancy && (
             <View style={[styles.section, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}>
-              <SectionHeader>Baby kicks (in the last hour)</SectionHeader>
+              <View style={styles.sectionLabelRow}>
+                <SectionHeader>Baby kicks (in the last hour)</SectionHeader>
+                {hasGoal('safe-delivery') && (
+                  <Text style={[styles.goalTag, { color: theme.text.tertiary }]}>{goalLabel('safe-delivery')}</Text>
+                )}
+              </View>
               <View style={styles.kickRow}>
                 <TouchableOpacity
                   onPress={() => setKickCount(prev => Math.max(0, (prev ?? 0) - 1))}
@@ -767,36 +932,13 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
             style={[styles.saveBtn, { backgroundColor: canSave ? theme.interactive.primary : theme.border.subtle }]}
           >
             <CheckCircle size={18} color="#fff" strokeWidth={2.5} />
-            <Text style={styles.saveBtnText}>{saving ? 'Saving…' : 'Save check-in'}</Text>
+            <Text style={styles.saveBtnText}>{saving ? 'Saving…' : 'Save entry'}</Text>
           </TouchableOpacity>
         </ScrollView>
 
       ) : (
-        /* ── Calendar tab ─────────────────────────────────────────────────── */
-        <ScrollView contentContainerStyle={styles.calScroll} showsVerticalScrollIndicator={false}>
-          <Calendar
-            current={selectedDate}
-            onDayPress={(day: any) => setSelectedDate(day.dateString)}
-            markedDates={markedDates}
-            theme={{
-              backgroundColor: 'transparent',
-              calendarBackground: 'transparent',
-              textSectionTitleColor: theme.text.tertiary,
-              selectedDayBackgroundColor: theme.interactive.primary,
-              selectedDayTextColor: '#fff',
-              todayTextColor: theme.text.brand,
-              dayTextColor: theme.text.primary,
-              textDisabledColor: theme.border.default,
-              dotColor: theme.interactive.primary,
-              selectedDotColor: '#fff',
-              monthTextColor: theme.text.primary,
-              arrowColor: theme.interactive.primary,
-              textMonthFontFamily: Typography.fontFamily.bodyBold,
-              textDayFontFamily: Typography.fontFamily.bodyMedium,
-              textDayHeaderFontFamily: Typography.fontFamily.bodySemibold,
-            }}
-          />
-
+        /* ── Past day view ─────────────────────────────────────────────────── */
+        <ScrollView contentContainerStyle={styles.calScroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           {selectedDate ? (() => {
             const log = logs[selectedDate];
             const isToday = selectedDate === todayKey;
@@ -808,10 +950,10 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
               return (
                 <View style={[styles.dayCard, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}>
                   <Text style={[styles.dayCardDate, { color: theme.text.primary }]}>{displayDate}</Text>
-                  <Text style={[styles.dayCardEmpty, { color: theme.text.tertiary }]}>No check-in logged for this day.</Text>
+                  <Text style={[styles.dayCardEmpty, { color: theme.text.tertiary }]}>No diary entry for this day.</Text>
                   {isToday && (
                     <TouchableOpacity
-                      onPress={() => setActiveTab('log')}
+                      onPress={() => setSelectedDate(todayKey)}
                       activeOpacity={0.85}
                       style={[styles.dayCardBtn, { backgroundColor: theme.interactive.primary }]}
                     >
@@ -835,7 +977,7 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
                   <Text style={[styles.dayCardDate, { color: theme.text.primary }]}>{displayDate}</Text>
                   {isToday && (
                     <TouchableOpacity
-                      onPress={() => setActiveTab('log')}
+                      onPress={() => setSelectedDate(todayKey)}
                       activeOpacity={0.8}
                       style={[styles.dayCardEditBtn, { backgroundColor: theme.bg.subtle, borderColor: theme.border.default }]}
                     >
@@ -894,6 +1036,15 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
                   </View>
                 )}
 
+                {(log.waterGlasses != null) && (
+                  <View style={styles.historyRow}>
+                    <Text style={[styles.historyRowLabel, { color: theme.text.tertiary }]}>Water</Text>
+                    <Text style={[styles.historyRowValue, { color: theme.text.primary }]}>
+                      💧 {log.waterGlasses} glass{log.waterGlasses !== 1 ? 'es' : ''}{log.waterGlasses >= 8 ? ' ✓' : ` / 8`}
+                    </Text>
+                  </View>
+                )}
+
                 {(log.babyFeedings != null || log.babyNappies != null || log.babySleepHours != null || log.babyMood) && (
                   <View style={styles.historyRow}>
                     <Text style={[styles.historyRowLabel, { color: theme.text.tertiary }]}>Baby</Text>
@@ -941,6 +1092,7 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
         </ScrollView>
       )}
     </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -1001,6 +1153,16 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing[12],
     gap: Spacing[4],
   },
+  sectionLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing[1],
+  },
+  goalTag: {
+    fontFamily: Typography.fontFamily.body,
+    fontSize: Typography.size.xs,
+  },
   section: {
     borderRadius: Radius.xl,
     borderWidth: 1,
@@ -1011,9 +1173,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  collapseChevron: {
-    fontSize: 11,
-    marginBottom: Spacing[2],
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[2],
+  },
+  streakBadge: {
+    paddingHorizontal: Spacing[2],
+    paddingVertical: 3,
+    borderRadius: Radius.full,
+  },
+  streakText: {
+    fontFamily: Typography.fontFamily.bodySemibold,
+    fontSize: Typography.size.xs,
+  },
+  // Water intake
+  waterRow: {
+    gap: Spacing[3],
+  },
+  waterGoalWrap: {
+    gap: 4,
+  },
+  waterGoalBar: {
+    height: 6,
+    borderRadius: Radius.full,
+    overflow: 'hidden',
+  },
+  waterGoalFill: {
+    height: '100%',
+    borderRadius: Radius.full,
+  },
+  waterGoalLabel: {
+    fontFamily: Typography.fontFamily.body,
+    fontSize: Typography.size.xs,
   },
   // Mood
   moodRow: {
@@ -1432,5 +1624,47 @@ const styles = StyleSheet.create({
   },
   dayCardDivider: {
     height: 1,
+  },
+  // Calendar icon button
+  calIconBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: Radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Week strip
+  weekStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing[1],
+  },
+  stripCell: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 3,
+  },
+  stripDayLbl: {
+    fontFamily: Typography.fontFamily.bodyMedium,
+    fontSize: 10,
+    textTransform: 'uppercase',
+  },
+  stripDayCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: Radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stripDayNum: {
+    fontFamily: Typography.fontFamily.bodySemibold,
+    fontSize: Typography.size.sm,
+  },
+  stripDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'transparent',
   },
 });

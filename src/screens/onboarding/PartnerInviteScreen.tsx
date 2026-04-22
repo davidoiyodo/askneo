@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Share } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Share, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '../../theme/ThemeContext';
 import { Typography, Spacing, Radius } from '../../theme';
 import Button from '../../components/ui/Button';
-import { useAppContext } from '../../hooks/useAppContext';
 import { UserStage, EmergencyContact } from '../../hooks/useAppContext';
 
 type Props = {
@@ -15,32 +14,22 @@ type Props = {
 
 export default function PartnerInviteScreen({ navigation, route }: Props) {
   const { theme } = useTheme();
-  const { setUser } = useAppContext();
   const { stage, name, email, date, inviteCode, password, emergencyContacts } = route.params;
   const [partnerName, setPartnerName] = useState('');
   const [inviteStatus, setInviteStatus] = useState<null | 'invited' | 'active'>(null);
 
   const finish = () => {
-    let dueDate: string | undefined;
-    let babyDOB: string | undefined;
-    if (date) {
-      if (stage === 'newmom') babyDOB = date;
-      else dueDate = date;
-    }
-    setUser({
+    navigation.navigate('Goals', {
       name,
       email,
       password,
       stage,
-      dueDate,
-      babyDOB,
-      inviteCode: inviteCode || undefined,
+      date,
+      inviteCode,
+      emergencyContacts,
       partnerName: partnerName.trim() || undefined,
       partnerStatus: inviteStatus || undefined,
-      emergencyContacts,
-      onboardingComplete: true,
     });
-    navigation.replace('MainApp');
   };
 
   const shareInvite = async () => {
@@ -56,8 +45,9 @@ export default function PartnerInviteScreen({ navigation, route }: Props) {
   const markActive = () => setInviteStatus('active');
 
   return (
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg.app }]}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
           <Text style={[styles.step, { color: theme.text.link }]}>Step 4 of 4</Text>
           <Text style={[styles.title, { color: theme.text.primary }]}>Invite your partner</Text>
@@ -140,6 +130,7 @@ export default function PartnerInviteScreen({ navigation, route }: Props) {
         </View>
       </ScrollView>
     </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 

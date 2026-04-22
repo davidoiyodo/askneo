@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ChevronLeft, Mic, FileText, Clock, CheckCircle2, AlertCircle, Plus } from 'lucide-react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import { Typography, Spacing, Radius, Shadow } from '../../theme';
-import { ConsultationSession } from '../../types/consultation';
+import { ConsultationSession, SessionType } from '../../types/consultation';
 
 const STORAGE_KEY = 'askneo_consultations';
 
@@ -46,6 +46,20 @@ export default function ConsultationsScreen({ navigation }: { navigation: any })
     return (
       <View style={[styles.badge, { backgroundColor: s.bg }]}>
         <Text style={[styles.badgeText, { color: s.color }]}>{s.label}</Text>
+      </View>
+    );
+  };
+
+  const TypeBadge = ({ type }: { type?: SessionType }) => {
+    const map: Record<SessionType, { label: string; color: string; bg: string }> = {
+      doctor:  { label: '🩺 Doctor',  color: theme.accent.sky.text,   bg: theme.accent.sky.bg  },
+      midwife: { label: '👩‍⚕️ Midwife', color: theme.accent.rose.text,  bg: theme.accent.rose.bg },
+      scan:    { label: '🔬 Scan',    color: theme.accent.gold.text,  bg: theme.accent.gold.bg },
+    };
+    const t = map[type ?? 'doctor'];
+    return (
+      <View style={[styles.badge, { backgroundColor: t.bg }]}>
+        <Text style={[styles.badgeText, { color: t.color }]}>{t.label}</Text>
       </View>
     );
   };
@@ -132,7 +146,10 @@ export default function ConsultationsScreen({ navigation }: { navigation: any })
                     </View>
                   )}
                 </View>
-                <StatusBadge status={s.status} />
+                <View style={styles.badgeStack}>
+                  <TypeBadge type={s.sessionType} />
+                  <StatusBadge status={s.status} />
+                </View>
               </TouchableOpacity>
             ))}
           </View>
@@ -225,6 +242,7 @@ const styles = StyleSheet.create({
   metaDot: { fontFamily: Typography.fontFamily.body, fontSize: Typography.size.xs },
   actionItemsRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   actionItemsLabel: { fontFamily: Typography.fontFamily.bodyMedium, fontSize: Typography.size.xs },
+  badgeStack: { alignItems: 'flex-end', gap: 4, flexShrink: 0 },
   badge: { paddingHorizontal: Spacing[3], paddingVertical: 4, borderRadius: Radius.full },
   badgeText: { fontFamily: Typography.fontFamily.bodySemibold, fontSize: Typography.size.xs },
 });

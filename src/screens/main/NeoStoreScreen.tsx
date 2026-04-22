@@ -3,7 +3,7 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, Image, FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, Minus, Plus, ShoppingCart, Heart } from 'lucide-react-native';
+import { ChevronLeft, ShoppingCart, Heart } from 'lucide-react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext } from '../../hooks/useAppContext';
 import { Typography, Spacing, Radius, Shadow, Colors } from '../../theme';
@@ -134,21 +134,15 @@ export default function NeoStoreScreen({ navigation }: { navigation: any }) {
 
   const handleCheckout = () => navigation.navigate('Cart');
 
-  const QtyControl = ({ product }: { product: Product }) => {
-    const qty = cart[product.id] ?? 0;
-    if (qty === 0) return null;
-    return (
-      <View style={[styles.qtyControl, { backgroundColor: theme.bg.subtle, borderColor: theme.border.subtle }]}>
-        <TouchableOpacity onPress={() => decreaseQty(product)} style={styles.qtyBtn} activeOpacity={0.7}>
-          <Minus size={14} color={theme.text.brand} strokeWidth={2.5} />
-        </TouchableOpacity>
-        <Text style={[styles.qtyText, { color: theme.text.primary }]}>{qty}</Text>
-        <TouchableOpacity onPress={() => addToCart(product)} style={styles.qtyBtn} activeOpacity={0.7}>
-          <Plus size={14} color={theme.text.brand} strokeWidth={2.5} />
-        </TouchableOpacity>
-      </View>
-    );
-  };
+  const InCartPill = ({ onPress, label = '✓ In cart' }: { onPress: () => void; label?: string }) => (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.8}
+      style={[styles.inCartPill, { backgroundColor: theme.accent.sage.bg, borderColor: theme.accent.sage.border }]}
+    >
+      <Text style={[styles.inCartPillText, { color: theme.accent.sage.text }]}>{label}</Text>
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: theme.bg.app }]}>
@@ -315,7 +309,7 @@ export default function NeoStoreScreen({ navigation }: { navigation: any }) {
                         <>
                           <Text style={[styles.price, { color: theme.text.primary }]}>{formatPrice(b)}</Text>
                           {cart[b.id] ? (
-                            <QtyControl product={b} />
+                            <InCartPill onPress={() => navigation.navigate('Cart')} />
                           ) : (
                             <Button label="Add to cart" onPress={() => addToCart(b)} size="sm" />
                           )}
@@ -397,19 +391,10 @@ export default function NeoStoreScreen({ navigation }: { navigation: any }) {
                             activeOpacity={0.8}
                             style={[styles.shopGridAddBtn, { backgroundColor: theme.interactive.primary }]}
                           >
-                            <Plus size={13} color="#fff" strokeWidth={2.5} />
-                            <Text style={styles.shopGridAddLabel}>Add</Text>
+                            <Text style={styles.shopGridAddLabel}>Add to cart</Text>
                           </TouchableOpacity>
                         ) : (
-                          <View style={[styles.qtyControl, { backgroundColor: theme.bg.subtle, borderColor: theme.border.subtle, alignSelf: 'stretch', justifyContent: 'space-between' }]}>
-                            <TouchableOpacity onPress={() => removeShopItem(item.id)} style={styles.qtyBtn} activeOpacity={0.7}>
-                              <Minus size={13} color={theme.text.brand} strokeWidth={2.5} />
-                            </TouchableOpacity>
-                            <Text style={[styles.qtyText, { color: theme.text.primary }]}>{qty}</Text>
-                            <TouchableOpacity onPress={() => addShopItem(item.id)} style={styles.qtyBtn} activeOpacity={0.7}>
-                              <Plus size={13} color={theme.text.brand} strokeWidth={2.5} />
-                            </TouchableOpacity>
-                          </View>
+                          <InCartPill onPress={() => navigation.navigate('Cart')} />
                         )}
                       </View>
                     </View>
@@ -466,7 +451,7 @@ export default function NeoStoreScreen({ navigation }: { navigation: any }) {
                       </Text>
                     </View>
                     {cart[item.id] ? (
-                      <QtyControl product={item} />
+                      <InCartPill onPress={() => navigation.navigate('Cart')} label="✓ Claimed" />
                     ) : (
                       <Button label="Claim item" onPress={() => addToCart(item)} size="sm" />
                     )}
@@ -800,10 +785,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   shopGridAddBtn: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing[1],
     height: 34,
     borderRadius: Radius.full,
   },
@@ -813,25 +796,17 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
     color: '#fff',
   },
-
-  qtyControl: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: Radius.full,
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  qtyBtn: {
+  inCartPill: {
     paddingHorizontal: Spacing[3],
     paddingVertical: Spacing[2],
+    borderRadius: Radius.full,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  qtyText: {
-    fontFamily: Typography.fontFamily.bodyBold,
-    fontSize: Typography.size.sm,
-    minWidth: 24,
-    textAlign: 'center',
+  inCartPillText: {
+    fontFamily: Typography.fontFamily.bodySemibold,
+    fontSize: Typography.size.xs,
   },
   cartBar: {
     position: 'absolute',

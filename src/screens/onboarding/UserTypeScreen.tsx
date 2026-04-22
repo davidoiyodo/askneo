@@ -39,17 +39,34 @@ const options: Array<{ stage: UserStage; label: string; emoji: string; descripti
   },
 ];
 
-function getDateRange(stage: UserStage): { min: Date; max: Date } {
+// Naegele's rule: EDD = LMP + 280 days
+function lmpToEdd(lmpIso: string): Date {
+  const lmp = new Date(lmpIso);
+  return new Date(lmp.getTime() + 280 * 24 * 60 * 60 * 1000);
+}
+
+function formatShortDate(d: Date): string {
+  return d.toLocaleDateString('en-NG', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function getDateRange(stage: UserStage, pregnancyMode: 'lmp' | 'edd' = 'lmp'): { min: Date; max: Date } {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   switch (stage) {
     case 'pregnancy': {
-      // EDD must be in the future, max ~10 months (40 weeks) away
-      const min = new Date(today);
-      const max = new Date(today);
-      max.setDate(max.getDate() + 300);
-      return { min, max };
+      if (pregnancyMode === 'edd') {
+        // EDD must be in the future, max ~10 months (40 weeks) away
+        const min = new Date(today);
+        const max = new Date(today);
+        max.setDate(max.getDate() + 300);
+        return { min, max };
+      } else {
+        // LMP: at most 40 weeks ago (EDD = today), at most today
+        const min = new Date(today);
+        min.setDate(min.getDate() - 280);
+        return { min, max: new Date(today) };
+      }
     }
     case 'newmom': {
       // Baby's DOB must be in the past, at most 2 years ago
@@ -68,14 +85,20 @@ function getDateRange(stage: UserStage): { min: Date; max: Date } {
   }
 }
 
-function getDateConfig(stage: UserStage): { label: string; placeholder: string; help: string } {
+function getDateConfig(stage: UserStage, pregnancyMode: 'lmp' | 'edd' = 'lmp'): { label: string; placeholder: string; help: string } {
   switch (stage) {
     case 'pregnancy':
-      return {
-        label: 'Expected due date',
-        placeholder: 'Select your due date',
-        help: 'Must be within the next 10 months.',
-      };
+      return pregnancyMode === 'lmp'
+        ? {
+            label: 'First day of your last period',
+            placeholder: 'Select the date',
+            help: "We'll use this to calculate your due date.",
+          }
+        : {
+            label: 'Expected due date',
+            placeholder: 'Select your due date',
+            help: 'Must be within the next 10 months.',
+          };
     case 'newmom':
       return {
         label: "Baby's date of birth",
@@ -97,6 +120,7 @@ export default function UserTypeScreen({ navigation }: Props) {
   const { theme } = useTheme();
   const [selected, setSelected] = useState<UserStage | null>(null);
   const [date, setDate] = useState('');
+  const [pregnancyMode, setPregnancyMode] = useState<'lmp' | 'edd'>('lmp');
   const [inviteCode, setInviteCode] = useState('');
   const [inviteFocused, setInviteFocused] = useState(false);
 
@@ -104,22 +128,41 @@ export default function UserTypeScreen({ navigation }: Props) {
     if (selected !== stage) {
       setDate('');
       setInviteCode('');
+      setPregnancyMode('lmp');
     }
     setSelected(stage);
   };
+
+  const handleTogglePregnancyMode = () => {
+    setDate('');
+    setPregnancyMode(m => m === 'lmp' ? 'edd' : 'lmp');
+  };
+
+  // For pregnancy + LMP mode: compute EDD before navigating
+  const resolvedDate = (() => {
+    if (selected === 'pregnancy' && pregnancyMode === 'lmp' && date) {
+      return lmpToEdd(date).toISOString().slice(0, 10);
+    }
+    return date;
+  })();
 
   const handleContinue = () => {
     if (!selected) return;
     navigation.navigate('BasicInfo', {
       stage: selected,
-      date,
+      date: resolvedDate,
       inviteCode: selected === 'partner' ? inviteCode.trim() : '',
     });
   };
 
   const isDateStage = selected === 'pregnancy' || selected === 'newmom' || selected === 'ttc';
-  const dateRange = selected && isDateStage ? getDateRange(selected) : null;
-  const dateConfig = selected && isDateStage ? getDateConfig(selected) : null;
+  const dateRange = selected && isDateStage ? getDateRange(selected, pregnancyMode) : null;
+  const dateConfig = selected && isDateStage ? getDateConfig(selected, pregnancyMode) : null;
+
+  // EDD preview when LMP mode is active and a date is chosen
+  const eddPreview = selected === 'pregnancy' && pregnancyMode === 'lmp' && date
+    ? formatShortDate(lmpToEdd(date))
+    : null;
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg.app }]}>
@@ -176,7 +219,16 @@ export default function UserTypeScreen({ navigation }: Props) {
           {/* Contextual field — dates */}
           {isDateStage && dateConfig && dateRange && (
             <View style={[styles.contextBox, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}>
-              <Text style={[styles.contextLabel, { color: theme.text.secondary }]}>{dateConfig.label}</Text>
+              <View style={styles.contextLabelRow}>
+                <Text style={[styles.contextLabel, { color: theme.text.secondary }]}>{dateConfig.label}</Text>
+                {selected === 'pregnancy' && (
+                  <TouchableOpacity onPress={handleTogglePregnancyMode} activeOpacity={0.7}>
+                    <Text style={[styles.modeToggle, { color: theme.text.link }]}>
+                      {pregnancyMode === 'lmp' ? 'I know my due date' : 'Use last period instead'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
               <DatePickerField
                 value={date}
                 onChange={setDate}
@@ -184,7 +236,15 @@ export default function UserTypeScreen({ navigation }: Props) {
                 maxDate={dateRange.max}
                 placeholder={dateConfig.placeholder}
               />
-              <Text style={[styles.contextHelp, { color: theme.text.tertiary }]}>{dateConfig.help}</Text>
+              {eddPreview ? (
+                <View style={[styles.eddPreview, { backgroundColor: theme.accent.rose.bg }]}>
+                  <Text style={[styles.eddPreviewText, { color: theme.accent.rose.text }]}>
+                    🗓 Estimated due date: {eddPreview}
+                  </Text>
+                </View>
+              ) : (
+                <Text style={[styles.contextHelp, { color: theme.text.tertiary }]}>{dateConfig.help}</Text>
+              )}
             </View>
           )}
 
@@ -286,7 +346,26 @@ const styles = StyleSheet.create({
     padding: Spacing[4],
     gap: Spacing[2],
   },
+  contextLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   contextLabel: {
+    fontFamily: Typography.fontFamily.bodySemibold,
+    fontSize: Typography.size.sm,
+  },
+  modeToggle: {
+    fontFamily: Typography.fontFamily.bodyMedium,
+    fontSize: Typography.size.xs,
+    textDecorationLine: 'underline',
+  },
+  eddPreview: {
+    paddingHorizontal: Spacing[3],
+    paddingVertical: Spacing[2],
+    borderRadius: Radius.lg,
+  },
+  eddPreviewText: {
     fontFamily: Typography.fontFamily.bodySemibold,
     fontSize: Typography.size.sm,
   },

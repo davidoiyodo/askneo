@@ -19,6 +19,8 @@ export interface ConsultationExtractedData {
 
 export type ConsultationStatus = 'recording' | 'processing' | 'done' | 'error';
 
+export type SessionType = 'doctor' | 'scan' | 'midwife';
+
 export interface ConsultationSession {
   id: string;
   title: string;                  // e.g. "Antenatal checkup – Dr. Amara"
@@ -27,6 +29,10 @@ export interface ConsultationSession {
   audioUri?: string;              // local file URI (cloud URL later)
   status: ConsultationStatus;
   permissionGranted: boolean;
+  sessionType: SessionType;
+  scanType?: string;              // e.g. "Dating", "NT", "Anatomy", "Growth"
+  gestationalWeek?: number;       // e.g. 12
+  imagingFacility?: string;       // e.g. "St. Thomas Hospital"
   transcript?: string;
   summary?: string;
   extractedData?: ConsultationExtractedData;

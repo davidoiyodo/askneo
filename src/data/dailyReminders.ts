@@ -15,8 +15,8 @@ export const dailyReminders: DailyReminder[] = [
   // ── Daily check-in (all stages) ────────────────────────────────────────
   {
     id: 'daily-checkin',
-    label: 'Complete your daily check-in',
-    note: 'Log your mood, energy, symptoms, and sleep',
+    label: 'Write your wellness diary entry',
+    note: 'Log your mood, energy, symptoms, hydration, and sleep',
     stages: ['pregnancy', 'newmom', 'ttc', 'partner'],
     icon: '📋',
     resetAfterHours: 24,

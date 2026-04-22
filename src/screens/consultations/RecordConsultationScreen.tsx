@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet, TextInput, Animated, Alert,
+  View, Text, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, StyleSheet, TextInput, Animated, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,13 +9,87 @@ import { ChevronLeft, Mic, Square, Shield } from 'lucide-react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import { Typography, Spacing, Radius } from '../../theme';
 import Button from '../../components/ui/Button';
-import { ConsultationSession } from '../../types/consultation';
+import { ConsultationSession, SessionType } from '../../types/consultation';
 
 const STORAGE_KEY = 'askneo_consultations';
+
+const SESSION_TYPES = [
+  { key: 'doctor'  as SessionType, label: 'Doctor',  emoji: '🩺', placeholder: 'e.g. Antenatal checkup – Dr. Amara' },
+  { key: 'midwife' as SessionType, label: 'Midwife', emoji: '👩‍⚕️', placeholder: 'e.g. 28-week midwife review' },
+  { key: 'scan'    as SessionType, label: 'Scan',    emoji: '🔬', placeholder: 'e.g. 20-week anatomy scan' },
+];
+
+const SCAN_TYPES = ['Dating', 'NT', 'Anatomy', 'Growth', 'Other'];
+
+const CONSENT_POINTS = [
+  'Audio is processed securely on our servers',
+  'Only you can see the transcript and extracted data',
+  'You can delete any recording at any time',
+  'Please also get verbal consent from your provider',
+];
 
 // ── Mock AI extraction (replace with real API call when backend is ready) ──
 async function mockExtract(session: ConsultationSession): Promise<ConsultationSession> {
   await new Promise(r => setTimeout(r, 3000)); // simulate API delay
+
+  if (session.sessionType === 'scan') {
+    const weekLabel = session.gestationalWeek ? `${session.gestationalWeek} weeks` : 'current gestation';
+    const scanLabel = session.scanType ? `${session.scanType.toLowerCase()} scan` : 'scan';
+    return {
+      ...session,
+      status: 'done',
+      transcript: `Sonographer confirmed baby is well-positioned for the ${scanLabel}. Measurements are consistent with ${weekLabel}. Nuchal translucency measured at 1.8mm — within normal range. Baby's heartbeat is strong at 162 bpm. The sonographer noted no structural concerns at this stage. Next scan recommended at 20 weeks for the anatomy review.`,
+      summary: `${session.scanType ?? 'Scan'} at ${weekLabel}. NT 1.8mm (normal). Heartbeat 162 bpm. No concerns noted. Anatomy scan recommended at 20 weeks.`,
+      extractedData: {
+        nextAppointment: new Date(Date.now() + 56 * 24 * 3600_000).toISOString(),
+        medications: [],
+        instructions: [
+          'Drink plenty of water before your next scan',
+          'Book the 20-week anatomy scan',
+          'Request scan images from the imaging centre',
+        ],
+        contextNotes: [
+          `NT measurement 1.8mm — within normal range at ${weekLabel}`,
+          'Baby heartbeat strong at 162 bpm',
+          'No structural concerns flagged at this stage',
+        ],
+      },
+      actionItems: [
+        { id: '1', text: 'Book 20-week anatomy scan', done: false },
+        { id: '2', text: 'Request scan images from the imaging centre', done: false },
+      ],
+    };
+  }
+
+  if (session.sessionType === 'midwife') {
+    return {
+      ...session,
+      status: 'done',
+      transcript: 'Midwife reviewed your birth plan preferences and discussed pain management options including gas and air and epidural. Blood pressure was recorded at 118/74 — within normal range. Urine test came back clear. Baby is in a head-down position. Midwife recommended attending the antenatal class next week and confirmed the home birth option is available.',
+      summary: 'Antenatal midwife appointment. BP 118/74 (normal). Urine clear. Baby head-down. Birth plan discussed. Antenatal class recommended.',
+      extractedData: {
+        nextAppointment: new Date(Date.now() + 14 * 24 * 3600_000).toISOString(),
+        medications: [],
+        instructions: [
+          'Attend antenatal class next week',
+          'Continue taking folic acid and vitamin D daily',
+          'Complete birth plan document and bring to next appointment',
+        ],
+        contextNotes: [
+          'Blood pressure 118/74 — normal range',
+          'Baby in head-down position',
+          'Home birth option confirmed as available',
+        ],
+      },
+      actionItems: [
+        { id: '1', text: 'Register for antenatal class', done: false },
+        { id: '2', text: 'Complete birth plan document', done: false },
+        { id: '3', text: 'Continue folic acid and vitamin D daily', done: false },
+      ],
+    };
+  }
+
+  // Default: doctor
   return {
     ...session,
     status: 'done',
@@ -50,6 +124,10 @@ type Phase = 'consent' | 'recording' | 'processing';
 export default function RecordConsultationScreen({ navigation }: { navigation: any }) {
   const { theme } = useTheme();
   const [phase, setPhase] = useState<Phase>('consent');
+  const [sessionType, setSessionType] = useState<SessionType>('doctor');
+  const [scanType, setScanType] = useState('');
+  const [gestationalWeek, setGestationalWeek] = useState('');
+  const [imagingFacility, setImagingFacility] = useState('');
   const [title, setTitle] = useState('');
   const [elapsed, setElapsed] = useState(0);
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
@@ -105,14 +183,21 @@ export default function RecordConsultationScreen({ navigation }: { navigation: a
     setPhase('processing');
 
     // Build the session object
+    const typeLabel = SESSION_TYPES.find(t => t.key === sessionType)?.label ?? 'Consultation';
     const session: ConsultationSession = {
       id: Date.now().toString(),
-      title: title.trim() || `Consultation – ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`,
+      title: title.trim() || `${typeLabel} – ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`,
       date: new Date().toISOString(),
       durationSeconds: elapsed,
       audioUri: uri ?? undefined,
       status: 'processing',
       permissionGranted: true,
+      sessionType,
+      ...(sessionType === 'scan' && {
+        scanType: scanType || undefined,
+        gestationalWeek: gestationalWeek ? parseInt(gestationalWeek, 10) : undefined,
+        imagingFacility: imagingFacility.trim() || undefined,
+      }),
       actionItems: [],
     };
 
@@ -141,6 +226,7 @@ export default function RecordConsultationScreen({ navigation }: { navigation: a
 
   // ── Consent phase ──────────────────────────────────────────────────────
   if (phase === 'consent') {
+    const activeTmpl = SESSION_TYPES.find(t => t.key === sessionType);
     return (
       <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: theme.bg.app }]}>
         <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
@@ -156,7 +242,12 @@ export default function RecordConsultationScreen({ navigation }: { navigation: a
           <View style={{ width: 72 }} />
         </View>
 
-        <View style={styles.consentBody}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={0}
+        >
+        <ScrollView contentContainerStyle={styles.consentScroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View style={[styles.shieldIcon, { backgroundColor: theme.accent.sky.bg }]}>
             <Shield size={36} color={theme.accent.sky.text} strokeWidth={1.5} />
           </View>
@@ -164,17 +255,38 @@ export default function RecordConsultationScreen({ navigation }: { navigation: a
           <Text style={[styles.consentTitle, { color: theme.text.primary }]}>
             Before you record
           </Text>
-          <Text style={[styles.consentBody2, { color: theme.text.secondary }]}>
+          <Text style={[styles.consentBodyText, { color: theme.text.secondary }]}>
             AskNeo will process this recording to extract useful information — medications prescribed, follow-up dates, instructions, and a summary you can read back later.
           </Text>
 
+          {/* Session type selector */}
+          <View style={styles.typeSelector}>
+            {SESSION_TYPES.map(({ key, label, emoji }) => {
+              const active = sessionType === key;
+              return (
+                <TouchableOpacity
+                  key={key}
+                  activeOpacity={0.8}
+                  onPress={() => setSessionType(key)}
+                  style={[
+                    styles.typeBtn,
+                    active
+                      ? { backgroundColor: theme.bg.subtle, borderColor: theme.border.brand }
+                      : { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle },
+                  ]}
+                >
+                  <Text style={styles.typeBtnEmoji}>{emoji}</Text>
+                  <Text style={[styles.typeBtnLabel, { color: active ? theme.text.brand : theme.text.secondary }]}>
+                    {label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {/* Privacy bullets */}
           <View style={[styles.consentCard, { backgroundColor: theme.bg.subtle, borderColor: theme.border.subtle }]}>
-            {[
-              'Audio is processed securely on our servers',
-              'Only you can see the transcript and extracted data',
-              'You can delete any recording at any time',
-              'Please also get verbal consent from your doctor',
-            ].map(point => (
+            {CONSENT_POINTS.map(point => (
               <View key={point} style={styles.consentPoint}>
                 <Text style={[styles.consentDot, { color: theme.text.brand }]}>•</Text>
                 <Text style={[styles.consentPointText, { color: theme.text.secondary }]}>{point}</Text>
@@ -182,12 +294,60 @@ export default function RecordConsultationScreen({ navigation }: { navigation: a
             ))}
           </View>
 
+          {/* Scan-specific fields */}
+          {sessionType === 'scan' && (
+            <>
+              <Text style={[styles.titleLabel, { color: theme.text.secondary }]}>Scan type</Text>
+              <View style={styles.scanTypeRow}>
+                {SCAN_TYPES.map(st => {
+                  const active = scanType === st;
+                  return (
+                    <TouchableOpacity
+                      key={st}
+                      activeOpacity={0.8}
+                      onPress={() => setScanType(active ? '' : st)}
+                      style={[
+                        styles.scanTypePill,
+                        active
+                          ? { backgroundColor: theme.bg.subtle, borderColor: theme.border.brand }
+                          : { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle },
+                      ]}
+                    >
+                      <Text style={[styles.scanTypePillText, { color: active ? theme.text.brand : theme.text.secondary }]}>
+                        {st}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <Text style={[styles.titleLabel, { color: theme.text.secondary }]}>Gestational week</Text>
+              <TextInput
+                style={[styles.titleInput, { borderColor: theme.border.default, color: theme.text.primary, backgroundColor: theme.bg.surface }]}
+                placeholder="e.g. 12"
+                placeholderTextColor={theme.text.tertiary}
+                value={gestationalWeek}
+                onChangeText={setGestationalWeek}
+                keyboardType="number-pad"
+              />
+
+              <Text style={[styles.titleLabel, { color: theme.text.secondary }]}>Imaging facility (optional)</Text>
+              <TextInput
+                style={[styles.titleInput, { borderColor: theme.border.default, color: theme.text.primary, backgroundColor: theme.bg.surface }]}
+                placeholder="e.g. St. Thomas Hospital"
+                placeholderTextColor={theme.text.tertiary}
+                value={imagingFacility}
+                onChangeText={setImagingFacility}
+              />
+            </>
+          )}
+
           <Text style={[styles.titleLabel, { color: theme.text.secondary }]}>
             Label this session (optional)
           </Text>
           <TextInput
             style={[styles.titleInput, { borderColor: theme.border.default, color: theme.text.primary, backgroundColor: theme.bg.surface }]}
-            placeholder="e.g. Antenatal checkup – Dr. Amara"
+            placeholder={activeTmpl?.placeholder ?? 'e.g. Antenatal checkup – Dr. Amara'}
             placeholderTextColor={theme.text.tertiary}
             value={title}
             onChangeText={setTitle}
@@ -198,10 +358,11 @@ export default function RecordConsultationScreen({ navigation }: { navigation: a
             onPress={startRecording}
             fullWidth
           />
-          <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
+          <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7} style={styles.cancelWrapper}>
             <Text style={[styles.cancelLink, { color: theme.text.tertiary }]}>Cancel</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     );
   }
@@ -304,13 +465,11 @@ const styles = StyleSheet.create({
   headerTitle: { fontFamily: Typography.fontFamily.bodyBold, fontSize: Typography.size.base },
 
   // Consent
-  consentBody: {
-    flex: 1,
+  consentScroll: {
     paddingHorizontal: Spacing[6],
     paddingTop: Spacing[8],
-    paddingBottom: Spacing[6],
+    paddingBottom: Spacing[8],
     gap: Spacing[4],
-    alignItems: 'stretch',
   },
   shieldIcon: {
     width: 72,
@@ -326,11 +485,28 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
     textAlign: 'center',
   },
-  consentBody2: {
+  consentBodyText: {
     fontFamily: Typography.fontFamily.body,
     fontSize: Typography.size.base,
     lineHeight: Typography.size.base * 1.6,
     textAlign: 'center',
+  },
+  typeSelector: {
+    flexDirection: 'row',
+    gap: Spacing[2],
+  },
+  typeBtn: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: Spacing[3],
+    borderRadius: Radius.xl,
+    borderWidth: 1.5,
+    gap: 4,
+  },
+  typeBtnEmoji: { fontSize: 22, lineHeight: 28 },
+  typeBtnLabel: {
+    fontFamily: Typography.fontFamily.bodyMedium,
+    fontSize: Typography.size.xs,
   },
   consentCard: {
     borderRadius: Radius.xl,
@@ -341,6 +517,21 @@ const styles = StyleSheet.create({
   consentPoint: { flexDirection: 'row', gap: Spacing[2], alignItems: 'flex-start' },
   consentDot: { fontFamily: Typography.fontFamily.bodyBold, fontSize: Typography.size.base, lineHeight: Typography.size.base * 1.4 },
   consentPointText: { fontFamily: Typography.fontFamily.body, fontSize: Typography.size.sm, lineHeight: Typography.size.sm * 1.5, flex: 1 },
+  scanTypeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing[2],
+  },
+  scanTypePill: {
+    paddingHorizontal: Spacing[3],
+    paddingVertical: Spacing[2],
+    borderRadius: Radius.full,
+    borderWidth: 1.5,
+  },
+  scanTypePillText: {
+    fontFamily: Typography.fontFamily.bodyMedium,
+    fontSize: Typography.size.sm,
+  },
   titleLabel: { fontFamily: Typography.fontFamily.bodySemibold, fontSize: Typography.size.sm },
   titleInput: {
     borderWidth: 1.5,
@@ -351,6 +542,7 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.base,
     minHeight: 52,
   },
+  cancelWrapper: { alignItems: 'center' },
   cancelLink: {
     fontFamily: Typography.fontFamily.bodySemibold,
     fontSize: Typography.size.sm,

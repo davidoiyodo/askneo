@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Bookmark, BookmarkCheck, Circle, CheckCircle2, CornerUpLeft } from 'lucide-react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext } from '../../hooks/useAppContext';
-import { dailyReminders } from '../../data/dailyReminders';
+import { useRoutine } from '../../hooks/useRoutine';
+import { ROUTINE_ITEMS } from '../../data/routineItems';
 import { Typography, Spacing, Radius } from '../../theme';
 import TriageCard from '../triage/TriageCard';
 import { NeoResponse } from '../../data/responses';
@@ -24,7 +25,8 @@ interface ChatBubbleProps {
 
 export default function ChatBubble({ message, onReply }: ChatBubbleProps) {
   const { theme } = useTheme();
-  const { highlights, addHighlight, removeHighlight, isReminderDone, logReminder, clearReminder } = useAppContext();
+  const { highlights, addHighlight, removeHighlight } = useAppContext();
+  const { isItemDoneToday, completeItem, uncompleteItem } = useRoutine();
   const isUser = message.sender === 'user';
   const isSaved = highlights.includes(message.text);
 
@@ -107,22 +109,21 @@ export default function ChatBubble({ message, onReply }: ChatBubbleProps) {
         )}
 
         {!isUser && message.response?.reminder && (() => {
-          const rem = dailyReminders.find(r => r.id === message.response!.reminder);
+          const rem = ROUTINE_ITEMS.find(r => r.id === message.response!.reminder);
           if (!rem) return null;
-          const done = isReminderDone(rem.id, rem.resetAfterHours);
+          const done = isItemDoneToday(rem.id);
           return (
             <TouchableOpacity
-              onPress={() => done ? clearReminder(rem.id) : logReminder(rem.id, rem.resetAfterHours, rem.label)}
+              onPress={() => done ? uncompleteItem(rem.id) : completeItem(rem.id)}
               activeOpacity={0.8}
               style={[
                 styles.reminderStrip,
                 { backgroundColor: done ? theme.accent.sage.bg : theme.bg.surface, borderColor: done ? theme.accent.sage.border : theme.border.subtle },
               ]}
             >
-              <Text style={styles.reminderEmoji}>{rem.icon}</Text>
               <View style={styles.reminderContent}>
                 <Text style={[styles.reminderLabel, { color: done ? theme.accent.sage.text : theme.text.primary }]}>
-                  {rem.label}
+                  {rem.title}
                 </Text>
                 {rem.note && !done && (
                   <Text style={[styles.reminderNote, { color: theme.text.secondary }]}>{rem.note}</Text>

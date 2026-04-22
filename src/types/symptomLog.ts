@@ -40,6 +40,9 @@ export interface DailyLog {
   babySymptoms: string[];
   babySymptomSeverity: SymptomSeverity | null;
 
+  // Hydration
+  waterGlasses: number | null;
+
   // Free-write
   notes: string;
 }

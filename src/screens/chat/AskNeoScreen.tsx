@@ -12,8 +12,10 @@ import { useAppContext } from '../../hooks/useAppContext';
 import { Typography, Spacing, Radius, Shadow } from '../../theme';
 import ChatBubble, { Message } from '../../components/chat/ChatBubble';
 import { ChatTab, welcomeMessages } from '../../data/responses';
-import { getResponse, isVisitQuery, buildVisitContext } from '../../utils/chatEngine';
+import { getResponse, isVisitQuery, buildVisitContext, isRoutineQuery, buildRoutineContext, isANCQuery, buildANCContext } from '../../utils/chatEngine';
 import { useDailyLogs } from '../../hooks/useDailyLogs';
+import { useRoutine } from '../../hooks/useRoutine';
+import { useANCVisits } from '../../hooks/useANCVisits';
 
 const CHAT_HISTORY_KEY = 'askneo_chat_history';
 
@@ -42,6 +44,8 @@ export default function AskNeoScreen({ navigation, route }: { navigation: any; r
   const { theme } = useTheme();
   const { user } = useAppContext();
   const { logs } = useDailyLogs();
+  const { getTodayItems, todayCompletions } = useRoutine();
+  const { visits: ancVisits, totalVisitCount } = useANCVisits();
 
   const defaultTab: ChatTab =
     user?.stage === 'ttc' ? 'ttc' :
@@ -80,7 +84,7 @@ export default function AskNeoScreen({ navigation, route }: { navigation: any; r
     setTimeout(() => inputRef.current?.focus(), 300);
   }, [route.params?.prompt]);
 
-  // ── Auto-send initialMessage from HomeScreen inline input ─────────────
+  // ── Auto-send initialMessage (e.g. from story feedback) ──────────────
   useEffect(() => {
     const msg = route.params?.initialMessage;
     if (!msg) return;
@@ -88,6 +92,14 @@ export default function AskNeoScreen({ navigation, route }: { navigation: any; r
     const timer = setTimeout(() => sendMessage(msg), 200);
     return () => clearTimeout(timer);
   }, [route.params?.initialMessage]);
+
+  // ── Pre-fill input without sending (e.g. from "Ask Neo about this") ──
+  useEffect(() => {
+    const prefill = route.params?.prefill;
+    if (!prefill) return;
+    setInputText(prefill);
+    setTimeout(() => inputRef.current?.focus(), 300);
+  }, [route.params?.prefill]);
 
   // ── Load persisted history on mount ───────────────────────────────────
   useEffect(() => {
@@ -161,6 +173,21 @@ export default function AskNeoScreen({ navigation, route }: { navigation: any; r
           const ctx = buildVisitContext(logs, user.stage);
           if (ctx) {
             responseText = `${result.text}\n\n📋 Based on your recent logs:\n${ctx}`;
+          }
+        }
+
+        if (isRoutineQuery(text) && user && (user.goals ?? []).length > 0) {
+          const todayItems = getTodayItems(user);
+          const routineCtx = buildRoutineContext(user, todayItems, todayCompletions);
+          if (routineCtx) {
+            responseText = `${responseText}\n\n🎯 Your routine today: ${routineCtx}`;
+          }
+        }
+
+        if (isANCQuery(text) && user?.stage === 'pregnancy' && ancVisits.length > 0) {
+          const ancCtx = buildANCContext(ancVisits, totalVisitCount);
+          if (ancCtx) {
+            responseText = `${responseText}\n\n🩺 From your ANC records: ${ancCtx}`;
           }
         }
 

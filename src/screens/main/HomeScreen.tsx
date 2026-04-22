@@ -1,21 +1,29 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity, Image,
   TextInput, KeyboardAvoidingView, Platform, Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { HeartPulse, Activity, X, Circle, Siren, Send } from 'lucide-react-native';
+import { HeartPulse, Activity, NotebookPen, X, Circle, Siren, Send, CheckCircle2, Stethoscope, ChevronDown, ChevronUp } from 'lucide-react-native';
+import { Calendar } from 'react-native-calendars';
 import { getPregnancyDevelopment, getPostnatalDevelopment, getPostnatalAgeLabel } from '../../data/babyDevelopment';
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext } from '../../hooks/useAppContext';
-import { useDailyLogs } from '../../hooks/useDailyLogs';
+import { useRoutine } from '../../hooks/useRoutine';
+import { useANCVisits } from '../../hooks/useANCVisits';
+import { getGoalById } from '../../data/goals';
+import { GOAL_ACCENT } from '../../utils/goalColors';
+import { ITEM_IMAGES } from '../../utils/itemImages';
+import WeeklyStreakWidget from '../../components/home/WeeklyStreakWidget';
+import ConsultationWidget from '../../components/home/ConsultationWidget';
+import GoalStoryCircle from '../../components/home/GoalStoryCircle';
 import { Typography, Spacing, Radius, Shadow } from '../../theme';
 import Card from '../../components/ui/Card';
 import { pregnancyPrompts, babyPrompts, ttcPrompts, partnerPrompts, TimelinePrompt } from '../../data/timelinePrompts';
-import { dailyReminders } from '../../data/dailyReminders';
 import { getArticlesForUser } from '../../data/articles';
 import { getGestationalWeek, getBabyAgeLabel } from '../../utils/chatEngine';
+import { useFocusEffect } from '@react-navigation/native';
 
 interface Props {
   navigation: any;
@@ -23,8 +31,11 @@ interface Props {
 
 export default function HomeScreen({ navigation }: Props) {
   const { theme } = useTheme();
-  const { user, highlights, removeHighlight, isReminderDone, logReminder, tasks, toggleTask } = useAppContext();
-  const { incrementField } = useDailyLogs();
+  const { user, highlights, removeHighlight, tasks, toggleTask, updateUser } = useAppContext();
+  const { getGoalItems, isItemDoneToday } = useRoutine();
+  const { visits, totalVisitCount, nextAppointment, loaded: ancLoaded, setupCount, saveSetupCount, reload: reloadANC } = useANCVisits();
+
+  useFocusEffect(useCallback(() => { reloadANC(); }, [reloadANC]));
 
   const getGreeting = () => {
     const hr = new Date().getHours();
@@ -69,18 +80,6 @@ export default function HomeScreen({ navigation }: Props) {
     return ttcPrompts.slice(0, 6);
   };
 
-  const getTodayReminders = () => {
-    if (!user) return [];
-    const week = user.stage === 'pregnancy' && user.dueDate
-      ? getGestationalWeek(new Date(user.dueDate))
-      : 0;
-    return dailyReminders.filter(r => {
-      if (!r.stages.includes(user.stage)) return false;
-      if (r.minWeek && week < r.minWeek) return false;
-      return true;
-    });
-  };
-
   const getArticles = () => {
     if (!user) return [];
     const week = user.stage === 'pregnancy' && user.dueDate
@@ -103,9 +102,36 @@ export default function HomeScreen({ navigation }: Props) {
     return null;
   };
 
+  const getANCStartInfo = () => {
+    if (!user?.dueDate) return null;
+    const currentWeek = getGestationalWeek(new Date(user.dueDate));
+    if (currentWeek < 8) {
+      const weeksToGo = 8 - currentWeek;
+      return {
+        status: 'upcoming' as const,
+        badge: `Week 8 in ${weeksToGo} week${weeksToGo !== 1 ? 's' : ''}`,
+        message: `You're at week ${currentWeek}. In Nigeria, the first ANC visit is recommended at 8–12 weeks. ${weeksToGo} week${weeksToGo !== 1 ? 's' : ''} to go — we'll help you prepare.`,
+        cta: "Got it — I'll book at week 8",
+      };
+    } else if (currentWeek <= 12) {
+      return {
+        status: 'now' as const,
+        badge: 'Now is the ideal time!',
+        message: `You're at week ${currentWeek} — this is the ideal window to start antenatal care. Book your first visit as soon as you can.`,
+        cta: "Got it — I'll book soon",
+      };
+    } else {
+      return {
+        status: 'late' as const,
+        badge: 'Start as soon as possible',
+        message: `You're at week ${currentWeek}. It's not too late — starting ANC now still makes a real difference. Book your first visit soon.`,
+        cta: "Got it — I'll book now",
+      };
+    }
+  };
+
   const devCard = getDevCard();
   const prompts = getActivePrompts();
-  const todayReminders = getTodayReminders();
   const journalArticles = getArticles();
   const initials = (user?.name ?? 'M')[0].toUpperCase();
   const [askExpanded, setAskExpanded] = useState(false);
@@ -115,7 +141,12 @@ export default function HomeScreen({ navigation }: Props) {
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
   const pendingTasks = tasks.filter(t => !t.done);
-  const pendingReminders = todayReminders.filter(r => !isReminderDone(r.id, r.resetAfterHours));
+
+  // ANC setup gateway card state
+  const [ancSetupStep, setAncSetupStep] = useState<'question' | 'yes' | 'no'>('question');
+  const [ancSetupCount, setAncSetupCount] = useState(0);
+  const [ancSetupNextAppt, setAncSetupNextAppt] = useState('');
+  const [ancSetupShowCal, setAncSetupShowCal] = useState(false);
 
   // Appointment nudge card
   const [apptCardDismissed, setApptCardDismissed] = useState(false);
@@ -247,6 +278,62 @@ export default function HomeScreen({ navigation }: Props) {
           )}
         </View>
 
+        {/* Weekly rings + Goal story circles */}
+        {user && (user.goals ?? []).length > 0 && (() => {
+          const goals = user.goals ?? [];
+          return (
+            <>
+              <View style={styles.section}>
+                <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Today's focus</Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.storyRow}
+                >
+                  {(() => {
+                    return goals.map(goalId => {
+                      const goalDef = getGoalById(goalId as any);
+                      if (!goalDef) return null;
+                      const allItems = getGoalItems(user, goalId as any);
+                      // Each item is shown in the circle whose goalId appears FIRST in the item's
+                      // own goalIds array (among the user's selected goals). This distributes items
+                      // fairly rather than giving everything to whichever goal the user picked first.
+                      const items = allItems.filter(it => {
+                        if (it.universalItem) return goals[0] === goalId;
+                        const primary = it.goalIds.find(g => goals.includes(g as any));
+                        return primary === goalId;
+                      });
+                      if (items.length === 0) return null;
+                      const doneIds       = new Set(items.filter(it => isItemDoneToday(it.id)).map(it => it.id));
+                      const initialIndex  = items.findIndex(it => !doneIds.has(it.id));
+                      const specificItems = items.filter(it => !it.universalItem);
+                      const coverItem     = specificItems[specificItems.length - 1] ?? items[0];
+                      const coverImageUri = ITEM_IMAGES[coverItem.id];
+                      return (
+                        <GoalStoryCircle
+                          key={goalId}
+                          goalId={goalId}
+                          goalIcon={goalDef.icon}
+                          goalLabel={goalDef.label}
+                          items={items}
+                          doneIds={doneIds}
+                          imageUri={coverImageUri}
+                          onPress={() => navigation.navigate('GoalStory', { goalId, initialIndex: Math.max(0, initialIndex) })}
+                        />
+                      );
+                    });
+                  })()}
+                </ScrollView>
+              </View>
+
+              <WeeklyStreakWidget
+                user={user}
+                onPress={() => navigation.navigate('StreakDetail')}
+              />
+            </>
+          );
+        })()}
+
         {/* Quick actions */}
         <View style={styles.quickGrid}>
           {devCard ? (
@@ -276,10 +363,206 @@ export default function HomeScreen({ navigation }: Props) {
             onPress={() => navigation.navigate('SymptomLog')}
             style={[styles.quickCard, { backgroundColor: theme.accent.sage.bg, borderColor: 'transparent' }]}
           >
-            <Activity size={24} color={theme.accent.sage.text} strokeWidth={1.75} />
-            <Text style={[styles.quickLabel, { color: theme.accent.sage.text }]}>{'Daily\ncheck-in'}</Text>
+            <NotebookPen size={24} color={theme.accent.sage.text} strokeWidth={1.75} />
+            <Text style={[styles.quickLabel, { color: theme.accent.sage.text }]}>{'Wellness\nDiary'}</Text>
           </TouchableOpacity>
         </View>
+
+        {/* ANC one-time setup gateway — shows until setupCount is set */}
+        {user?.stage === 'pregnancy' && ancLoaded && setupCount === null && (() => {
+          const ancInfo = getANCStartInfo();
+          const handleSaveYes = () => {
+            saveSetupCount(ancSetupCount);
+            if (ancSetupNextAppt) updateUser({ nextAppointmentDate: ancSetupNextAppt });
+          };
+          const handleSaveNo = () => saveSetupCount(0);
+
+          return (
+            <View style={[styles.ancSetupCard, { backgroundColor: theme.accent.gold.bg, borderColor: theme.accent.gold.border }]}>
+              <View style={styles.ancSetupHeaderRow}>
+                <View style={[styles.ancIconWrap, { backgroundColor: theme.accent.gold.border }]}>
+                  <Stethoscope size={18} color={theme.accent.gold.text} strokeWidth={1.75} />
+                </View>
+                <Text style={[styles.ancSetupTitle, { color: theme.text.primary }]}>Antenatal care</Text>
+              </View>
+
+              {ancSetupStep === 'question' && (
+                <View style={styles.ancSetupBody}>
+                  <Text style={[styles.ancSetupQuestion, { color: theme.text.secondary }]}>
+                    Have you started your antenatal visits?
+                  </Text>
+                  <View style={styles.ancSetupBtnRow}>
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      onPress={() => setAncSetupStep('yes')}
+                      style={[styles.ancSetupPrimaryBtn, { backgroundColor: theme.interactive.primary }]}
+                    >
+                      <Text style={styles.ancSetupPrimaryBtnLabel}>Yes, I have</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      onPress={() => setAncSetupStep('no')}
+                      style={[styles.ancSetupOutlineBtn, { borderColor: theme.accent.gold.text }]}
+                    >
+                      <Text style={[styles.ancSetupOutlineBtnLabel, { color: theme.text.primary }]}>Not yet</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
+              {ancSetupStep === 'yes' && (
+                <View style={styles.ancSetupBody}>
+                  <Text style={[styles.ancSetupQuestion, { color: theme.text.secondary }]}>
+                    How many visits have you had so far?
+                  </Text>
+                  <View style={styles.ancCounter}>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => setAncSetupCount(c => Math.max(0, c - 1))}
+                      style={[styles.ancCounterBtn, { borderColor: theme.border.default }]}
+                    >
+                      <Text style={[styles.ancCounterBtnLabel, { color: theme.text.primary }]}>−</Text>
+                    </TouchableOpacity>
+                    <Text style={[styles.ancCounterValue, { color: theme.text.primary }]}>{ancSetupCount}</Text>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => setAncSetupCount(c => Math.min(20, c + 1))}
+                      style={[styles.ancCounterBtn, { borderColor: theme.border.default }]}
+                    >
+                      <Text style={[styles.ancCounterBtnLabel, { color: theme.text.primary }]}>+</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <Text style={[styles.ancSetupQuestion, { color: theme.text.secondary, marginTop: Spacing[3] }]}>
+                    When is your next appointment?
+                  </Text>
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => setAncSetupShowCal(v => !v)}
+                    style={[styles.ancDateBtn, { borderColor: theme.border.default, backgroundColor: theme.bg.surface }]}
+                  >
+                    <Text style={[styles.ancDateBtnLabel, { color: ancSetupNextAppt ? theme.text.primary : theme.text.tertiary }]}>
+                      {ancSetupNextAppt
+                        ? new Date(ancSetupNextAppt + 'T12:00:00').toLocaleDateString('en-NG', { day: 'numeric', month: 'long', year: 'numeric' })
+                        : 'Select date (optional)'}
+                    </Text>
+                    {ancSetupShowCal
+                      ? <ChevronUp size={14} color={theme.text.tertiary} strokeWidth={2} />
+                      : <ChevronDown size={14} color={theme.text.tertiary} strokeWidth={2} />}
+                  </TouchableOpacity>
+                  {ancSetupShowCal && (
+                    <Calendar
+                      current={ancSetupNextAppt || new Date().toISOString().split('T')[0]}
+                      minDate={new Date().toISOString().split('T')[0]}
+                      onDayPress={(day: { dateString: string }) => {
+                        setAncSetupNextAppt(day.dateString);
+                        setAncSetupShowCal(false);
+                      }}
+                      markedDates={ancSetupNextAppt ? { [ancSetupNextAppt]: { selected: true, selectedColor: theme.interactive.primary } } : {}}
+                      theme={{
+                        backgroundColor: 'transparent',
+                        calendarBackground: 'transparent',
+                        todayTextColor: theme.interactive.primary,
+                        selectedDayBackgroundColor: theme.interactive.primary,
+                      }}
+                    />
+                  )}
+
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    onPress={handleSaveYes}
+                    style={[styles.ancSetupPrimaryBtn, { backgroundColor: theme.interactive.primary, marginTop: Spacing[3] }]}
+                  >
+                    <Text style={styles.ancSetupPrimaryBtnLabel}>Save →</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {ancSetupStep === 'no' && (
+                <View style={styles.ancSetupBody}>
+                  {ancInfo ? (
+                    <>
+                      <View style={[
+                        styles.ancStatusPill,
+                        ancInfo.status === 'upcoming' && { backgroundColor: theme.accent.sky.bg, borderColor: theme.accent.sky.border },
+                        ancInfo.status === 'now'      && { backgroundColor: theme.accent.sage.bg, borderColor: theme.accent.sage.border },
+                        ancInfo.status === 'late'     && { backgroundColor: theme.accent.rose.bg, borderColor: theme.accent.rose.border },
+                      ]}>
+                        <Text style={[
+                          styles.ancStatusPillLabel,
+                          ancInfo.status === 'upcoming' && { color: theme.accent.sky.text },
+                          ancInfo.status === 'now'      && { color: theme.accent.sage.text },
+                          ancInfo.status === 'late'     && { color: theme.accent.rose.text },
+                        ]}>
+                          {ancInfo.badge}
+                        </Text>
+                      </View>
+                      <Text style={[styles.ancSetupQuestion, { color: theme.text.secondary }]}>
+                        {ancInfo.message}
+                      </Text>
+                      <TouchableOpacity
+                        activeOpacity={0.85}
+                        onPress={handleSaveNo}
+                        style={[styles.ancSetupPrimaryBtn, { backgroundColor: theme.interactive.primary }]}
+                      >
+                        <Text style={styles.ancSetupPrimaryBtnLabel}>{ancInfo.cta}</Text>
+                      </TouchableOpacity>
+                    </>
+                  ) : (
+                    <>
+                      <Text style={[styles.ancSetupQuestion, { color: theme.text.secondary }]}>
+                        ANC is recommended as early as 8–12 weeks into pregnancy. When you're ready, we'll help you prepare.
+                      </Text>
+                      <TouchableOpacity
+                        activeOpacity={0.85}
+                        onPress={handleSaveNo}
+                        style={[styles.ancSetupPrimaryBtn, { backgroundColor: theme.interactive.primary }]}
+                      >
+                        <Text style={styles.ancSetupPrimaryBtnLabel}>Got it — I'll book soon</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </View>
+              )}
+            </View>
+          );
+        })()}
+
+        {/* ANC persistent reminder — shown while setupCount===0 and no visits logged yet */}
+        {user?.stage === 'pregnancy' && ancLoaded && setupCount === 0 && visits.length === 0 && (() => {
+          const ancInfo = getANCStartInfo();
+          if (!ancInfo) return null;
+          const currentWeek  = user.dueDate ? getGestationalWeek(new Date(user.dueDate)) : 0;
+          const accentBg     = ancInfo.status === 'upcoming' ? theme.accent.sky.bg     : ancInfo.status === 'now' ? theme.accent.sage.bg     : theme.accent.rose.bg;
+          const accentBorder = ancInfo.status === 'upcoming' ? theme.accent.sky.border : ancInfo.status === 'now' ? theme.accent.sage.border : theme.accent.rose.border;
+          const accentText   = ancInfo.status === 'upcoming' ? theme.accent.sky.text   : ancInfo.status === 'now' ? theme.accent.sage.text   : theme.accent.rose.text;
+          const shortMsg =
+            ancInfo.status === 'upcoming'
+              ? `You're at week ${currentWeek}. First ANC visit recommended at 8–12 weeks — ${8 - currentWeek} week${8 - currentWeek !== 1 ? 's' : ''} to go.`
+              : ancInfo.status === 'now'
+              ? `You're at week ${currentWeek} — now is the ideal window to book your first antenatal visit.`
+              : `You're at week ${currentWeek}. Book your first ANC visit as soon as you can.`;
+          const cta = ancInfo.status === 'upcoming' ? 'Prepare for week 8 →' : 'Log first visit →';
+          return (
+            <View style={[styles.ancReminderCard, { backgroundColor: accentBg, borderColor: accentBorder }]}>
+              <View style={[styles.ancStatusPill, { backgroundColor: accentBg, borderColor: accentBorder }]}>
+                <Text style={[styles.ancStatusPillLabel, { color: accentText }]}>{ancInfo.badge}</Text>
+              </View>
+              <Text style={[styles.ancReminderTitle, { color: theme.text.primary }]}>First antenatal visit</Text>
+              <Text style={[styles.ancReminderMsg, { color: theme.text.secondary }]}>{shortMsg}</Text>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() => navigation.navigate('ANCVisits')}
+                style={[styles.ancReminderBtn, { backgroundColor: theme.interactive.primary }]}
+              >
+                <Text style={styles.ancReminderBtnLabel}>{cta}</Text>
+              </TouchableOpacity>
+            </View>
+          );
+        })()}
+
+        {/* Consultation widget */}
+        <ConsultationWidget navigation={navigation} />
 
         {/* Chat Highlights */}
         {highlights.length > 0 && (
@@ -309,56 +592,30 @@ export default function HomeScreen({ navigation }: Props) {
           </View>
         )}
 
-        {/* Today — reminders + one-time tasks merged */}
-        {(pendingReminders.length > 0 || pendingTasks.length > 0) && (
+        {/* Pending one-time tasks from Neo */}
+        {pendingTasks.length > 0 && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Today</Text>
-            <View style={[styles.todayCard, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}>
-              {pendingReminders.map((r, i) => (
-                <TouchableOpacity
-                  key={r.id}
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    if (r.navigateTo) {
-                      navigation.navigate(r.navigateTo);
-                    } else {
-                      logReminder(r.id, r.resetAfterHours, r.label);
-                      if (r.id === 'log-feed')  incrementField('babyFeedings');
-                      if (r.id === 'log-nappy') incrementField('babyNappies');
-                    }
-                  }}
-                  style={[
-                    styles.todayRow,
-                    { borderTopColor: theme.border.subtle },
-                    i === 0 && { borderTopWidth: 0 },
-                  ]}
-                >
-                  <Text style={styles.todayEmoji}>{r.icon}</Text>
-                  <View style={styles.todayContent}>
-                    <Text style={[styles.todayLabel, { color: theme.text.primary }]}>{r.label}</Text>
-                    {r.note ? <Text style={[styles.todayNote, { color: theme.text.tertiary }]}>{r.note}</Text> : null}
-                  </View>
-                  <Circle size={20} color={theme.border.default} strokeWidth={2} />
-                </TouchableOpacity>
-              ))}
+            <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Tasks</Text>
+            <View style={[styles.taskCard, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}>
               {pendingTasks.map((task, i) => (
                 <TouchableOpacity
                   key={task.id}
                   activeOpacity={0.7}
                   onPress={() => toggleTask(task.id)}
                   style={[
-                    styles.todayRow,
+                    styles.taskRow,
                     { borderTopColor: theme.border.subtle },
-                    i === 0 && pendingReminders.length === 0 && { borderTopWidth: 0 },
+                    i === 0 && { borderTopWidth: 0 },
                   ]}
                 >
                   <Circle size={20} color={theme.border.default} strokeWidth={2} />
-                  <Text style={[styles.todayLabel, { color: theme.text.primary, flex: 1 }]}>{task.text}</Text>
+                  <Text style={[styles.taskLabel, { color: theme.text.primary, flex: 1 }]}>{task.text}</Text>
                 </TouchableOpacity>
               ))}
             </View>
           </View>
         )}
+
 
         {/* Appointment nudge card */}
         {showApptCard && (
@@ -749,38 +1006,30 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.sm,
     lineHeight: Typography.size.sm * 1.4,
   },
-  todayCard: {
+  // ── Tasks (one-time Neo tasks) ────────────────────────────────────────────────
+  taskCard: {
     borderRadius: Radius.xl,
     borderWidth: 1,
     overflow: 'hidden',
   },
-  todayRow: {
+  taskRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing[3],
     padding: Spacing[4],
     borderTopWidth: StyleSheet.hairlineWidth,
   },
-  todayEmoji: {
-    fontSize: Typography.size.lg,
-    lineHeight: Typography.size.lg * 1.4,
-  },
-  todayContent: {
-    flex: 1,
-    gap: Spacing[1],
-  },
-  todayLabel: {
+  taskLabel: {
     fontFamily: Typography.fontFamily.bodySemibold,
     fontSize: Typography.size.sm,
   },
-  todayLabelDone: {
-    textDecorationLine: 'line-through',
-    opacity: 0.7,
-  },
-  todayNote: {
-    fontFamily: Typography.fontFamily.body,
-    fontSize: Typography.size.xs,
-    lineHeight: Typography.size.xs * 1.5,
+
+  // ── Goal story circles ────────────────────────────────────────────────────────
+  storyRow: {
+    flexDirection: 'row',
+    gap:           Spacing[5],
+    paddingLeft:   Spacing[1],
+    paddingRight:  Spacing[5],
   },
   journalRow: { gap: Spacing[3], paddingRight: Spacing[5] },
   journalCard: {
@@ -860,6 +1109,144 @@ const styles = StyleSheet.create({
     borderRadius: Radius.full,
   },
   apptCardBtnLabel: {
+    fontFamily: Typography.fontFamily.bodySemibold,
+    fontSize: Typography.size.sm,
+    color: '#fff',
+  },
+  // ANC setup gateway card
+  ancSetupCard: {
+    borderRadius: Radius.xl,
+    borderWidth: 1,
+    padding: Spacing[4],
+    gap: Spacing[4],
+  },
+  ancSetupHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[3],
+  },
+  ancIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ancSetupTitle: {
+    fontFamily: Typography.fontFamily.bodyBold,
+    fontSize: Typography.size.base,
+  },
+  ancSetupBody: {
+    gap: Spacing[3],
+  },
+  ancSetupQuestion: {
+    fontFamily: Typography.fontFamily.body,
+    fontSize: Typography.size.sm,
+    lineHeight: Typography.size.sm * 1.55,
+  },
+  ancSetupBtnRow: {
+    flexDirection: 'row',
+    gap: Spacing[3],
+  },
+  ancSetupPrimaryBtn: {
+    flex: 1,
+    paddingVertical: Spacing[3],
+    paddingHorizontal: Spacing[4],
+    borderRadius: Radius.full,
+    alignItems: 'center',
+  },
+  ancSetupPrimaryBtnLabel: {
+    fontFamily: Typography.fontFamily.bodySemibold,
+    fontSize: Typography.size.sm,
+    color: '#fff',
+  },
+  ancSetupOutlineBtn: {
+    flex: 1,
+    paddingVertical: Spacing[3],
+    paddingHorizontal: Spacing[4],
+    borderRadius: Radius.full,
+    borderWidth: 1.5,
+    alignItems: 'center',
+  },
+  ancSetupOutlineBtnLabel: {
+    fontFamily: Typography.fontFamily.bodySemibold,
+    fontSize: Typography.size.sm,
+  },
+  ancCounter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[4],
+  },
+  ancCounterBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.full,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ancCounterBtnLabel: {
+    fontFamily: Typography.fontFamily.bodyBold,
+    fontSize: Typography.size.lg,
+    lineHeight: Typography.size.lg * 1.2,
+  },
+  ancCounterValue: {
+    fontFamily: Typography.fontFamily.display,
+    fontSize: Typography.size['2xl'],
+    minWidth: 32,
+    textAlign: 'center',
+  },
+  ancDateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderRadius: Radius.lg,
+    paddingVertical: Spacing[3],
+    paddingHorizontal: Spacing[4],
+    gap: Spacing[2],
+  },
+  ancDateBtnLabel: {
+    fontFamily: Typography.fontFamily.bodySemibold,
+    fontSize: Typography.size.sm,
+    flex: 1,
+  },
+  ancStatusPill: {
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing[3],
+    paddingVertical: Spacing[1],
+  },
+  ancStatusPillLabel: {
+    fontFamily: Typography.fontFamily.bodySemibold,
+    fontSize: Typography.size.xs,
+  },
+  // ANC persistent reminder card
+  ancReminderCard: {
+    borderRadius: Radius.xl,
+    borderWidth: 1,
+    padding: Spacing[4],
+    gap: Spacing[2],
+  },
+  ancReminderTitle: {
+    fontFamily: Typography.fontFamily.bodyBold,
+    fontSize: Typography.size.base,
+    marginTop: Spacing[1],
+  },
+  ancReminderMsg: {
+    fontFamily: Typography.fontFamily.body,
+    fontSize: Typography.size.sm,
+    lineHeight: Typography.size.sm * 1.55,
+  },
+  ancReminderBtn: {
+    alignSelf: 'flex-start',
+    marginTop: Spacing[2],
+    paddingVertical: Spacing[2],
+    paddingHorizontal: Spacing[4],
+    borderRadius: Radius.full,
+  },
+  ancReminderBtnLabel: {
     fontFamily: Typography.fontFamily.bodySemibold,
     fontSize: Typography.size.sm,
     color: '#fff',
