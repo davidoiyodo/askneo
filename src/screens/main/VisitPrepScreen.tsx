@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Calendar as RNCalendar } from 'react-native-calendars';
 import {
   ChevronLeft, Plus, X, Calendar, Pill, ClipboardList, CheckSquare,
   AlertTriangle, FileText, ShoppingBag, CheckCircle, Activity,
@@ -227,6 +228,7 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
   const [sessions, setSessions] = useState<ConsultationSession[]>([]);
   const [healthEvents, setHealthEvents] = useState<HealthEvent[]>([]);
   const [newQuestion, setNewQuestion] = useState('');
+  const [showApptPicker, setShowApptPicker] = useState(false);
 
   // Convert map to sorted array for display
   const symptomLogs: DailyLog[] = Object.values(logsMap).sort(
@@ -267,8 +269,12 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
     });
   }, []);
 
-  // Filter to period since last visit
-  const lastVisitDate = user?.lastVisitDate ? new Date(user.lastVisitDate) : null;
+  // For pregnancy users, anchor the window to the most recent ANC visit date.
+  // For all others, use the manually-marked lastVisitDate.
+  const lastVisitDateStr = (user?.stage === 'pregnancy' && ancVisits.length > 0)
+    ? ancVisits[0].date
+    : (user?.lastVisitDate ?? null);
+  const lastVisitDate = lastVisitDateStr ? new Date(lastVisitDateStr) : null;
 
   const periodSessions = lastVisitDate
     ? sessions.filter(s => new Date(s.date) > lastVisitDate)
@@ -361,8 +367,8 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
         <View style={styles.header}>
           <Text style={[styles.title, { color: theme.text.primary }]}>Visit Prep</Text>
           <Text style={[styles.subtitle, { color: theme.text.secondary }]}>
-            {lastVisitDate
-              ? `Since your last visit on ${formatDate(user!.lastVisitDate!)}`
+            {lastVisitDateStr
+              ? `Since your last visit on ${formatDate(lastVisitDateStr)}`
               : 'A summary of your health conversations and consultations'}
           </Text>
         </View>
@@ -827,13 +833,60 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
           </View>
         </View>
 
-        {/* Mark visit complete */}
-        <View style={[styles.markSection, { borderTopColor: theme.border.subtle }]}>
-          <Button label="Mark visit complete" onPress={handleMarkComplete} size="md" />
-          <Text style={[styles.markNote, { color: theme.text.tertiary }]}>
-            Resets this summary for your next appointment
-          </Text>
-        </View>
+        {/* Next appointment setter — non-pregnancy users only, shown when no date is set */}
+        {user?.stage !== 'pregnancy' && !nextAppt && (
+          <View style={[styles.section, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.border.subtle, paddingTop: Spacing[5] }]}>
+            <View style={styles.sectionHeader}>
+              <Calendar size={15} color={theme.text.brand} strokeWidth={2} />
+              <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Next appointment</Text>
+            </View>
+            <Text style={[styles.sectionNote, { color: theme.text.secondary }]}>
+              Set a date so the app can remind you and prep a summary before you go.
+            </Text>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setShowApptPicker(v => !v)}
+              style={[styles.apptSetRow, { backgroundColor: theme.bg.surface, borderColor: theme.border.default }]}
+            >
+              <Calendar size={15} color={theme.text.secondary} strokeWidth={2} />
+              <Text style={[styles.apptSetLabel, { color: theme.text.secondary }]}>
+                {showApptPicker ? 'Hide calendar' : 'Pick a date'}
+              </Text>
+            </TouchableOpacity>
+            {showApptPicker && (
+              <RNCalendar
+                minDate={new Date().toISOString().split('T')[0]}
+                onDayPress={(day: { dateString: string }) => {
+                  updateUser({ nextAppointmentDate: day.dateString });
+                  setShowApptPicker(false);
+                }}
+                theme={{
+                  backgroundColor: theme.bg.surface,
+                  calendarBackground: theme.bg.surface,
+                  textSectionTitleColor: theme.text.secondary,
+                  selectedDayBackgroundColor: theme.interactive.primary,
+                  selectedDayTextColor: '#ffffff',
+                  todayTextColor: theme.text.brand,
+                  dayTextColor: theme.text.primary,
+                  textDisabledColor: theme.text.tertiary,
+                  arrowColor: theme.interactive.primary,
+                  monthTextColor: theme.text.primary,
+                }}
+                style={{ borderRadius: 12, overflow: 'hidden' }}
+              />
+            )}
+          </View>
+        )}
+
+        {/* Mark visit complete — only for non-pregnancy users; pregnancy window resets automatically via ANC visits */}
+        {user?.stage !== 'pregnancy' && (
+          <View style={[styles.markSection, { borderTopColor: theme.border.subtle }]}>
+            <Button label="Mark visit complete" onPress={handleMarkComplete} size="md" />
+            <Text style={[styles.markNote, { color: theme.text.tertiary }]}>
+              Resets this summary for your next appointment
+            </Text>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
     </KeyboardAvoidingView>
@@ -1122,5 +1175,19 @@ const styles = StyleSheet.create({
     fontFamily: Typography.fontFamily.bodySemibold,
     fontSize: Typography.size.xs,
     flexShrink: 0,
+  },
+  apptSetRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[2],
+    paddingVertical: Spacing[3],
+    paddingHorizontal: Spacing[4],
+    borderRadius: Radius.xl,
+    borderWidth: 1.5,
+    alignSelf: 'flex-start',
+  },
+  apptSetLabel: {
+    fontFamily: Typography.fontFamily.bodyMedium,
+    fontSize: Typography.size.sm,
   },
 });

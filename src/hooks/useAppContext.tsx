@@ -215,7 +215,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   const markVisitComplete = () => {
     updateUser({
-      lastVisitDate: new Date().toISOString().split('T')[0],
+      // For pregnancy users, lastVisitDate is derived from ANC visits — don't overwrite it
+      ...(user?.stage !== 'pregnancy' ? { lastVisitDate: new Date().toISOString().split('T')[0] } : {}),
       nextAppointmentDate: undefined,
       visitPrepQuestions: undefined,
     });

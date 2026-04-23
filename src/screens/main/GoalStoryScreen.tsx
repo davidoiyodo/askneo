@@ -111,16 +111,25 @@ export default function GoalStoryScreen({ navigation, route }: Props) {
 
   // ── Mark done (one-way — undo available in full details view) ───────────────
 
-  const handleMarkDone = () => {
-    if (done) return;
+  const markDoneWithAnimation = () => {
     completeItem(item.id);
     Animated.sequence([
       Animated.timing(doneAnim, { toValue: 1, duration: 120, useNativeDriver: true }),
       Animated.timing(doneAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
     ]).start(() => {
-      // Collapse right slot — Mark done button is gone, input fills full width
       Animated.spring(slotWidthAnim, { toValue: 0, useNativeDriver: false, tension: 280, friction: 24 }).start();
     });
+  };
+
+  const handleMarkDone = () => {
+    if (done) return;
+    markDoneWithAnimation();
+  };
+
+  const handleDoIt = () => {
+    if (!item.navigateTo) return;
+    if (!done) markDoneWithAnimation();
+    navigation.navigate(item.navigateTo);
   };
 
   const doneFlashOpacity = doneAnim.interpolate({
@@ -268,7 +277,7 @@ export default function GoalStoryScreen({ navigation, route }: Props) {
             {/* Right slot — always present so send button is reachable even when done */}
             <Animated.View style={[styles.rightSlot, { width: slotWidthAnim }]}>
 
-              {/* Mark done — only when not yet done, fades out when input focused */}
+              {/* Action button — only when not yet done, fades out when input focused */}
               {!done && (
                 <Animated.View
                   style={[
@@ -279,10 +288,12 @@ export default function GoalStoryScreen({ navigation, route }: Props) {
                 >
                   <TouchableOpacity
                     activeOpacity={0.85}
-                    onPress={handleMarkDone}
+                    onPress={item.navigateTo ? handleDoIt : handleMarkDone}
                     style={styles.doneBtn}
                   >
-                    <Text style={styles.doneBtnText}>Mark done</Text>
+                    <Text style={styles.doneBtnText}>
+                      {item.navigateTo ? 'Do it →' : 'Mark done'}
+                    </Text>
                   </TouchableOpacity>
                 </Animated.View>
               )}

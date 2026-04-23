@@ -15,6 +15,7 @@ import { Calendar } from 'react-native-calendars';
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext } from '../../hooks/useAppContext';
 import { useANCVisits, ANCVisit, UrineResult, BinaryResult, HIVStatus } from '../../hooks/useANCVisits';
+import { useRoutine } from '../../hooks/useRoutine';
 import { getGestationalWeek } from '../../utils/chatEngine';
 import { Typography, Spacing, Radius } from '../../theme';
 
@@ -151,6 +152,7 @@ export default function ANCVisitsScreen({ navigation }: { navigation: any }) {
   const { theme } = useTheme();
   const { user, updateUser } = useAppContext();
   const { visits, setupCount, loaded, nextAppointment, totalVisitCount, saveVisit, deleteVisit, saveSetupCount } = useANCVisits();
+  const { completeItem } = useRoutine();
 
   // ── Screen mode ─────────────────────────────────────────────────────────────
   const [mode, setMode] = useState<ScreenMode>('list');
@@ -284,11 +286,16 @@ export default function ANCVisitsScreen({ navigation }: { navigation: any }) {
     };
     saveVisit(visit);
 
+    // Auto-complete the antenatal attendance routine item for new visits (not edits)
+    if (editingId === null) completeItem('antenatal-attendance');
+
     // Sync nextAppointmentDate to user profile so HomeScreen nudge works
+    // lastVisitDate is intentionally NOT set here — VisitPrepScreen derives it from ancVisits directly
+    // For new visits (not edits), also clear the Visit Prep question list so it resets for the next appointment
     if (nextApptDate && nextApptDate !== user?.nextAppointmentDate) {
-      updateUser({ nextAppointmentDate: nextApptDate, lastVisitDate: visitDate });
-    } else if (visitDate) {
-      updateUser({ lastVisitDate: visitDate });
+      updateUser({ nextAppointmentDate: nextApptDate, ...(editingId === null ? { visitPrepQuestions: undefined } : {}) });
+    } else if (editingId === null) {
+      updateUser({ visitPrepQuestions: undefined });
     }
 
     setSaving(false);

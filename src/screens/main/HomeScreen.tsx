@@ -153,8 +153,12 @@ export default function HomeScreen({ navigation }: Props) {
   const daysUntilAppt = user?.nextAppointmentDate
     ? Math.ceil((new Date(user.nextAppointmentDate).getTime() - Date.now()) / 86400000)
     : null;
-  const showApptCard = daysUntilAppt !== null && daysUntilAppt >= 0 && daysUntilAppt <= 7 && !apptCardDismissed;
-  const apptDaysLabel = daysUntilAppt === 0 ? 'today' : daysUntilAppt === 1 ? 'tomorrow' : `in ${daysUntilAppt} days`;
+  const isApptToday     = daysUntilAppt === 0;
+  const isApptUpcoming  = daysUntilAppt !== null && daysUntilAppt > 0 && daysUntilAppt <= 7;
+  const isApptPassed    = daysUntilAppt !== null && daysUntilAppt < 0 && daysUntilAppt >= -3;
+  const showApptCard    = (isApptToday || isApptUpcoming || isApptPassed) && !apptCardDismissed;
+  const apptDaysLabel   = daysUntilAppt === 1 ? 'tomorrow' : `in ${daysUntilAppt} days`;
+  const isPregnancy     = user?.stage === 'pregnancy';
   useEffect(() => {
     AsyncStorage.getItem('askneo_dismissed_prompts').then(val => {
       if (val) setDismissedIds(JSON.parse(val));
@@ -619,21 +623,71 @@ export default function HomeScreen({ navigation }: Props) {
 
         {/* Appointment nudge card */}
         {showApptCard && (
-          <View style={[styles.apptCard, { backgroundColor: theme.accent.gold.bg, borderColor: theme.accent.gold.border }]}>
+          <View style={[styles.apptCard, {
+            backgroundColor: isApptToday ? theme.accent.sage.bg : isApptPassed ? theme.accent.peach.bg : theme.accent.gold.bg,
+            borderColor: isApptToday ? theme.accent.sage.border : isApptPassed ? theme.accent.peach.border : theme.accent.gold.border,
+          }]}>
             <View style={styles.apptCardLeft}>
-              <Text style={[styles.apptCardTitle, { color: theme.text.primary }]}>
-                Your appointment is {apptDaysLabel}
-              </Text>
-              <Text style={[styles.apptCardBody, { color: theme.text.secondary }]}>
-                Want to see what to discuss with your doctor?
-              </Text>
-              <TouchableOpacity
-                activeOpacity={0.85}
-                onPress={() => navigation.navigate('VisitPrep')}
-                style={[styles.apptCardBtn, { backgroundColor: theme.interactive.primary }]}
-              >
-                <Text style={styles.apptCardBtnLabel}>See visit prep →</Text>
-              </TouchableOpacity>
+              {isApptToday ? (
+                <>
+                  <Text style={[styles.apptCardTitle, { color: theme.text.primary }]}>
+                    {isPregnancy ? 'Today is your antenatal visit' : 'Your appointment is today'}
+                  </Text>
+                  <Text style={[styles.apptCardBody, { color: theme.text.secondary }]}>
+                    {isPregnancy
+                      ? 'Did you attend? Log how it went so NEO can track your progress and prepare for the next one.'
+                      : 'How did it go? Tell NEO about it so it can help you stay on top of your health.'}
+                  </Text>
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    onPress={() => navigation.navigate(isPregnancy ? 'ANCVisits' : 'AskNeo')}
+                    style={[styles.apptCardBtn, { backgroundColor: theme.interactive.primary }]}
+                  >
+                    <Text style={styles.apptCardBtnLabel}>{isPregnancy ? 'Log this visit →' : 'Tell NEO →'}</Text>
+                  </TouchableOpacity>
+                </>
+              ) : isApptPassed ? (
+                <>
+                  <Text style={[styles.apptCardTitle, { color: theme.text.primary }]}>
+                    {isPregnancy ? 'Did you attend your antenatal visit?' : 'You had an appointment recently'}
+                  </Text>
+                  <Text style={[styles.apptCardBody, { color: theme.text.secondary }]}>
+                    Log how it went while it's fresh — it helps NEO track your progress and prepare better questions for next time.
+                  </Text>
+                  <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      onPress={() => navigation.navigate(isPregnancy ? 'ANCVisits' : 'AskNeo')}
+                      style={[styles.apptCardBtn, { backgroundColor: theme.interactive.primary }]}
+                    >
+                      <Text style={styles.apptCardBtnLabel}>{isPregnancy ? 'Log visit →' : 'Tell NEO →'}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      onPress={() => { updateUser({ nextAppointmentDate: undefined }); setApptCardDismissed(true); }}
+                      style={[styles.apptCardBtn, { backgroundColor: 'transparent', borderWidth: 1, borderColor: theme.border.default }]}
+                    >
+                      <Text style={[styles.apptCardBtnLabel, { color: theme.text.secondary }]}>Dismiss</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              ) : (
+                <>
+                  <Text style={[styles.apptCardTitle, { color: theme.text.primary }]}>
+                    Your appointment is {apptDaysLabel}
+                  </Text>
+                  <Text style={[styles.apptCardBody, { color: theme.text.secondary }]}>
+                    Want to see what to discuss with your doctor?
+                  </Text>
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    onPress={() => navigation.navigate('VisitPrep')}
+                    style={[styles.apptCardBtn, { backgroundColor: theme.interactive.primary }]}
+                  >
+                    <Text style={styles.apptCardBtnLabel}>See visit prep →</Text>
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
             <TouchableOpacity
               onPress={() => setApptCardDismissed(true)}

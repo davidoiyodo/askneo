@@ -42,6 +42,7 @@ export const ROUTINE_ITEMS: RoutineItem[] = [
     weekRange: { min: 28 },
     frequency: 'daily',
     completionType: 'count',
+    navigateTo: 'SymptomLog',
     note: 'If you don\'t reach 10 movements in 2 hours, call your midwife or doctor immediately — do not wait.',
   },
   {
@@ -54,6 +55,7 @@ export const ROUTINE_ITEMS: RoutineItem[] = [
     stage: ['pregnancy'],
     frequency: 'daily',
     completionType: 'checkbox',
+    navigateTo: 'SymptomLog',
   },
   {
     id: 'danger-signs-awareness',
@@ -87,6 +89,7 @@ export const ROUTINE_ITEMS: RoutineItem[] = [
     stage: ['pregnancy'],
     frequency: 'weekly',
     completionType: 'checkbox',
+    navigateTo: 'ANCVisits',
   },
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -332,6 +335,7 @@ export const ROUTINE_ITEMS: RoutineItem[] = [
     stage: ['pregnancy'],
     frequency: 'daily',
     completionType: 'checkbox',
+    navigateTo: 'SymptomLog',
   },
   {
     id: 'magnesium-intake',
@@ -509,6 +513,7 @@ export const ROUTINE_ITEMS: RoutineItem[] = [
     frequency: 'daily',
     completionType: 'checkbox',
     requiresFeedingIntention: 'breast',
+    navigateTo: 'SymptomLog',
   },
   {
     id: 'nursing-nutrition',
@@ -676,6 +681,7 @@ export const ROUTINE_ITEMS: RoutineItem[] = [
     stage: ['newmom'],
     frequency: 'daily',
     completionType: 'checkbox',
+    navigateTo: 'SymptomLog',
   },
   {
     id: 'wound-care',
@@ -728,6 +734,7 @@ export const ROUTINE_ITEMS: RoutineItem[] = [
     stage: ['ttc'],
     frequency: 'daily',
     completionType: 'checkbox',
+    navigateTo: 'SymptomLog',
     note: 'BBT must be taken at the same time each morning after at least 3 hours of uninterrupted sleep to be accurate.',
   },
   {
@@ -836,6 +843,7 @@ export const ROUTINE_ITEMS: RoutineItem[] = [
     stage: ['partner'],
     frequency: 'weekly',
     completionType: 'checkbox',
+    navigateTo: 'ANCVisits',
   },
   {
     id: 'partner-danger-signs',
@@ -933,6 +941,7 @@ export const ROUTINE_ITEMS: RoutineItem[] = [
     stage: ['pregnancy'],
     frequency: 'daily',
     completionType: 'checkbox',
+    navigateTo: 'SymptomLog',
   },
 
   {
@@ -1006,6 +1015,7 @@ export const ROUTINE_ITEMS: RoutineItem[] = [
     stage: ['newmom'],
     frequency: 'daily',
     completionType: 'checkbox',
+    navigateTo: 'SymptomLog',
   },
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -1045,6 +1055,7 @@ export const ROUTINE_ITEMS: RoutineItem[] = [
     stage: ['ttc'],
     frequency: 'daily',
     completionType: 'checkbox',
+    navigateTo: 'SymptomLog',
   },
 
   {

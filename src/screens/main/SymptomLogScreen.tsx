@@ -259,13 +259,21 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
     if (isPregnancy && kickCount !== null && kickCount > 0) completeItem('kick-count');
     if (medications.some(m => /prenatal|vitamin|supplement/i.test(m.name))) completeItem('prenatal-vitamins');
     if (isNewmom && medications.some(m => /iron/i.test(m.name))) completeItem('postnatal-iron');
+    if (isTTC && medications.some(m => /folic|folate/i.test(m.name))) completeItem('ttc-folic-acid');
+    if (isTTC && medications.some(m => /vitamin|supplement|preconception/i.test(m.name))) completeItem('ttc-vitamins');
     if (isNewmom && babyFeedings !== null && babyFeedings > 0) completeItem('log-feed');
     if (isNewmom && babyNappies !== null && babyNappies > 0)   completeItem('log-nappy');
     if (isNewmom && babySleepHours !== null)                   completeItem('log-baby-sleep');
     if (isTTC) completeItem('ttc-cycle-log');
+    // Hydration — any water glasses logged
+    if (waterGlasses !== null && waterGlasses > 0) {
+      if (isPregnancy) { completeItem('pregnancy-water'); completeItem('hydration'); }
+      if (isNewmom)    { completeItem('newmom-water'); completeItem('nursing-hydration'); }
+      if (isTTC)         completeItem('ttc-water');
+    }
 
     Alert.alert('Saved ✓', todayLog ? 'Today\'s entry updated.' : 'Diary entry saved.');
-  }, [canSave, todayKey, stage, mood, energy, symptoms, symptomSeverity, medications, sleepHours, sleepQuality, kickCount, babyFeedings, babyNappies, babySleepHours, babyMood, babySymptoms, babySymSeverity, notes, isPregnancy, isNewmom, isTTC, saveDayLog, todayLog, completeItem]);
+  }, [canSave, todayKey, stage, mood, energy, symptoms, symptomSeverity, medications, sleepHours, sleepQuality, kickCount, babyFeedings, babyNappies, babySleepHours, babyMood, babySymptoms, babySymSeverity, notes, waterGlasses, isPregnancy, isNewmom, isTTC, saveDayLog, todayLog, completeItem]);
 
 
   // ── Calendar helpers ─────────────────────────────────────────────────────────

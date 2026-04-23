@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Audio } from 'expo-av';
 import { ChevronLeft, Mic, Square, Shield } from 'lucide-react-native';
 import { useTheme } from '../../theme/ThemeContext';
+import { useAppContext } from '../../hooks/useAppContext';
 import { Typography, Spacing, Radius } from '../../theme';
 import Button from '../../components/ui/Button';
 import { ConsultationSession, SessionType } from '../../types/consultation';
@@ -123,6 +124,7 @@ type Phase = 'consent' | 'recording' | 'processing';
 
 export default function RecordConsultationScreen({ navigation }: { navigation: any }) {
   const { theme } = useTheme();
+  const { updateUser } = useAppContext();
   const [phase, setPhase] = useState<Phase>('consent');
   const [sessionType, setSessionType] = useState<SessionType>('doctor');
   const [scanType, setScanType] = useState('');
@@ -211,6 +213,11 @@ export default function RecordConsultationScreen({ navigation }: { navigation: a
     const done = await mockExtract(session);
     const updated = all.map(s => s.id === done.id ? done : s);
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+
+    // Sync extracted next appointment to user profile so HomeScreen and VisitPrep pick it up
+    if (done.extractedData?.nextAppointment) {
+      updateUser({ nextAppointmentDate: done.extractedData.nextAppointment.split('T')[0] });
+    }
 
     navigation.replace('ConsultationDetail', { sessionId: done.id });
   };

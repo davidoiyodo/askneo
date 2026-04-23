@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet, Image, FlatList,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, Image, FlatList, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, ShoppingCart, Heart } from 'lucide-react-native';
+import { ChevronLeft, ShoppingCart, Heart, Plus, Trash2 } from 'lucide-react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext } from '../../hooks/useAppContext';
 import { Typography, Spacing, Radius, Shadow, Colors } from '../../theme';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import BuildBundleModal from '../../components/modals/BuildBundleModal';
+import ListItemModal from '../../components/modals/ListItemModal';
 import { bundles, p2pItems, bundleCatalog, Product, BundleItem } from '../../data/neostore';
+import { useP2PListings, UserListing } from '../../hooks/useP2PListings';
 
 const SHOP_CATEGORIES = ['Feeding', 'Clothing', 'Hygiene', 'Health', 'Comfort', 'Sleep'] as const;
 
@@ -80,10 +82,24 @@ export default function NeoStoreScreen({ navigation }: { navigation: any }) {
   const HERO_TEXT   = [theme.accent.rose.text, theme.accent.peach.text, theme.accent.sage.text, theme.accent.gold.text];
   const AVATAR_COLORS = [theme.accent.rose.bg, theme.accent.sky.bg, theme.accent.sage.bg, theme.accent.gold.bg, theme.accent.peach.bg];
 
+  const { listings: myListings, addListing, removeListing } = useP2PListings();
+
   const [activeSection, setActiveSection] = useState<'shop' | 'bundles' | 'p2p'>('shop');
+  const [p2pView, setP2pView] = useState<'browse' | 'mine'>('browse');
   const [activeShopCat, setActiveShopCat] = useState<string>('All');
   const [expandedBundles, setExpandedBundles] = useState<Set<string>>(new Set());
   const [buildBundleVisible, setBuildBundleVisible] = useState(false);
+  const [listItemVisible, setListItemVisible] = useState(false);
+
+  const conditionLabel = (c: UserListing['condition']) =>
+    c === 'like-new' ? 'Like new' : c === 'good' ? 'Good' : 'Fair';
+
+  const confirmRemoveListing = (id: string) => {
+    Alert.alert('Remove listing', 'Remove this item from P2P?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Remove', style: 'destructive', onPress: () => removeListing(id) },
+    ]);
+  };
 
   const formatPrice = (p: Product) =>
     p.price === 0 ? 'Custom pricing' : `${p.currency}${p.price.toLocaleString()}`;
@@ -404,61 +420,140 @@ export default function NeoStoreScreen({ navigation }: { navigation: any }) {
           </View>
         ) : (
           <View style={styles.productList}>
-            <Text style={[styles.p2pNote, { color: theme.text.secondary }]}>
-              Parents listing items they no longer need. Pay only the delivery fee to claim.
-            </Text>
-            {p2pItems.map((item, i) => (
-              <Card key={item.id} style={styles.productCard} padding="none">
-                {/* Image carousel */}
-                <View style={styles.carouselWrap}>
-                  <ImageCarousel images={item.images ?? []} height={180} />
-                  <View style={[styles.freeBadge, { backgroundColor: theme.accent.sage.bg }]}>
-                    <Text style={[styles.freeBadgeText, { color: theme.accent.sage.text }]}>FREE</Text>
-                  </View>
+            {/* P2P sub-tab row */}
+            <View style={styles.p2pTabRow}>
+              <View style={[styles.p2pTabPills, { backgroundColor: theme.bg.subtle }]}>
+                {(['browse', 'mine'] as const).map(v => (
                   <TouchableOpacity
-                    onPress={() => toggleWishlist(item)}
+                    key={v}
+                    onPress={() => setP2pView(v)}
                     activeOpacity={0.7}
-                    style={[styles.carouselHeartBtn, { backgroundColor: theme.bg.surface }]}
+                    style={[
+                      styles.p2pTabPill,
+                      p2pView === v && [styles.p2pTabPillActive, { backgroundColor: theme.bg.surface, ...Shadow.sm }],
+                    ]}
                   >
-                    <Heart
-                      size={16}
-                      color={isWishlisted(item.id) ? Colors.accent.rose.text : theme.text.tertiary}
-                      fill={isWishlisted(item.id) ? Colors.accent.rose.text : 'none'}
-                      strokeWidth={2}
-                    />
+                    <Text style={[
+                      styles.p2pTabPillLabel,
+                      { color: p2pView === v ? theme.text.brand : theme.text.tertiary },
+                    ]}>
+                      {v === 'browse' ? 'Browse' : `My listings${myListings.length > 0 ? ` (${myListings.length})` : ''}`}
+                    </Text>
                   </TouchableOpacity>
-                </View>
+                ))}
+              </View>
+              {p2pView === 'browse' && (
+                <TouchableOpacity
+                  onPress={() => setListItemVisible(true)}
+                  activeOpacity={0.8}
+                  style={[styles.listItemBtn, { backgroundColor: theme.interactive.primary }]}
+                >
+                  <Plus size={14} color="#fff" strokeWidth={2.5} />
+                  <Text style={styles.listItemBtnLabel}>List item</Text>
+                </TouchableOpacity>
+              )}
+            </View>
 
-                <View style={styles.p2pCardBody}>
-                  <View style={styles.p2pHeader}>
-                    <View style={[styles.p2pAvatar, { backgroundColor: AVATAR_COLORS[i % AVATAR_COLORS.length] }]}>
-                      <Text style={[styles.p2pAvatarText, { color: HERO_TEXT[i % HERO_TEXT.length] }]}>{item.p2pUser?.[0] ?? 'U'}</Text>
+            {p2pView === 'browse' ? (
+              <>
+                <Text style={[styles.p2pNote, { color: theme.text.secondary }]}>
+                  Parents listing items they no longer need. Pay only the delivery fee to claim.
+                </Text>
+                {p2pItems.map((item, i) => (
+                  <Card key={item.id} style={styles.productCard} padding="none">
+                    <View style={styles.carouselWrap}>
+                      <ImageCarousel images={item.images ?? []} height={180} />
+                      <View style={[styles.freeBadge, { backgroundColor: theme.accent.sage.bg }]}>
+                        <Text style={[styles.freeBadgeText, { color: theme.accent.sage.text }]}>FREE</Text>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => toggleWishlist(item)}
+                        activeOpacity={0.7}
+                        style={[styles.carouselHeartBtn, { backgroundColor: theme.bg.surface }]}
+                      >
+                        <Heart
+                          size={16}
+                          color={isWishlisted(item.id) ? Colors.accent.rose.text : theme.text.tertiary}
+                          fill={isWishlisted(item.id) ? Colors.accent.rose.text : 'none'}
+                          strokeWidth={2}
+                        />
+                      </TouchableOpacity>
                     </View>
-                    <View style={styles.p2pUserInfo}>
-                      <Text style={[styles.p2pUser, { color: theme.text.secondary }]}>{item.p2pUser}</Text>
-                      <Text style={[styles.p2pLocation, { color: theme.text.tertiary }]}>📍 {item.p2pLocation}</Text>
+
+                    <View style={styles.p2pCardBody}>
+                      <View style={styles.p2pHeader}>
+                        <View style={[styles.p2pAvatar, { backgroundColor: AVATAR_COLORS[i % AVATAR_COLORS.length] }]}>
+                          <Text style={[styles.p2pAvatarText, { color: HERO_TEXT[i % HERO_TEXT.length] }]}>{item.p2pUser?.[0] ?? 'U'}</Text>
+                        </View>
+                        <View style={styles.p2pUserInfo}>
+                          <Text style={[styles.p2pUser, { color: theme.text.secondary }]}>{item.p2pUser}</Text>
+                          <Text style={[styles.p2pLocation, { color: theme.text.tertiary }]}>📍 {item.p2pLocation}</Text>
+                        </View>
+                      </View>
+                      <View style={styles.p2pNameDesc}>
+                        <Text style={[styles.cardName, { color: theme.text.primary, fontSize: Typography.size.base }]}>{item.name}</Text>
+                        <Text style={[styles.cardDesc, { color: theme.text.secondary }]}>{item.description}</Text>
+                      </View>
+                      <View style={[styles.cardFooter, { borderTopColor: theme.border.subtle }]}>
+                        <View>
+                          <Text style={[styles.p2pPriceLabel, { color: theme.text.tertiary }]}>Item is free</Text>
+                          <Text style={[styles.p2pLogistics, { color: theme.text.secondary }]}>
+                            Logistics: <Text style={{ color: theme.text.primary, fontFamily: Typography.fontFamily.bodyBold }}>{item.currency}{(item.logisticsPrice ?? 0).toLocaleString()}</Text>
+                          </Text>
+                        </View>
+                        {cart[item.id] ? (
+                          <InCartPill onPress={() => navigation.navigate('Cart')} label="✓ Claimed" />
+                        ) : (
+                          <Button label="Claim item" onPress={() => addToCart(item)} size="sm" />
+                        )}
+                      </View>
                     </View>
+                  </Card>
+                ))}
+              </>
+            ) : (
+              <>
+                {myListings.length === 0 ? (
+                  <View style={[styles.emptyState, { backgroundColor: theme.bg.subtle }]}>
+                    <Text style={[styles.emptyStateTitle, { color: theme.text.primary }]}>No listings yet</Text>
+                    <Text style={[styles.emptyStateBody, { color: theme.text.secondary }]}>
+                      Items you list will appear here. Switch to Browse and tap "List item" to get started.
+                    </Text>
                   </View>
-                  <View style={styles.p2pNameDesc}>
-                    <Text style={[styles.cardName, { color: theme.text.primary, fontSize: Typography.size.base }]}>{item.name}</Text>
-                    <Text style={[styles.cardDesc, { color: theme.text.secondary }]}>{item.description}</Text>
-                  </View>
-                  <View style={[styles.cardFooter, { borderTopColor: theme.border.subtle }]}>
-                    <View>
-                      <Text style={[styles.p2pPriceLabel, { color: theme.text.tertiary }]}>Item is free</Text>
-                      <Text style={[styles.p2pLogistics, { color: theme.text.secondary }]}>
-                        Logistics: <Text style={{ color: theme.text.primary, fontFamily: Typography.fontFamily.bodyBold }}>{item.currency}{(item.logisticsPrice ?? 0).toLocaleString()}</Text>
-                      </Text>
+                ) : (
+                  myListings.map(listing => (
+                    <View
+                      key={listing.id}
+                      style={[styles.myListingRow, { backgroundColor: theme.bg.subtle, borderColor: theme.border.subtle }]}
+                    >
+                      {listing.images.length > 0 && (
+                        <Image source={{ uri: listing.images[0] }} style={styles.myListingThumb} resizeMode="cover" />
+                      )}
+                      <View style={styles.myListingInfo}>
+                        <Text style={[styles.myListingName, { color: theme.text.primary }]}>{listing.name}</Text>
+                        <Text style={[styles.myListingMeta, { color: theme.text.tertiary }]}>
+                          {conditionLabel(listing.condition)} · 📍 {listing.ownerLocation}
+                        </Text>
+                        <Text style={[styles.myListingMeta, { color: theme.text.tertiary }]}>
+                          {listing.images.length} photo{listing.images.length !== 1 ? 's' : ''}
+                        </Text>
+                      </View>
+                      <TouchableOpacity onPress={() => confirmRemoveListing(listing.id)} activeOpacity={0.7} style={styles.removeBtn}>
+                        <Trash2 size={16} color={theme.text.tertiary} strokeWidth={2} />
+                      </TouchableOpacity>
                     </View>
-                    {cart[item.id] ? (
-                      <InCartPill onPress={() => navigation.navigate('Cart')} label="✓ Claimed" />
-                    ) : (
-                      <Button label="Claim item" onPress={() => addToCart(item)} size="sm" />
-                    )}
-                  </View>
-                </View>
-              </Card>
-            ))}
+                  ))
+                )}
+                <TouchableOpacity
+                  onPress={() => setListItemVisible(true)}
+                  activeOpacity={0.8}
+                  style={[styles.listItemBtn, styles.listItemBtnFull, { backgroundColor: theme.interactive.primary }]}
+                >
+                  <Plus size={16} color="#fff" strokeWidth={2.5} />
+                  <Text style={[styles.listItemBtnLabel, { fontSize: Typography.size.base }]}>List another item</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         )}
       </ScrollView>
@@ -471,6 +566,12 @@ export default function NeoStoreScreen({ navigation }: { navigation: any }) {
           const hasItems = Object.keys(selection).length > 0;
           setCustomBundle(hasItems ? { selection, total } : null);
         }}
+      />
+
+      <ListItemModal
+        visible={listItemVisible}
+        onClose={() => setListItemVisible(false)}
+        onSubmit={addListing}
       />
 
       {cartCount > 0 && (
@@ -648,6 +749,89 @@ const styles = StyleSheet.create({
   },
 
   // ── P2P card ────────────────────────────────────────────────────────────────
+  p2pTabRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing[3],
+  },
+  p2pTabPills: {
+    flexDirection: 'row',
+    borderRadius: Radius.full,
+    padding: 3,
+    gap: 2,
+    flex: 1,
+  },
+  p2pTabPill: {
+    flex: 1,
+    paddingVertical: Spacing[2],
+    borderRadius: Radius.full,
+    alignItems: 'center',
+  },
+  p2pTabPillActive: { borderRadius: Radius.full },
+  p2pTabPillLabel: {
+    fontFamily: Typography.fontFamily.bodySemibold,
+    fontSize: Typography.size.sm,
+  },
+  emptyState: {
+    borderRadius: Radius.xl,
+    padding: Spacing[6],
+    alignItems: 'center',
+    gap: Spacing[2],
+  },
+  emptyStateTitle: {
+    fontFamily: Typography.fontFamily.bodyBold,
+    fontSize: Typography.size.base,
+  },
+  emptyStateBody: {
+    fontFamily: Typography.fontFamily.body,
+    fontSize: Typography.size.sm,
+    lineHeight: Typography.size.sm * 1.6,
+    textAlign: 'center',
+  },
+  listItemBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[1],
+    paddingVertical: Spacing[2],
+    paddingHorizontal: Spacing[3],
+    borderRadius: Radius.full,
+    flexShrink: 0,
+  },
+  listItemBtnLabel: {
+    fontFamily: Typography.fontFamily.bodySemibold,
+    fontSize: Typography.size.sm,
+    color: '#fff',
+  },
+  listItemBtnFull: {
+    justifyContent: 'center',
+    paddingVertical: Spacing[3],
+    paddingHorizontal: Spacing[5],
+  },
+  myListingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[3],
+    padding: Spacing[4],
+    borderRadius: Radius.xl,
+    borderWidth: 1,
+  },
+  myListingThumb: {
+    width: 56,
+    height: 56,
+    borderRadius: Radius.lg,
+  },
+  myListingInfo: { flex: 1, gap: 2 },
+  myListingName: {
+    fontFamily: Typography.fontFamily.bodySemibold,
+    fontSize: Typography.size.sm,
+  },
+  myListingMeta: {
+    fontFamily: Typography.fontFamily.body,
+    fontSize: Typography.size.xs,
+    lineHeight: Typography.size.xs * 1.5,
+  },
+  removeBtn: { padding: Spacing[1] },
   p2pNote: {
     fontFamily: Typography.fontFamily.body,
     fontSize: Typography.size.sm,
