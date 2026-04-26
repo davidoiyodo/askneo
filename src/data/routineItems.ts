@@ -734,7 +734,7 @@ export const ROUTINE_ITEMS: RoutineItem[] = [
     stage: ['ttc'],
     frequency: 'daily',
     completionType: 'checkbox',
-    navigateTo: 'SymptomLog',
+    navigateTo: 'CycleTracker',
     note: 'BBT must be taken at the same time each morning after at least 3 hours of uninterrupted sleep to be accurate.',
   },
   {
@@ -746,6 +746,7 @@ export const ROUTINE_ITEMS: RoutineItem[] = [
     stage: ['ttc'],
     frequency: 'daily',
     completionType: 'checkbox',
+    navigateTo: 'CycleTracker',
   },
   {
     id: 'ovulation-tracking',
@@ -756,6 +757,7 @@ export const ROUTINE_ITEMS: RoutineItem[] = [
     stage: ['ttc'],
     frequency: 'weekly',
     completionType: 'checkbox',
+    navigateTo: 'CycleTracker',
   },
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -1031,7 +1033,7 @@ export const ROUTINE_ITEMS: RoutineItem[] = [
     stage: ['ttc'],
     frequency: 'daily',
     completionType: 'checkbox',
-    navigateTo: 'SymptomLog',
+    navigateTo: 'CycleTracker',
   },
 
   {
@@ -1043,7 +1045,7 @@ export const ROUTINE_ITEMS: RoutineItem[] = [
     stage: ['ttc'],
     frequency: 'daily',
     completionType: 'checkbox',
-    navigateTo: 'SymptomLog',
+    navigateTo: 'CycleTracker',
   },
 
   {

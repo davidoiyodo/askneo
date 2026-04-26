@@ -5,6 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '../../theme/ThemeContext';
 import { Typography, Spacing, Radius } from '../../theme';
 import Button from '../../components/ui/Button';
+import OnboardingBackButton from '../../components/ui/OnboardingBackButton';
 import { UserStage, EmergencyContact } from '../../hooks/useAppContext';
 
 type Props = {
@@ -48,6 +49,8 @@ export default function PartnerInviteScreen({ navigation, route }: Props) {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg.app }]}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <OnboardingBackButton onPress={() => navigation.goBack()} />
+
         <View style={styles.header}>
           <Text style={[styles.step, { color: theme.text.link }]}>Step 4 of 4</Text>
           <Text style={[styles.title, { color: theme.text.primary }]}>Invite your partner</Text>
@@ -138,7 +141,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   container: {
     paddingHorizontal: Spacing[6],
-    paddingTop: Spacing[8],
+    paddingTop: Spacing[4],
     paddingBottom: Spacing[10],
     gap: Spacing[6],
   },

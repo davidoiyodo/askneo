@@ -5,13 +5,14 @@ import {
   TextInput, KeyboardAvoidingView, Platform, Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { HeartPulse, Activity, NotebookPen, X, Circle, Siren, Send, CheckCircle2, Stethoscope, ChevronDown, ChevronUp } from 'lucide-react-native';
+import { HeartPulse, Activity, NotebookPen, X, Circle, Siren, Send, CheckCircle2, Stethoscope, ChevronDown, ChevronUp, CalendarHeart } from 'lucide-react-native';
 import { Calendar } from 'react-native-calendars';
 import { getPregnancyDevelopment, getPostnatalDevelopment, getPostnatalAgeLabel } from '../../data/babyDevelopment';
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext } from '../../hooks/useAppContext';
 import { useRoutine } from '../../hooks/useRoutine';
 import { useANCVisits } from '../../hooks/useANCVisits';
+import { useCycleLogs } from '../../hooks/useCycleLogs';
 import { getGoalById } from '../../data/goals';
 import { GOAL_ACCENT } from '../../utils/goalColors';
 import { ITEM_IMAGES } from '../../utils/itemImages';
@@ -34,6 +35,7 @@ export default function HomeScreen({ navigation }: Props) {
   const { user, highlights, removeHighlight, tasks, toggleTask, updateUser } = useAppContext();
   const { getGoalItems, isItemDoneToday } = useRoutine();
   const { visits, totalVisitCount, nextAppointment, loaded: ancLoaded, setupCount, saveSetupCount, reload: reloadANC } = useANCVisits();
+  const { cycleDay, isFertileToday, daysUntilTestDay, avgCycleLength, nextFertileWindow } = useCycleLogs();
 
   useFocusEffect(useCallback(() => { reloadANC(); }, [reloadANC]));
 
@@ -159,6 +161,25 @@ export default function HomeScreen({ navigation }: Props) {
   const showApptCard    = (isApptToday || isApptUpcoming || isApptPassed) && !apptCardDismissed;
   const apptDaysLabel   = daysUntilAppt === 1 ? 'tomorrow' : `in ${daysUntilAppt} days`;
   const isPregnancy     = user?.stage === 'pregnancy';
+
+  // Pre-compute TTC cycle card props to avoid IIFE in JSX
+  const ttcLmpSeed    = user?.stage === 'ttc' ? user?.dueDate ?? undefined : undefined;
+  const ttcCD         = user?.stage === 'ttc' ? cycleDay(ttcLmpSeed) : 0;
+  const ttcFertile    = user?.stage === 'ttc' ? isFertileToday(ttcLmpSeed) : false;
+  const ttcIsTWW      = ttcCD >= 17 && ttcCD <= avgCycleLength + 2;
+  const ttcDaysLeft   = user?.stage === 'ttc' ? daysUntilTestDay(ttcLmpSeed) : 0;
+  const ttcPrediction = user?.stage === 'ttc' ? nextFertileWindow(ttcLmpSeed) : null;
+  const ttcNextLabel  = ttcPrediction && !ttcPrediction.isCurrentWindow && ttcPrediction.daysUntilStart >= 0
+    ? ttcPrediction.daysUntilStart === 0 ? '🌱 Fertile starts today' : `🌱 Fertile in ${ttcPrediction.daysUntilStart}d`
+    : null;
+  const ttcSubLabel   = ttcFertile
+    ? '🌱 Fertile window'
+    : ttcIsTWW
+    ? (ttcDaysLeft > 0 ? `Test in ~${ttcDaysLeft}d` : 'Test now 🤞')
+    : ttcNextLabel ?? 'Cycle Tracker';
+  const ttcCardBg     = ttcFertile ? theme.accent.sage.bg : ttcIsTWW ? theme.accent.sky.bg : theme.accent.rose.bg;
+  const ttcCardText   = ttcFertile ? theme.accent.sage.text : ttcIsTWW ? theme.accent.sky.text : theme.accent.rose.text;
+
   useEffect(() => {
     AsyncStorage.getItem('askneo_dismissed_prompts').then(val => {
       if (val) setDismissedIds(JSON.parse(val));
@@ -351,6 +372,16 @@ export default function HomeScreen({ navigation }: Props) {
               </View>
               <Text style={[styles.devCardLabel, { color: theme.accent.sky.text }]}>{devCard.cardTitle}</Text>
               <Text style={[styles.devHeadline, { color: theme.text.primary }]} numberOfLines={2}>{devCard.headline}</Text>
+            </TouchableOpacity>
+          ) : user?.stage === 'ttc' ? (
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('CycleTracker')}
+              style={[styles.quickCard, { backgroundColor: ttcCardBg, borderColor: 'transparent' }]}
+            >
+              <CalendarHeart size={24} color={ttcCardText} strokeWidth={1.75} />
+              <Text style={[styles.quickLabel, { color: ttcCardText }]}>{`CD ${ttcCD}`}</Text>
+              <Text style={[styles.quickSublabel, { color: ttcCardText }]}>{ttcSubLabel}</Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
@@ -1036,6 +1067,12 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.xs,
     textAlign: 'center',
     lineHeight: Typography.size.xs * 1.5,
+  },
+  quickSublabel: {
+    fontFamily: Typography.fontFamily.body,
+    fontSize: Typography.size.xs - 1,
+    textAlign: 'center',
+    opacity: 0.75,
   },
   devCard: {
     alignItems: 'flex-start',

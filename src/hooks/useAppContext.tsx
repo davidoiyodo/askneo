@@ -89,6 +89,11 @@ export interface AppUser {
   birthIntention?: BirthIntention;
   feedingIntention?: FeedingIntention;
   personalIntentions?: string[];
+  // TTC profile
+  dateOfBirth?: string;        // ISO date YYYY-MM-DD — for age-based guidance
+  ttcStartDate?: string;       // ISO date — approximate start of TTC journey
+  knownConditions?: string[];  // e.g. ['pcos', 'endometriosis', 'thyroid', 'fibroids', 'irregular-cycles']
+  cyclesIrregular?: boolean;   // derived from knownConditions but stored for quick access
 }
 
 interface AppContextType {

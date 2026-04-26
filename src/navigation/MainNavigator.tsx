@@ -27,6 +27,9 @@ import RoutineItemScreen from '../screens/main/RoutineItemScreen';
 import GoalStoryScreen from '../screens/main/GoalStoryScreen';
 import StreakDetailScreen from '../screens/main/StreakDetailScreen';
 import ANCVisitsScreen from '../screens/main/ANCVisitsScreen';
+import CycleTrackerScreen from '../screens/main/CycleTrackerScreen';
+import CycleHistoryScreen from '../screens/main/CycleHistoryScreen';
+import PreconceptionChecklistScreen from '../screens/main/PreconceptionChecklistScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -188,6 +191,21 @@ export default function MainNavigator() {
       <Stack.Screen
         name="ANCVisits"
         component={ANCVisitsScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="CycleTracker"
+        component={CycleTrackerScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="CycleHistory"
+        component={CycleHistoryScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="PreconceptionChecklist"
+        component={PreconceptionChecklistScreen}
         options={{ animation: 'slide_from_right' }}
       />
     </Stack.Navigator>

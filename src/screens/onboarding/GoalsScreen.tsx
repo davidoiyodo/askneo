@@ -9,6 +9,7 @@ import { Check } from 'lucide-react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import { Typography, Spacing, Radius } from '../../theme';
 import Button from '../../components/ui/Button';
+import OnboardingBackButton from '../../components/ui/OnboardingBackButton';
 import {
   useAppContext, UserStage, GoalId, SubGoalId,
   BirthIntention, FeedingIntention, EmergencyContact,
@@ -17,7 +18,8 @@ import { GOALS, SUB_GOALS } from '../../data/goals';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type InternalStep = 'goals' | 'subgoals' | 'intentions' | 'personal';
+type InternalStep = 'ttc-profile' | 'goals' | 'subgoals' | 'intentions' | 'personal';
+type TtcDuration = '0-3m' | '3-6m' | '6-12m' | '12m+';
 
 type Props = {
   navigation: NativeStackNavigationProp<any>;
@@ -38,12 +40,13 @@ type Props = {
 
 // ─── Step progression logic ───────────────────────────────────────────────────
 
-function nextStep(current: InternalStep, goals: GoalId[]): InternalStep | 'done' {
+function nextStep(current: InternalStep, goals: GoalId[], stage: UserStage): InternalStep | 'done' {
   const needsSubs  = goals.includes('baby-development');
-  const needsIntentions = goals.some(g =>
+  const needsIntentions = stage !== 'ttc' && goals.some(g =>
     ['natural-birth', 'breastfeeding-readiness', 'feeding-success'].includes(g)
   );
   switch (current) {
+    case 'ttc-profile': return 'goals';
     case 'goals':
       if (needsSubs) return 'subgoals';
       if (needsIntentions) return 'intentions';
@@ -57,6 +60,32 @@ function nextStep(current: InternalStep, goals: GoalId[]): InternalStep | 'done'
   }
 }
 
+function prevStep(current: InternalStep, goals: GoalId[], stage: UserStage): InternalStep | 'nav-back' {
+  const needsSubs = goals.includes('baby-development');
+  const needsIntentions = stage !== 'ttc' && goals.some(g =>
+    ['natural-birth', 'breastfeeding-readiness', 'feeding-success'].includes(g)
+  );
+  switch (current) {
+    case 'ttc-profile': return 'nav-back';
+    case 'goals':      return stage === 'ttc' ? 'ttc-profile' : 'nav-back';
+    case 'subgoals':   return 'goals';
+    case 'intentions': return needsSubs ? 'subgoals' : 'goals';
+    case 'personal':
+      if (needsIntentions) return 'intentions';
+      if (needsSubs)       return 'subgoals';
+      return 'goals';
+  }
+}
+
+// Compute ttcStartDate from duration selection
+function computeTtcStartDate(duration: TtcDuration | null): string | undefined {
+  if (!duration) return undefined;
+  const now = new Date();
+  const monthsMap: Record<TtcDuration, number> = { '0-3m': 1, '3-6m': 4, '6-12m': 9, '12m+': 14 };
+  now.setMonth(now.getMonth() - monthsMap[duration]);
+  return now.toISOString().split('T')[0];
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function GoalsScreen({ navigation, route }: Props) {
@@ -64,12 +93,15 @@ export default function GoalsScreen({ navigation, route }: Props) {
   const { setUser } = useAppContext();
   const { stage, name, email, password, date, inviteCode, emergencyContacts, partnerName, partnerStatus } = route.params;
 
-  const [step, setStep] = useState<InternalStep>('goals');
+  const [step, setStep] = useState<InternalStep>(stage === 'ttc' ? 'ttc-profile' : 'goals');
   const [selectedGoals, setSelectedGoals]         = useState<GoalId[]>([]);
   const [selectedSubGoals, setSelectedSubGoals]   = useState<SubGoalId[]>([]);
   const [birthIntention, setBirthIntention]       = useState<BirthIntention>('undecided');
   const [feedingIntention, setFeedingIntention]   = useState<FeedingIntention>('undecided');
   const [personalIntention, setPersonalIntention] = useState('');
+  // TTC-specific
+  const [ttcDuration, setTtcDuration]             = useState<TtcDuration | null>(null);
+  const [knownConditions, setKnownConditions]     = useState<string[]>([]);
 
   const stageGoals = GOALS.filter(g => g.stages.includes(stage));
 
@@ -79,6 +111,12 @@ export default function GoalsScreen({ navigation, route }: Props) {
   );
 
   // ── Handlers ────────────────────────────────────────────────────────────
+
+  const handleBack = () => {
+    const prev = prevStep(step, selectedGoals, stage);
+    if (prev === 'nav-back') navigation.goBack();
+    else setStep(prev);
+  };
 
   const toggleGoal = (id: GoalId) => {
     setSelectedGoals(prev =>
@@ -93,7 +131,7 @@ export default function GoalsScreen({ navigation, route }: Props) {
   };
 
   const advance = () => {
-    const next = nextStep(step, selectedGoals);
+    const next = nextStep(step, selectedGoals, stage);
     if (next === 'done') {
       finish();
     } else {
@@ -108,6 +146,9 @@ export default function GoalsScreen({ navigation, route }: Props) {
       if (stage === 'newmom') babyDOB = date;
       else dueDate = date;
     }
+    const cyclesIrregular = knownConditions.some(c =>
+      ['pcos', 'irregular-cycles', 'endometriosis'].includes(c)
+    );
     setUser({
       name,
       email,
@@ -127,6 +168,12 @@ export default function GoalsScreen({ navigation, route }: Props) {
         !skipPersonal && personalIntention.trim()
           ? [personalIntention.trim()]
           : [],
+      // TTC profile
+      ...(stage === 'ttc' ? {
+        ttcStartDate: computeTtcStartDate(ttcDuration),
+        knownConditions: knownConditions.length > 0 ? knownConditions : undefined,
+        cyclesIrregular: knownConditions.length > 0 ? cyclesIrregular : undefined,
+      } : {}),
       onboardingComplete: true,
     });
     navigation.replace('MainApp');
@@ -140,6 +187,9 @@ export default function GoalsScreen({ navigation, route }: Props) {
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.75}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked: selected }}
+      accessibilityLabel={`${label}: ${description}`}
       style={[
         styles.card,
         {
@@ -148,21 +198,21 @@ export default function GoalsScreen({ navigation, route }: Props) {
         },
       ]}
     >
-      <View style={[styles.cardIcon, { backgroundColor: selected ? theme.interactive.primary + '22' : theme.bg.subtle }]}>
+      <View style={[styles.cardIcon, { backgroundColor: selected ? 'rgba(255,255,255,0.15)' : theme.bg.subtle }]}>
         <Text style={styles.cardEmoji}>{icon}</Text>
       </View>
       <View style={styles.cardBody}>
-        <Text style={[styles.cardLabel, { color: theme.text.primary }]}>{label}</Text>
-        <Text style={[styles.cardDesc, { color: theme.text.secondary }]}>{description}</Text>
+        <Text style={[styles.cardLabel, { color: selected ? theme.text.inverse : theme.text.primary }]}>{label}</Text>
+        <Text style={[styles.cardDesc, { color: selected ? theme.text.inverse : theme.text.secondary, opacity: selected ? 0.8 : 1 }]}>{description}</Text>
       </View>
       <View style={[
         styles.check,
         {
-          backgroundColor: selected ? theme.interactive.primary : 'transparent',
-          borderColor: selected ? theme.interactive.primary : theme.border.default,
+          backgroundColor: selected ? 'rgba(255,255,255,0.25)' : 'transparent',
+          borderColor: selected ? 'rgba(255,255,255,0.6)' : theme.border.default,
         },
       ]}>
-        {selected && <Check size={12} color="#fff" strokeWidth={3} />}
+        {selected && <Check size={12} color={theme.text.inverse} strokeWidth={3} />}
       </View>
     </TouchableOpacity>
   );
@@ -173,6 +223,9 @@ export default function GoalsScreen({ navigation, route }: Props) {
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.75}
+      accessibilityRole="radio"
+      accessibilityState={{ checked: selected }}
+      accessibilityLabel={label}
       style={[
         styles.pill,
         {
@@ -181,11 +234,17 @@ export default function GoalsScreen({ navigation, route }: Props) {
         },
       ]}
     >
-      <Text style={[styles.pillText, { color: selected ? '#fff' : theme.text.primary }]}>
+      <Text style={[styles.pillText, { color: selected ? theme.interactive.primaryText : theme.text.primary }]}>
         {label}
       </Text>
     </TouchableOpacity>
   );
+
+  const toggleCondition = (id: string) => {
+    setKnownConditions(prev =>
+      prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
+    );
+  };
 
   // ── Render ───────────────────────────────────────────────────────────────
 
@@ -197,6 +256,85 @@ export default function GoalsScreen({ navigation, route }: Props) {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+
+          <OnboardingBackButton onPress={handleBack} />
+
+          {/* ── STEP: TTC PROFILE ─────────────────────────────────────── */}
+          {step === 'ttc-profile' && (
+            <>
+              <View style={styles.header}>
+                <Text style={[styles.eyebrow, { color: theme.text.link }]}>Your journey</Text>
+                <Text style={[styles.title, { color: theme.text.primary }]}>
+                  Tell us about your TTC journey
+                </Text>
+                <Text style={[styles.subtitle, { color: theme.text.secondary }]}>
+                  This helps us give you the most relevant cycle insights and guidance. Everything is optional and can be updated anytime.
+                </Text>
+              </View>
+
+              {/* How long trying */}
+              <View style={styles.question}>
+                <Text style={[styles.questionLabel, { color: theme.text.primary }]}>
+                  How long have you been trying to conceive?
+                </Text>
+                <View style={styles.pillRow}>
+                  {([
+                    { value: '0-3m',  label: 'Under 3 months' },
+                    { value: '3-6m',  label: '3–6 months' },
+                    { value: '6-12m', label: '6–12 months' },
+                    { value: '12m+',  label: 'Over a year' },
+                  ] as { value: TtcDuration; label: string }[]).map(opt => (
+                    <IntentionPill
+                      key={opt.value}
+                      label={opt.label}
+                      selected={ttcDuration === opt.value}
+                      onPress={() => setTtcDuration(opt.value)}
+                    />
+                  ))}
+                </View>
+              </View>
+
+              {/* Known conditions */}
+              <View style={styles.question}>
+                <Text style={[styles.questionLabel, { color: theme.text.primary }]}>
+                  Any of these apply to you? (optional)
+                </Text>
+                <Text style={[styles.subtitle, { color: theme.text.secondary }]}>
+                  We use this to tailor your cycle insights.
+                </Text>
+                <View style={styles.pillRow}>
+                  {([
+                    { id: 'pcos',             label: 'PCOS' },
+                    { id: 'endometriosis',     label: 'Endometriosis' },
+                    { id: 'thyroid',           label: 'Thyroid condition' },
+                    { id: 'fibroids',          label: 'Fibroids / polyps' },
+                    { id: 'irregular-cycles',  label: 'Irregular cycles' },
+                    { id: 'none',              label: 'None of these' },
+                  ]).map(opt => {
+                    const isSelected = opt.id === 'none'
+                      ? knownConditions.length === 0
+                      : knownConditions.includes(opt.id);
+                    return (
+                      <IntentionPill
+                        key={opt.id}
+                        label={opt.label}
+                        selected={isSelected}
+                        onPress={() => {
+                          if (opt.id === 'none') setKnownConditions([]);
+                          else toggleCondition(opt.id);
+                        }}
+                      />
+                    );
+                  })}
+                </View>
+              </View>
+
+              <Button label="Continue" onPress={advance} fullWidth />
+              <TouchableOpacity onPress={advance} style={styles.skip}>
+                <Text style={[styles.skipText, { color: theme.text.tertiary }]}>Skip for now</Text>
+              </TouchableOpacity>
+            </>
+          )}
 
           {/* ── STEP: GOALS ───────────────────────────────────────────── */}
           {step === 'goals' && (
@@ -263,7 +401,7 @@ export default function GoalsScreen({ navigation, route }: Props) {
               </View>
 
               <Button label="Continue" onPress={advance} fullWidth />
-              <TouchableOpacity onPress={() => setStep(nextStep('subgoals', selectedGoals) as InternalStep)} style={styles.skip}>
+              <TouchableOpacity onPress={() => setStep(nextStep('subgoals', selectedGoals, stage) as InternalStep)} style={styles.skip}>
                 <Text style={[styles.skipText, { color: theme.text.tertiary }]}>Skip</Text>
               </TouchableOpacity>
             </>
@@ -385,7 +523,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   container: {
     paddingHorizontal: Spacing[6],
-    paddingTop: Spacing[8],
+    paddingTop: Spacing[4],
     paddingBottom: Spacing[12],
     gap: Spacing[6],
   },

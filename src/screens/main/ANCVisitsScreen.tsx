@@ -542,9 +542,12 @@ export default function ANCVisitsScreen({ navigation }: { navigation: any }) {
                       key={opt.value}
                       onPress={() => setUrineProtein(active ? null : opt.value)}
                       activeOpacity={0.75}
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: active }}
+                      accessibilityLabel={`Protein: ${opt.label}`}
                       style={[styles.urinePill, { borderColor: active ? theme.interactive.primary : theme.border.default, backgroundColor: active ? theme.interactive.primary : theme.bg.app }]}
                     >
-                      <Text style={[styles.urinePillText, { color: active ? '#fff' : theme.text.secondary }]}>{opt.emoji} {opt.label}</Text>
+                      <Text style={[styles.urinePillText, { color: active ? theme.interactive.primaryText : theme.text.secondary }]}>{opt.emoji} {opt.label}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -560,9 +563,12 @@ export default function ANCVisitsScreen({ navigation }: { navigation: any }) {
                       key={opt.value}
                       onPress={() => setUrineGlucose(active ? null : opt.value)}
                       activeOpacity={0.75}
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: active }}
+                      accessibilityLabel={`Glucose: ${opt.label}`}
                       style={[styles.urinePill, { borderColor: active ? theme.interactive.primary : theme.border.default, backgroundColor: active ? theme.interactive.primary : theme.bg.app }]}
                     >
-                      <Text style={[styles.urinePillText, { color: active ? '#fff' : theme.text.secondary }]}>{opt.emoji} {opt.label}</Text>
+                      <Text style={[styles.urinePillText, { color: active ? theme.interactive.primaryText : theme.text.secondary }]}>{opt.emoji} {opt.label}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -602,12 +608,15 @@ export default function ANCVisitsScreen({ navigation }: { navigation: any }) {
                       key={opt.value}
                       onPress={() => setMalariaTest(active ? null : opt.value)}
                       activeOpacity={0.75}
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: active }}
+                      accessibilityLabel={`Malaria: ${opt.label}`}
                       style={[styles.urinePill, {
                         borderColor: active ? (opt.value === 'positive' ? theme.accent.rose.text : theme.interactive.primary) : theme.border.default,
                         backgroundColor: active ? (opt.value === 'positive' ? theme.accent.rose.text : theme.interactive.primary) : theme.bg.app,
                       }]}
                     >
-                      <Text style={[styles.urinePillText, { color: active ? '#fff' : theme.text.secondary }]}>{opt.label}</Text>
+                      <Text style={[styles.urinePillText, { color: active ? theme.interactive.primaryText : theme.text.secondary }]}>{opt.label}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -644,9 +653,12 @@ export default function ANCVisitsScreen({ navigation }: { navigation: any }) {
                           key={g}
                           onPress={() => setBloodGroup(active ? null : g)}
                           activeOpacity={0.75}
+                          accessibilityRole="radio"
+                          accessibilityState={{ checked: active }}
+                          accessibilityLabel={`Blood group: ${g}`}
                           style={[styles.optionPill, { borderColor: active ? theme.interactive.primary : theme.border.default, backgroundColor: active ? theme.interactive.primary : theme.bg.app }]}
                         >
-                          <Text style={[styles.optionPillText, { color: active ? '#fff' : theme.text.secondary }]}>{g}</Text>
+                          <Text style={[styles.optionPillText, { color: active ? theme.interactive.primaryText : theme.text.secondary }]}>{g}</Text>
                         </TouchableOpacity>
                       );
                     })}
@@ -664,9 +676,12 @@ export default function ANCVisitsScreen({ navigation }: { navigation: any }) {
                           key={g}
                           onPress={() => setGenotype(active ? null : g)}
                           activeOpacity={0.75}
+                          accessibilityRole="radio"
+                          accessibilityState={{ checked: active }}
+                          accessibilityLabel={`Genotype: ${g}`}
                           style={[styles.optionPill, { borderColor: active ? theme.interactive.primary : theme.border.default, backgroundColor: active ? theme.interactive.primary : theme.bg.app }]}
                         >
-                          <Text style={[styles.optionPillText, { color: active ? '#fff' : theme.text.secondary }]}>{g}</Text>
+                          <Text style={[styles.optionPillText, { color: active ? theme.interactive.primaryText : theme.text.secondary }]}>{g}</Text>
                         </TouchableOpacity>
                       );
                     })}
@@ -689,9 +704,12 @@ export default function ANCVisitsScreen({ navigation }: { navigation: any }) {
                           key={opt.value}
                           onPress={() => setHivStatus(active ? null : opt.value)}
                           activeOpacity={0.75}
+                          accessibilityRole="radio"
+                          accessibilityState={{ checked: active }}
+                          accessibilityLabel={`HIV: ${opt.label}`}
                           style={[styles.urinePill, { borderColor: active ? theme.interactive.primary : theme.border.default, backgroundColor: active ? theme.interactive.primary : theme.bg.app }]}
                         >
-                          <Text style={[styles.urinePillText, { color: active ? '#fff' : theme.text.secondary }]}>{opt.label}</Text>
+                          <Text style={[styles.urinePillText, { color: active ? theme.interactive.primaryText : theme.text.secondary }]}>{opt.label}</Text>
                         </TouchableOpacity>
                       );
                     })}
@@ -709,9 +727,12 @@ export default function ANCVisitsScreen({ navigation }: { navigation: any }) {
                           key={opt.value}
                           onPress={() => setHbsAg(active ? null : opt.value)}
                           activeOpacity={0.75}
+                          accessibilityRole="radio"
+                          accessibilityState={{ checked: active }}
+                          accessibilityLabel={`HBsAg: ${opt.label}`}
                           style={[styles.urinePill, { borderColor: active ? theme.interactive.primary : theme.border.default, backgroundColor: active ? theme.interactive.primary : theme.bg.app }]}
                         >
-                          <Text style={[styles.urinePillText, { color: active ? '#fff' : theme.text.secondary }]}>{opt.label}</Text>
+                          <Text style={[styles.urinePillText, { color: active ? theme.interactive.primaryText : theme.text.secondary }]}>{opt.label}</Text>
                         </TouchableOpacity>
                       );
                     })}
@@ -729,9 +750,12 @@ export default function ANCVisitsScreen({ navigation }: { navigation: any }) {
                           key={opt.value}
                           onPress={() => setVdrl(active ? null : opt.value)}
                           activeOpacity={0.75}
+                          accessibilityRole="radio"
+                          accessibilityState={{ checked: active }}
+                          accessibilityLabel={`VDRL: ${opt.label}`}
                           style={[styles.urinePill, { borderColor: active ? theme.interactive.primary : theme.border.default, backgroundColor: active ? theme.interactive.primary : theme.bg.app }]}
                         >
-                          <Text style={[styles.urinePillText, { color: active ? '#fff' : theme.text.secondary }]}>{opt.label}</Text>
+                          <Text style={[styles.urinePillText, { color: active ? theme.interactive.primaryText : theme.text.secondary }]}>{opt.label}</Text>
                         </TouchableOpacity>
                       );
                     })}

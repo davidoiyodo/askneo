@@ -449,6 +449,9 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
                     key={m.level}
                     onPress={() => setMood(m.level)}
                     activeOpacity={0.75}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: active }}
+                    accessibilityLabel={m.label}
                     style={[styles.moodBtn, active && [styles.moodBtnActive, { backgroundColor: theme.accent.rose.bg, borderColor: theme.accent.rose.border }]]}
                   >
                     <Text style={styles.moodEmoji}>{m.emoji}</Text>
@@ -472,6 +475,9 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
                     key={e.value}
                     onPress={() => setEnergy(e.value)}
                     activeOpacity={0.8}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: active }}
+                    accessibilityLabel={e.label}
                     style={[
                       styles.pillBtn,
                       { borderColor: active ? theme.interactive.primary : theme.border.default,
@@ -479,7 +485,7 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
                     ]}
                   >
                     <Text style={styles.pillEmoji}>{e.emoji}</Text>
-                    <Text style={[styles.pillLabel, { color: active ? '#fff' : theme.text.secondary }]}>
+                    <Text style={[styles.pillLabel, { color: active ? theme.interactive.primaryText : theme.text.secondary }]}>
                       {e.label}
                     </Text>
                   </TouchableOpacity>
@@ -514,13 +520,16 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
                         key={s}
                         onPress={() => toggleSymptom(s)}
                         activeOpacity={0.75}
+                        accessibilityRole="checkbox"
+                        accessibilityState={{ checked: active }}
+                        accessibilityLabel={s}
                         style={[
                           styles.chip,
                           { backgroundColor: active ? theme.interactive.primary : theme.bg.app,
                             borderColor: active ? theme.interactive.primary : theme.border.default },
                         ]}
                       >
-                        <Text style={[styles.chipText, { color: active ? '#fff' : theme.text.secondary }]}>{s}</Text>
+                        <Text style={[styles.chipText, { color: active ? theme.interactive.primaryText : theme.text.secondary }]}>{s}</Text>
                       </TouchableOpacity>
                     );
                   })}
@@ -641,6 +650,9 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
                       key={q.value}
                       onPress={() => setSleepQuality(q.value)}
                       activeOpacity={0.8}
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: active }}
+                      accessibilityLabel={q.label}
                       style={[
                         styles.sleepQBtn,
                         { borderColor: active ? theme.interactive.primary : theme.border.default,
@@ -791,6 +803,9 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
                         key={bm.value}
                         onPress={() => setBabyMood(bm.value)}
                         activeOpacity={0.8}
+                        accessibilityRole="radio"
+                        accessibilityState={{ checked: active }}
+                        accessibilityLabel={bm.label}
                         style={[
                           styles.pillBtn,
                           { borderColor: active ? theme.interactive.primary : theme.border.default,
@@ -798,7 +813,7 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
                         ]}
                       >
                         <Text style={styles.pillEmoji}>{bm.emoji}</Text>
-                        <Text style={[styles.pillLabel, { color: active ? '#fff' : theme.text.secondary }]}>
+                        <Text style={[styles.pillLabel, { color: active ? theme.interactive.primaryText : theme.text.secondary }]}>
                           {bm.label}
                         </Text>
                       </TouchableOpacity>
@@ -833,13 +848,16 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
                             key={s}
                             onPress={() => toggleBabySymptom(s)}
                             activeOpacity={0.75}
+                            accessibilityRole="checkbox"
+                            accessibilityState={{ checked: active }}
+                            accessibilityLabel={s}
                             style={[
                               styles.chip,
                               { backgroundColor: active ? theme.interactive.primary : theme.bg.app,
                                 borderColor: active ? theme.interactive.primary : theme.border.default },
                             ]}
                           >
-                            <Text style={[styles.chipText, { color: active ? '#fff' : theme.text.secondary }]}>{s}</Text>
+                            <Text style={[styles.chipText, { color: active ? theme.interactive.primaryText : theme.text.secondary }]}>{s}</Text>
                           </TouchableOpacity>
                         );
                       })}

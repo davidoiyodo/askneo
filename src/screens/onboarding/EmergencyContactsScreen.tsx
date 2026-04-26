@@ -7,6 +7,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '../../theme/ThemeContext';
 import { Typography, Spacing, Radius, Shadow, Colors } from '../../theme';
 import Button from '../../components/ui/Button';
+import OnboardingBackButton from '../../components/ui/OnboardingBackButton';
 import { EmergencyContact, UserStage } from '../../hooks/useAppContext';
 
 type Props = {
@@ -48,6 +49,8 @@ export default function EmergencyContactsScreen({ navigation, route }: Props) {
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg.app }]}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <OnboardingBackButton onPress={() => navigation.goBack()} />
+
           <View style={styles.header}>
             <Text style={[styles.step, { color: theme.text.link }]}>Step 3 of 4</Text>
             <Text style={[styles.title, { color: theme.text.primary }]}>Emergency contacts</Text>
@@ -126,7 +129,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   container: {
     paddingHorizontal: Spacing[6],
-    paddingTop: Spacing[8],
+    paddingTop: Spacing[4],
     paddingBottom: Spacing[10],
     gap: Spacing[6],
   },

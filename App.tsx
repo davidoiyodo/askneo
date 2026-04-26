@@ -20,6 +20,7 @@ import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { AppProvider, useAppContext } from './src/hooks/useAppContext';
 import { DailyLogsProvider } from './src/hooks/useDailyLogs';
 import { RoutineProvider } from './src/hooks/useRoutine';
+import { CycleLogsProvider } from './src/hooks/useCycleLogs';
 
 import SplashScreen from './src/screens/onboarding/SplashScreen';
 import WelcomeScreen from './src/screens/onboarding/WelcomeScreen';
@@ -91,11 +92,13 @@ export default function App() {
     <ThemeProvider>
       <AppProvider>
         <DailyLogsProvider>
-          <RoutineProvider>
-            <NavigationContainer>
-              <RootNavigator />
-            </NavigationContainer>
-          </RoutineProvider>
+          <CycleLogsProvider>
+            <RoutineProvider>
+              <NavigationContainer>
+                <RootNavigator />
+              </NavigationContainer>
+            </RoutineProvider>
+          </CycleLogsProvider>
         </DailyLogsProvider>
       </AppProvider>
     </ThemeProvider>

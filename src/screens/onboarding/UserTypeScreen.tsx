@@ -8,6 +8,7 @@ import { useTheme } from '../../theme/ThemeContext';
 import { Typography, Spacing, Radius, Shadow } from '../../theme';
 import Button from '../../components/ui/Button';
 import DatePickerField from '../../components/ui/DatePickerField';
+import OnboardingBackButton from '../../components/ui/OnboardingBackButton';
 import { UserStage } from '../../hooks/useAppContext';
 
 type Props = { navigation: NativeStackNavigationProp<any> };
@@ -172,6 +173,8 @@ export default function UserTypeScreen({ navigation }: Props) {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          <OnboardingBackButton onPress={() => navigation.goBack()} />
+
           <View style={styles.header}>
             <Text style={[styles.step, { color: theme.text.link }]}>Step 1 of 4</Text>
             <Text style={[styles.title, { color: theme.text.primary }]}>Tell us where you are{'\n'}in your journey</Text>
@@ -292,7 +295,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   container: {
     paddingHorizontal: Spacing[6],
-    paddingTop: Spacing[8],
+    paddingTop: Spacing[4],
     paddingBottom: Spacing[10],
     gap: Spacing[6],
   },

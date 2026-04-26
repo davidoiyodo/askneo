@@ -207,6 +207,9 @@ export default function ListItemModal({ visible, onClose, onSubmit }: Props) {
                     key={c.key}
                     onPress={() => setCondition(c.key)}
                     activeOpacity={0.7}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: condition === c.key }}
+                    accessibilityLabel={c.label}
                     style={[
                       styles.conditionChip,
                       condition === c.key
@@ -216,7 +219,7 @@ export default function ListItemModal({ visible, onClose, onSubmit }: Props) {
                   >
                     <Text style={[
                       styles.conditionLabel,
-                      { color: condition === c.key ? '#fff' : theme.text.secondary },
+                      { color: condition === c.key ? theme.interactive.primaryText : theme.text.secondary },
                     ]}>
                       {c.label}
                     </Text>
