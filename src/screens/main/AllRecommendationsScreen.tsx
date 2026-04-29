@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ChevronLeft, X, RotateCcw } from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext } from '../../hooks/useAppContext';
 import { Typography, Spacing, Radius, Shadow } from '../../theme';
@@ -13,6 +13,7 @@ import {
   pregnancyPrompts, babyPrompts, ttcPrompts, partnerPrompts, TimelinePrompt,
 } from '../../data/timelinePrompts';
 import { getGestationalWeek } from '../../utils/chatEngine';
+import Icon from '../../components/icons/Icon';
 
 const DISMISSED_KEY = 'askneo_dismissed_prompts';
 
@@ -115,7 +116,7 @@ export default function AllRecommendationsScreen({ navigation }: { navigation: a
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               style={[styles.restoreChip, { borderColor: theme.border.default }]}
             >
-              <RotateCcw size={12} color={theme.text.secondary} strokeWidth={2} />
+              <Icon name="refresh_anticlockwise_1" size={12} color={theme.text.secondary} />
               <Text style={[styles.restoreText, { color: theme.text.secondary }]}>Restore</Text>
             </TouchableOpacity>
           ) : (
@@ -124,7 +125,7 @@ export default function AllRecommendationsScreen({ navigation }: { navigation: a
               activeOpacity={0.7}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <X size={16} color={theme.text.tertiary} strokeWidth={2} />
+              <Icon name="close" size={16} color={theme.text.tertiary} />
             </TouchableOpacity>
           )}
         </View>
@@ -167,7 +168,7 @@ export default function AllRecommendationsScreen({ navigation }: { navigation: a
           activeOpacity={0.7}
           style={[styles.backBtn, { backgroundColor: theme.bg.subtle, borderColor: theme.border.subtle }]}
         >
-          <ChevronLeft size={20} color={theme.text.primary} strokeWidth={2} />
+          <Icon name="left" size={20} color={theme.text.primary} />
           <Text style={[styles.backLabel, { color: theme.text.primary }]}>Back</Text>
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.text.primary }]}>All recommendations</Text>

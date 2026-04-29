@@ -3,7 +3,7 @@ import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Baby, Heart, Lightbulb } from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext } from '../../hooks/useAppContext';
 import { Typography, Spacing, Radius, Shadow } from '../../theme';
@@ -14,6 +14,7 @@ import {
   DevelopmentInfo,
 } from '../../data/babyDevelopment';
 import { getGestationalWeek } from '../../utils/chatEngine';
+import Icon from '../../components/icons/Icon';
 
 interface Props {
   navigation: any;
@@ -61,7 +62,7 @@ export default function BabyDevelopmentScreen({ navigation }: Props) {
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           style={styles.backBtn}
         >
-          <ArrowLeft size={22} color={heroText} strokeWidth={2} />
+          <Icon name="arrow_left" size={22} color={heroText} />
         </TouchableOpacity>
 
         <View style={styles.heroBody}>
@@ -80,7 +81,7 @@ export default function BabyDevelopmentScreen({ navigation }: Props) {
         <View style={[styles.card, { backgroundColor: cardBg, borderColor: theme.border.subtle, ...Shadow.sm }]}>
           <View style={styles.cardHeader}>
             <View style={[styles.cardIconWrap, { backgroundColor: isPregnancy ? theme.accent.sky.bg : theme.accent.rose.bg }]}>
-              <Baby size={16} color={isPregnancy ? theme.accent.sky.text : theme.accent.rose.text} strokeWidth={2} />
+              <Icon name="baby" size={16} color={isPregnancy ? theme.accent.sky.text : theme.accent.rose.text} />
             </View>
             <Text style={[styles.cardTitle, { color: theme.text.primary }]}>
               {isPregnancy ? 'Your baby this week' : 'Your little one'}
@@ -93,7 +94,7 @@ export default function BabyDevelopmentScreen({ navigation }: Props) {
         <View style={[styles.card, { backgroundColor: cardBg, borderColor: theme.border.subtle, ...Shadow.sm }]}>
           <View style={styles.cardHeader}>
             <View style={[styles.cardIconWrap, { backgroundColor: theme.accent.sage.bg }]}>
-              <Heart size={16} color={theme.accent.sage.text} strokeWidth={2} />
+              <Icon name="heart" size={16} color={theme.accent.sage.text} />
             </View>
             <Text style={[styles.cardTitle, { color: theme.text.primary }]}>
               {isPregnancy ? 'How you might feel' : 'For you this week'}
@@ -106,7 +107,7 @@ export default function BabyDevelopmentScreen({ navigation }: Props) {
         {info.tip ? (
           <View style={[styles.card, styles.tipCard, { backgroundColor: theme.accent.gold.bg, borderColor: theme.accent.gold.border }]}>
             <View style={styles.cardHeader}>
-              <Lightbulb size={16} color={theme.accent.gold.text} strokeWidth={2} />
+              <Icon name="bulb" size={16} color={theme.accent.gold.text} />
               <Text style={[styles.cardTitle, { color: theme.text.primary }]}>Did you know?</Text>
             </View>
             <Text style={[styles.cardBody, { color: theme.text.secondary }]}>{info.tip}</Text>

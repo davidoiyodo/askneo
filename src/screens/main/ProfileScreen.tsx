@@ -4,7 +4,7 @@ import {
   KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, Pencil, Check, X, Plus, Trash2 } from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext, EmergencyContact } from '../../hooks/useAppContext';
 import { Typography, Spacing, Radius } from '../../theme';
@@ -15,6 +15,7 @@ import AddContactModal from '../../components/modals/AddContactModal';
 import PartnerInviteModal from '../../components/modals/PartnerInviteModal';
 import { getBabyAgeLabel, getGestationalWeek } from '../../utils/chatEngine';
 import { getGoalById } from '../../data/goals';
+import Icon from '../../components/icons/Icon';
 
 const SUBSCRIPTION_FEATURES = {
   free: [
@@ -152,22 +153,39 @@ export default function ProfileScreen({ navigation }: { navigation: any }) {
     if (user.stage === 'newmom' && user.babyDOB) {
       return getBabyAgeLabel(new Date(user.babyDOB));
     }
+    if (user.stage === 'partner') {
+      if (user.partnerStage === 'pregnancy' && user.partnerDueDate) {
+        const week = getGestationalWeek(new Date(user.partnerDueDate));
+        return `Partner week ${week} · Due ${new Date(user.partnerDueDate).toLocaleDateString('en-NG', { day: 'numeric', month: 'long' })}`;
+      }
+      if (user.partnerStage === 'newmom' && user.partnerBabyDOB) {
+        return `Baby is ${getBabyAgeLabel(new Date(user.partnerBabyDOB))}`;
+      }
+    }
     return '—';
   };
 
   const getDateFieldLabel = () => {
     if (!user) return 'Date';
+    if (user.stage === 'partner') {
+      if (user.partnerStage === 'pregnancy') return "Partner's due date";
+      if (user.partnerStage === 'newmom')    return "Baby's date of birth";
+      if (user.partnerStage === 'ttc')       return "Partner's last period";
+      return "Partner's date";
+    }
     const labels: Record<string, string> = {
       pregnancy: 'Estimated due date',
       newmom: "Baby's date of birth",
       ttc: 'First day of last period',
-      partner: "Partner's due date",
     };
     return labels[user.stage] ?? 'Date';
   };
 
   const getStoredDate = () => {
     if (!user) return undefined;
+    if (user.stage === 'partner') {
+      return user.partnerStage === 'newmom' ? user.partnerBabyDOB : user.partnerDueDate;
+    }
     return user.stage === 'newmom' ? user.babyDOB : user.dueDate;
   };
 
@@ -187,8 +205,14 @@ export default function ProfileScreen({ navigation }: { navigation: any }) {
     if (!trimmedEmail.includes('@')) { Alert.alert('Email required', 'Please enter a valid email address.'); return; }
     const isoDate: string | undefined = draftDate || undefined;
     const update: Parameters<typeof updateUser>[0] = { name: trimmedName, email: trimmedEmail };
-    if (user?.stage === 'newmom') update.babyDOB = isoDate;
-    else update.dueDate = isoDate;
+    if (user?.stage === 'partner') {
+      if (user.partnerStage === 'newmom') update.partnerBabyDOB = isoDate;
+      else update.partnerDueDate = isoDate;
+    } else if (user?.stage === 'newmom') {
+      update.babyDOB = isoDate;
+    } else {
+      update.dueDate = isoDate;
+    }
     updateUser(update);
     setEditing(false);
   };
@@ -218,7 +242,7 @@ export default function ProfileScreen({ navigation }: { navigation: any }) {
           activeOpacity={0.7}
           style={[styles.backBtn, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}
         >
-          <ChevronLeft size={20} color={theme.text.primary} strokeWidth={2} />
+          <Icon name="left" size={20} color={theme.text.primary} />
           <Text style={[styles.backLabel, { color: theme.text.primary }]}>Back</Text>
         </TouchableOpacity>
 
@@ -239,17 +263,17 @@ export default function ProfileScreen({ navigation }: { navigation: any }) {
             <Text style={[styles.sectionLabel, { color: theme.text.tertiary }]}>ACCOUNT</Text>
             {!editing ? (
               <TouchableOpacity onPress={startEditing} activeOpacity={0.7} style={styles.editBtn}>
-                <Pencil size={14} color={theme.text.link} strokeWidth={2} />
+                <Icon name="pencil" size={14} color={theme.text.link} />
                 <Text style={[styles.editBtnLabel, { color: theme.text.link }]}>Edit</Text>
               </TouchableOpacity>
             ) : (
               <View style={styles.editActions}>
                 <TouchableOpacity onPress={cancelEditing} activeOpacity={0.7} style={[styles.pillBtn, { borderColor: theme.border.default }]}>
-                  <X size={14} color={theme.text.secondary} strokeWidth={2} />
+                  <Icon name="close" size={14} color={theme.text.secondary} />
                   <Text style={[styles.pillBtnLabel, { color: theme.text.secondary }]}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={saveEditing} activeOpacity={0.7} style={[styles.pillBtn, { backgroundColor: theme.interactive.primary, borderColor: theme.interactive.primary }]}>
-                  <Check size={14} color="#fff" strokeWidth={2.5} />
+                  <Icon name="check" size={14} color="#fff" />
                   <Text style={[styles.pillBtnLabel, { color: '#fff' }]}>Save</Text>
                 </TouchableOpacity>
               </View>
@@ -288,8 +312,8 @@ export default function ProfileScreen({ navigation }: { navigation: any }) {
                   <DatePickerField
                     value={draftDate}
                     onChange={setDraftDate}
-                    minDate={getProfileDateRange(user?.stage ?? '').min}
-                    maxDate={getProfileDateRange(user?.stage ?? '').max}
+                    minDate={getProfileDateRange(user?.stage === 'partner' ? (user?.partnerStage ?? '') : (user?.stage ?? '')).min}
+                    maxDate={getProfileDateRange(user?.stage === 'partner' ? (user?.partnerStage ?? '') : (user?.stage ?? '')).max}
                     placeholder="Select a date"
                   />
                 </View>
@@ -311,7 +335,7 @@ export default function ProfileScreen({ navigation }: { navigation: any }) {
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionLabel, { color: theme.text.tertiary }]}>MY GOALS</Text>
               <TouchableOpacity onPress={() => navigation.navigate('EditGoals')} activeOpacity={0.7} style={styles.editBtn}>
-                <Pencil size={14} color={theme.text.link} strokeWidth={2} />
+                <Icon name="pencil" size={14} color={theme.text.link} />
                 <Text style={[styles.editBtnLabel, { color: theme.text.link }]}>Edit</Text>
               </TouchableOpacity>
             </View>
@@ -361,17 +385,17 @@ export default function ProfileScreen({ navigation }: { navigation: any }) {
             <Text style={[styles.sectionLabel, { color: theme.text.tertiary }]}>MY VISITS</Text>
             {!editingVisit ? (
               <TouchableOpacity onPress={startEditingVisit} activeOpacity={0.7} style={styles.editBtn}>
-                <Pencil size={14} color={theme.text.link} strokeWidth={2} />
+                <Icon name="pencil" size={14} color={theme.text.link} />
                 <Text style={[styles.editBtnLabel, { color: theme.text.link }]}>Edit</Text>
               </TouchableOpacity>
             ) : (
               <View style={styles.editActions}>
                 <TouchableOpacity onPress={() => setEditingVisit(false)} activeOpacity={0.7} style={[styles.pillBtn, { borderColor: theme.border.default }]}>
-                  <X size={14} color={theme.text.secondary} strokeWidth={2} />
+                  <Icon name="close" size={14} color={theme.text.secondary} />
                   <Text style={[styles.pillBtnLabel, { color: theme.text.secondary }]}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={saveVisit} activeOpacity={0.7} style={[styles.pillBtn, { backgroundColor: theme.interactive.primary, borderColor: theme.interactive.primary }]}>
-                  <Check size={14} color="#fff" strokeWidth={2.5} />
+                  <Icon name="check" size={14} color="#fff" />
                   <Text style={[styles.pillBtnLabel, { color: '#fff' }]}>Save</Text>
                 </TouchableOpacity>
               </View>
@@ -432,17 +456,17 @@ export default function ProfileScreen({ navigation }: { navigation: any }) {
             <Text style={[styles.sectionLabel, { color: theme.text.tertiary }]}>MY DOCTOR</Text>
             {!editingDoctor ? (
               <TouchableOpacity onPress={startEditingDoctor} activeOpacity={0.7} style={styles.editBtn}>
-                <Pencil size={14} color={theme.text.link} strokeWidth={2} />
+                <Icon name="pencil" size={14} color={theme.text.link} />
                 <Text style={[styles.editBtnLabel, { color: theme.text.link }]}>Edit</Text>
               </TouchableOpacity>
             ) : (
               <View style={styles.editActions}>
                 <TouchableOpacity onPress={() => setEditingDoctor(false)} activeOpacity={0.7} style={[styles.pillBtn, { borderColor: theme.border.default }]}>
-                  <X size={14} color={theme.text.secondary} strokeWidth={2} />
+                  <Icon name="close" size={14} color={theme.text.secondary} />
                   <Text style={[styles.pillBtnLabel, { color: theme.text.secondary }]}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={saveDoctor} activeOpacity={0.7} style={[styles.pillBtn, { backgroundColor: theme.interactive.primary, borderColor: theme.interactive.primary }]}>
-                  <Check size={14} color="#fff" strokeWidth={2.5} />
+                  <Icon name="check" size={14} color="#fff" />
                   <Text style={[styles.pillBtnLabel, { color: '#fff' }]}>Save</Text>
                 </TouchableOpacity>
               </View>
@@ -507,7 +531,7 @@ export default function ProfileScreen({ navigation }: { navigation: any }) {
             <Text style={[styles.sectionLabel, { color: theme.text.tertiary }]}>EMERGENCY CONTACTS</Text>
             {contacts.length > 0 && contacts.length < 5 && (
               <TouchableOpacity onPress={() => setAddContactModalVisible(true)} activeOpacity={0.7} style={styles.editBtn}>
-                <Plus size={14} color={theme.text.link} strokeWidth={2} />
+                <Icon name="add" size={14} color={theme.text.link} />
                 <Text style={[styles.editBtnLabel, { color: theme.text.link }]}>Add</Text>
               </TouchableOpacity>
             )}
@@ -538,7 +562,7 @@ export default function ProfileScreen({ navigation }: { navigation: any }) {
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     activeOpacity={0.7}
                   >
-                    <Trash2 size={16} color={theme.text.tertiary} strokeWidth={1.75} />
+                    <Icon name="delete_2" size={16} color={theme.text.tertiary} />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -554,7 +578,7 @@ export default function ProfileScreen({ navigation }: { navigation: any }) {
                 activeOpacity={0.85}
                 style={[styles.emptyBtn, { backgroundColor: theme.interactive.primary }]}
               >
-                <Plus size={16} color="#fff" strokeWidth={2.5} />
+                <Icon name="add" size={16} color="#fff" />
                 <Text style={styles.emptyBtnLabel}>Add your first contact</Text>
               </TouchableOpacity>
             </Card>

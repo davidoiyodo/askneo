@@ -4,7 +4,7 @@ import {
   StyleSheet, Alert, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, Trash2, Minus, Plus, ShoppingBag } from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext } from '../../hooks/useAppContext';
 import { Typography, Spacing, Radius, Shadow, Colors } from '../../theme';
@@ -13,6 +13,7 @@ import Button from '../../components/ui/Button';
 import BuildBundleModal from '../../components/modals/BuildBundleModal';
 import { bundles, p2pItems, bundleCatalog } from '../../data/neostore';
 import type { CustomBundle } from '../../hooks/useAppContext';
+import Icon from '../../components/icons/Icon';
 
 // ── Cart item row ──────────────────────────────────────────────────────────────
 function CartItemRow({
@@ -43,15 +44,15 @@ function CartItemRow({
         <View style={styles.itemActions}>
           <View style={[styles.qtyControl, { backgroundColor: theme.bg.subtle, borderColor: theme.border.subtle }]}>
             <TouchableOpacity onPress={onRemove} style={styles.qtyBtn} activeOpacity={0.7}>
-              <Minus size={13} color={theme.text.brand} strokeWidth={2.5} />
+              <Icon name="minus_circle" size={13} color={theme.text.brand} />
             </TouchableOpacity>
             <Text style={[styles.qtyText, { color: theme.text.primary }]}>{qty}</Text>
             <TouchableOpacity onPress={onAdd} style={styles.qtyBtn} activeOpacity={0.7}>
-              <Plus size={13} color={theme.text.brand} strokeWidth={2.5} />
+              <Icon name="add" size={13} color={theme.text.brand} />
             </TouchableOpacity>
           </View>
           <TouchableOpacity onPress={onDelete} activeOpacity={0.7} style={styles.deleteBtn}>
-            <Trash2 size={15} color={theme.text.tertiary} strokeWidth={2} />
+            <Icon name="delete_2" size={15} color={theme.text.tertiary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -147,7 +148,7 @@ export default function CartScreen({ navigation }: { navigation: any }) {
               activeOpacity={0.7}
               style={[styles.backBtn, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}
             >
-              <ChevronLeft size={20} color={theme.text.primary} strokeWidth={2} />
+              <Icon name="left" size={20} color={theme.text.primary} />
               <Text style={[styles.backLabel, { color: theme.text.primary }]}>Back</Text>
             </TouchableOpacity>
           </View>
@@ -155,7 +156,7 @@ export default function CartScreen({ navigation }: { navigation: any }) {
           {/* Centered content */}
           <View style={styles.emptyState}>
             <View style={[styles.emptyIcon, { backgroundColor: theme.bg.subtle }]}>
-              <ShoppingBag size={36} color={theme.text.tertiary} strokeWidth={1.5} />
+              <Icon name="shopping_bag_1" size={36} color={theme.text.tertiary} />
             </View>
             <Text style={[styles.emptyTitle, { color: theme.text.primary }]}>Your cart is empty</Text>
             <Text style={[styles.emptyBody, { color: theme.text.secondary }]}>
@@ -186,7 +187,7 @@ export default function CartScreen({ navigation }: { navigation: any }) {
               activeOpacity={0.7}
               style={[styles.backBtn, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}
             >
-              <ChevronLeft size={20} color={theme.text.primary} strokeWidth={2} />
+              <Icon name="left" size={20} color={theme.text.primary} />
               <Text style={[styles.backLabel, { color: theme.text.primary }]}>Back</Text>
             </TouchableOpacity>
           </View>
@@ -244,7 +245,7 @@ export default function CartScreen({ navigation }: { navigation: any }) {
                       ₦{customBundle.total.toLocaleString()}
                     </Text>
                     <TouchableOpacity onPress={() => setCustomBundle(null)} activeOpacity={0.7} style={styles.deleteBtn}>
-                      <Trash2 size={15} color={theme.text.tertiary} strokeWidth={2} />
+                      <Icon name="delete_2" size={15} color={theme.text.tertiary} />
                     </TouchableOpacity>
                   </View>
                 </View>

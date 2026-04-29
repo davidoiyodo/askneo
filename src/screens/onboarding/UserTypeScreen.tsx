@@ -5,42 +5,32 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '../../theme/ThemeContext';
-import { Typography, Spacing, Radius, Shadow } from '../../theme';
+import { Typography, Spacing, Radius } from '../../theme';
+import Icon from '../../components/icons/Icon';
 import Button from '../../components/ui/Button';
 import DatePickerField from '../../components/ui/DatePickerField';
 import OnboardingBackButton from '../../components/ui/OnboardingBackButton';
 import { UserStage } from '../../hooks/useAppContext';
+import { parseInviteCode } from '../../utils/inviteCode';
 
 type Props = { navigation: NativeStackNavigationProp<any> };
 
+type PartnerStageOption = 'pregnancy' | 'newmom' | 'ttc';
+
 const options: Array<{ stage: UserStage; label: string; emoji: string; description: string }> = [
-  {
-    stage: 'pregnancy',
-    label: "I'm pregnant",
-    emoji: '🤰',
-    description: 'Guidance through every trimester, from the first scan to your birth plan.',
-  },
-  {
-    stage: 'newmom',
-    label: 'I have a newborn',
-    emoji: '👶',
-    description: 'Support for baby care, feeding, milestones, and those 2am moments of uncertainty.',
-  },
-  {
-    stage: 'ttc',
-    label: 'Trying to conceive',
-    emoji: '🌱',
-    description: 'Cycle tracking, fertile window support, and preparation for pregnancy.',
-  },
-  {
-    stage: 'partner',
-    label: "I'm a partner / dad",
-    emoji: '🤝',
-    description: 'Stay informed and learn how to show up for your partner and baby.',
-  },
+  { stage: 'pregnancy', label: "I'm pregnant",       emoji: '🤰', description: 'Trimester guidance, scans, and birth prep.' },
+  { stage: 'newmom',    label: 'I have a newborn',   emoji: '👶', description: 'Baby care, feeding, and milestone support.' },
+  { stage: 'ttc',       label: 'Trying to conceive', emoji: '🌱', description: 'Cycle tracking and fertile window support.' },
+  { stage: 'partner',   label: 'Partner / dad',      emoji: '🤝', description: 'Stay informed and support your family.' },
 ];
 
-// Naegele's rule: EDD = LMP + 280 days
+const partnerStageOptions: Array<{ stage: PartnerStageOption; label: string; emoji: string }> = [
+  { stage: 'pregnancy', label: 'She is pregnant',  emoji: '🤰' },
+  { stage: 'newmom',    label: 'She has a newborn', emoji: '👶' },
+  { stage: 'ttc',       label: 'Trying to conceive', emoji: '🌱' },
+];
+
+// Naegele's rule
 function lmpToEdd(lmpIso: string): Date {
   const lmp = new Date(lmpIso);
   return new Date(lmp.getTime() + 280 * 24 * 60 * 60 * 1000);
@@ -50,33 +40,26 @@ function formatShortDate(d: Date): string {
   return d.toLocaleDateString('en-NG', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-function getDateRange(stage: UserStage, pregnancyMode: 'lmp' | 'edd' = 'lmp'): { min: Date; max: Date } {
+function getDateRange(stage: UserStage | PartnerStageOption, pregnancyMode: 'lmp' | 'edd' = 'lmp'): { min: Date; max: Date } {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
   switch (stage) {
     case 'pregnancy': {
       if (pregnancyMode === 'edd') {
-        // EDD must be in the future, max ~10 months (40 weeks) away
-        const min = new Date(today);
         const max = new Date(today);
         max.setDate(max.getDate() + 300);
-        return { min, max };
-      } else {
-        // LMP: at most 40 weeks ago (EDD = today), at most today
-        const min = new Date(today);
-        min.setDate(min.getDate() - 280);
-        return { min, max: new Date(today) };
+        return { min: new Date(today), max };
       }
+      const min = new Date(today);
+      min.setDate(min.getDate() - 280);
+      return { min, max: new Date(today) };
     }
     case 'newmom': {
-      // Baby's DOB must be in the past, at most 2 years ago
       const min = new Date(today);
       min.setFullYear(min.getFullYear() - 2);
       return { min, max: new Date(today) };
     }
     case 'ttc': {
-      // Last period must be in the past, at most 6 months ago
       const min = new Date(today);
       min.setMonth(min.getMonth() - 6);
       return { min, max: new Date(today) };
@@ -86,32 +69,17 @@ function getDateRange(stage: UserStage, pregnancyMode: 'lmp' | 'edd' = 'lmp'): {
   }
 }
 
-function getDateConfig(stage: UserStage, pregnancyMode: 'lmp' | 'edd' = 'lmp'): { label: string; placeholder: string; help: string } {
+function getDateConfig(stage: UserStage | PartnerStageOption, pregnancyMode: 'lmp' | 'edd' = 'lmp', isPartnerContext = false): { label: string; placeholder: string; help: string } {
+  const prefix = isPartnerContext ? "Partner's " : '';
   switch (stage) {
     case 'pregnancy':
       return pregnancyMode === 'lmp'
-        ? {
-            label: 'First day of your last period',
-            placeholder: 'Select the date',
-            help: "We'll use this to calculate your due date.",
-          }
-        : {
-            label: 'Expected due date',
-            placeholder: 'Select your due date',
-            help: 'Must be within the next 10 months.',
-          };
+        ? { label: `${prefix}first day of last period`, placeholder: 'Select the date', help: "We'll use this to estimate the due date." }
+        : { label: `${prefix}expected due date`, placeholder: 'Select due date', help: 'Must be within the next 10 months.' };
     case 'newmom':
-      return {
-        label: "Baby's date of birth",
-        placeholder: "Select your baby's birthday",
-        help: 'Must be a date in the past.',
-      };
+      return { label: "Baby's date of birth", placeholder: "Select baby's birthday", help: 'Must be a date in the past.' };
     case 'ttc':
-      return {
-        label: 'First day of last period',
-        placeholder: 'Select the date',
-        help: 'Must be within the last 6 months.',
-      };
+      return { label: `${prefix}first day of last period`, placeholder: 'Select the date', help: 'Must be within the last 6 months.' };
     default:
       return { label: '', placeholder: '', help: '' };
   }
@@ -119,17 +87,29 @@ function getDateConfig(stage: UserStage, pregnancyMode: 'lmp' | 'edd' = 'lmp'): 
 
 export default function UserTypeScreen({ navigation }: Props) {
   const { theme } = useTheme();
+
+  // Main selection
   const [selected, setSelected] = useState<UserStage | null>(null);
   const [date, setDate] = useState('');
   const [pregnancyMode, setPregnancyMode] = useState<'lmp' | 'edd'>('lmp');
+
+  // Partner — invite code path
   const [inviteCode, setInviteCode] = useState('');
   const [inviteFocused, setInviteFocused] = useState(false);
+
+  // Partner — manual entry fallback (when no valid code)
+  const [partnerStageManual, setPartnerStageManual] = useState<PartnerStageOption | null>(null);
+  const [partnerDateManual, setPartnerDateManual] = useState('');
+  const [partnerPregnancyMode, setPartnerPregnancyMode] = useState<'lmp' | 'edd'>('lmp');
 
   const handleSelect = (stage: UserStage) => {
     if (selected !== stage) {
       setDate('');
       setInviteCode('');
       setPregnancyMode('lmp');
+      setPartnerStageManual(null);
+      setPartnerDateManual('');
+      setPartnerPregnancyMode('lmp');
     }
     setSelected(stage);
   };
@@ -139,7 +119,11 @@ export default function UserTypeScreen({ navigation }: Props) {
     setPregnancyMode(m => m === 'lmp' ? 'edd' : 'lmp');
   };
 
-  // For pregnancy + LMP mode: compute EDD before navigating
+  // Decode invite code as user types
+  const decoded = selected === 'partner' ? parseInviteCode(inviteCode) : null;
+  const codeIsValid = decoded !== null;
+
+  // Resolved date for non-partner LMP→EDD conversion
   const resolvedDate = (() => {
     if (selected === 'pregnancy' && pregnancyMode === 'lmp' && date) {
       return lmpToEdd(date).toISOString().slice(0, 10);
@@ -147,23 +131,62 @@ export default function UserTypeScreen({ navigation }: Props) {
     return date;
   })();
 
+  // Resolved partner date for manual entry (LMP→EDD for pregnancy)
+  const resolvedPartnerDate = (() => {
+    if (partnerStageManual === 'pregnancy' && partnerPregnancyMode === 'lmp' && partnerDateManual) {
+      return lmpToEdd(partnerDateManual).toISOString().slice(0, 10);
+    }
+    return partnerDateManual;
+  })();
+
   const handleContinue = () => {
     if (!selected) return;
-    navigation.navigate('BasicInfo', {
+
+    if (selected === 'partner') {
+      if (codeIsValid) {
+        // Partner has a valid code — extract all context from it
+        const partnerStage = decoded!.stage as PartnerStageOption;
+        const partnerDate  = decoded!.date;
+        navigation.navigate('PrivacyPledge', {
+          stage: 'partner',
+          date: '',
+          inviteCode: inviteCode.trim(),
+          partnerStage,
+          partnerDueDate:  partnerStage !== 'newmom' ? partnerDate : undefined,
+          partnerBabyDOB:  partnerStage === 'newmom' ? partnerDate : undefined,
+        });
+      } else {
+        // No valid code — use manual stage/date if provided
+        navigation.navigate('PrivacyPledge', {
+          stage: 'partner',
+          date: '',
+          inviteCode: '',
+          partnerStage:    partnerStageManual ?? undefined,
+          partnerDueDate:  partnerStageManual !== 'newmom' ? resolvedPartnerDate || undefined : undefined,
+          partnerBabyDOB:  partnerStageManual === 'newmom' ? resolvedPartnerDate || undefined : undefined,
+        });
+      }
+      return;
+    }
+
+    navigation.navigate('PrivacyPledge', {
       stage: selected,
       date: resolvedDate,
-      inviteCode: selected === 'partner' ? inviteCode.trim() : '',
+      inviteCode: '',
     });
   };
 
   const isDateStage = selected === 'pregnancy' || selected === 'newmom' || selected === 'ttc';
-  const dateRange = selected && isDateStage ? getDateRange(selected, pregnancyMode) : null;
-  const dateConfig = selected && isDateStage ? getDateConfig(selected, pregnancyMode) : null;
+  const dateRange   = selected && isDateStage ? getDateRange(selected, pregnancyMode) : null;
+  const dateConfig  = selected && isDateStage ? getDateConfig(selected, pregnancyMode) : null;
+  const eddPreview  = selected === 'pregnancy' && pregnancyMode === 'lmp' && date
+    ? formatShortDate(lmpToEdd(date)) : null;
 
-  // EDD preview when LMP mode is active and a date is chosen
-  const eddPreview = selected === 'pregnancy' && pregnancyMode === 'lmp' && date
-    ? formatShortDate(lmpToEdd(date))
-    : null;
+  // Partner manual date helpers
+  const partnerDateRange  = partnerStageManual ? getDateRange(partnerStageManual, partnerPregnancyMode) : null;
+  const partnerDateConfig = partnerStageManual ? getDateConfig(partnerStageManual, partnerPregnancyMode, true) : null;
+  const partnerEddPreview = partnerStageManual === 'pregnancy' && partnerPregnancyMode === 'lmp' && partnerDateManual
+    ? formatShortDate(lmpToEdd(partnerDateManual)) : null;
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg.app }]}>
@@ -183,43 +206,43 @@ export default function UserTypeScreen({ navigation }: Props) {
             </Text>
           </View>
 
-          <View style={styles.options}>
+          {/* User type grid */}
+          <View style={styles.grid}>
             {options.map(opt => {
-              const isSelected = selected === opt.stage;
+              const isChosen = selected === opt.stage;
               return (
                 <TouchableOpacity
                   key={opt.stage}
                   onPress={() => handleSelect(opt.stage)}
                   activeOpacity={0.8}
                   style={[
-                    styles.option,
+                    styles.gridCard,
                     {
-                      backgroundColor: isSelected ? theme.bg.subtle : theme.bg.surface,
-                      borderColor: isSelected ? theme.border.brand : theme.border.default,
+                      backgroundColor: isChosen ? theme.bg.subtle : theme.bg.surface,
+                      borderColor: isChosen ? theme.interactive.primary : theme.border.subtle,
                     },
-                    Shadow.sm,
                   ]}
                 >
-                  <Text style={styles.emoji}>{opt.emoji}</Text>
-                  <View style={styles.optionText}>
-                    <Text style={[styles.optionLabel, { color: theme.text.primary }]}>{opt.label}</Text>
-                    <Text style={[styles.optionDesc, { color: theme.text.secondary }]}>{opt.description}</Text>
-                  </View>
-                  <View
-                    style={[
-                      styles.radio,
-                      {
-                        borderColor: isSelected ? theme.border.brand : theme.border.default,
-                        backgroundColor: isSelected ? theme.interactive.primary : 'transparent',
-                      },
-                    ]}
-                  />
+                  {isChosen ? (
+                    <View style={[styles.gridBadge, { backgroundColor: theme.interactive.primary }]}>
+                      <Icon name="check" size={11} color="#fff" />
+                    </View>
+                  ) : (
+                    <View style={[styles.gridBadge, { backgroundColor: theme.bg.app, borderWidth: 1.5, borderColor: theme.border.default }]}>
+                      <Icon name="add" size={11} color={theme.text.tertiary} />
+                    </View>
+                  )}
+                  <Text style={styles.gridEmoji}>{opt.emoji}</Text>
+                  <Text style={[styles.gridLabel, { color: theme.text.primary }]}>{opt.label}</Text>
+                  <Text style={[styles.gridDesc, { color: theme.text.secondary }]} numberOfLines={2}>
+                    {opt.description}
+                  </Text>
                 </TouchableOpacity>
               );
             })}
           </View>
 
-          {/* Contextual field — dates */}
+          {/* Date fields for pregnancy / newmom / ttc */}
           {isDateStage && dateConfig && dateRange && (
             <View style={[styles.contextBox, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}>
               <View style={styles.contextLabelRow}>
@@ -232,18 +255,10 @@ export default function UserTypeScreen({ navigation }: Props) {
                   </TouchableOpacity>
                 )}
               </View>
-              <DatePickerField
-                value={date}
-                onChange={setDate}
-                minDate={dateRange.min}
-                maxDate={dateRange.max}
-                placeholder={dateConfig.placeholder}
-              />
+              <DatePickerField value={date} onChange={setDate} minDate={dateRange.min} maxDate={dateRange.max} placeholder={dateConfig.placeholder} />
               {eddPreview ? (
                 <View style={[styles.eddPreview, { backgroundColor: theme.accent.rose.bg }]}>
-                  <Text style={[styles.eddPreviewText, { color: theme.accent.rose.text }]}>
-                    🗓 Estimated due date: {eddPreview}
-                  </Text>
+                  <Text style={[styles.eddPreviewText, { color: theme.accent.rose.text }]}>🗓 Estimated due date: {eddPreview}</Text>
                 </View>
               ) : (
                 <Text style={[styles.contextHelp, { color: theme.text.tertiary }]}>{dateConfig.help}</Text>
@@ -251,20 +266,24 @@ export default function UserTypeScreen({ navigation }: Props) {
             </View>
           )}
 
-          {/* Contextual field — partner invite code */}
+          {/* Partner contextual section */}
           {selected === 'partner' && (
             <View style={[styles.contextBox, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}>
-              <Text style={[styles.contextLabel, { color: theme.text.secondary }]}>Invite code (optional)</Text>
+
+              {/* Invite code field */}
+              <Text style={[styles.contextLabel, { color: theme.text.secondary }]}>Invite code from your partner</Text>
               <TextInput
                 style={[
                   styles.textInput,
                   {
                     backgroundColor: theme.bg.app,
-                    borderColor: inviteFocused ? theme.border.focus : theme.border.default,
+                    borderColor: codeIsValid
+                      ? theme.accent.sage.border
+                      : inviteFocused ? theme.border.focus : theme.border.default,
                     color: theme.text.primary,
                   },
                 ]}
-                placeholder="e.g. AMARA2025"
+                placeholder="e.g. PREGNANCY-20251225"
                 placeholderTextColor={theme.text.tertiary}
                 value={inviteCode}
                 onChangeText={setInviteCode}
@@ -273,9 +292,92 @@ export default function UserTypeScreen({ navigation }: Props) {
                 autoCapitalize="characters"
                 autoCorrect={false}
               />
-              <Text style={[styles.contextHelp, { color: theme.text.tertiary }]}>
-                Enter the code your partner shared. You can skip if you don't have one.
-              </Text>
+
+              {/* Code decoded — show connected preview */}
+              {codeIsValid && (
+                <View style={[styles.connectedBanner, { backgroundColor: theme.accent.sage.bg }]}>
+                  <Icon name="check_circle" size={16} color={theme.accent.sage.text} />
+                  <Text style={[styles.connectedText, { color: theme.accent.sage.text }]}>
+                    {decoded!.stage === 'pregnancy'
+                      ? `Connected — partner is pregnant${decoded!.date ? ` · Due ${formatShortDate(new Date(decoded!.date))}` : ''}`
+                      : decoded!.stage === 'newmom'
+                      ? `Connected — partner has a newborn${decoded!.date ? ` · Born ${formatShortDate(new Date(decoded!.date))}` : ''}`
+                      : `Connected — partner is trying to conceive`}
+                  </Text>
+                </View>
+              )}
+
+              {/* No valid code — show manual stage selector */}
+              {!codeIsValid && (
+                <>
+                  <View style={[styles.divider, { borderColor: theme.border.subtle }]} />
+                  <Text style={[styles.contextLabel, { color: theme.text.secondary }]}>
+                    Or tell us what stage she is in
+                  </Text>
+                  <View style={styles.pillRow}>
+                    {partnerStageOptions.map(opt => {
+                      const isChosen = partnerStageManual === opt.stage;
+                      return (
+                        <TouchableOpacity
+                          key={opt.stage}
+                          onPress={() => {
+                            setPartnerStageManual(opt.stage);
+                            setPartnerDateManual('');
+                            setPartnerPregnancyMode('lmp');
+                          }}
+                          activeOpacity={0.75}
+                          style={[
+                            styles.stagePill,
+                            {
+                              backgroundColor: isChosen ? theme.interactive.primary : theme.bg.app,
+                              borderColor: isChosen ? theme.interactive.primary : theme.border.default,
+                            },
+                          ]}
+                        >
+                          <Text style={styles.stagePillEmoji}>{opt.emoji}</Text>
+                          <Text style={[styles.stagePillText, { color: isChosen ? theme.interactive.primaryText : theme.text.primary }]}>
+                            {opt.label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  {/* Date picker for selected partner stage */}
+                  {partnerStageManual && partnerDateConfig && partnerDateRange && (
+                    <View style={styles.partnerDateSection}>
+                      <View style={styles.contextLabelRow}>
+                        <Text style={[styles.contextHelp, { color: theme.text.secondary }]}>{partnerDateConfig.label}</Text>
+                        {partnerStageManual === 'pregnancy' && (
+                          <TouchableOpacity onPress={() => { setPartnerDateManual(''); setPartnerPregnancyMode(m => m === 'lmp' ? 'edd' : 'lmp'); }} activeOpacity={0.7}>
+                            <Text style={[styles.modeToggle, { color: theme.text.link }]}>
+                              {partnerPregnancyMode === 'lmp' ? 'I know her due date' : 'Use last period instead'}
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                      <DatePickerField
+                        value={partnerDateManual}
+                        onChange={setPartnerDateManual}
+                        minDate={partnerDateRange.min}
+                        maxDate={partnerDateRange.max}
+                        placeholder={partnerDateConfig.placeholder}
+                      />
+                      {partnerEddPreview ? (
+                        <View style={[styles.eddPreview, { backgroundColor: theme.accent.rose.bg }]}>
+                          <Text style={[styles.eddPreviewText, { color: theme.accent.rose.text }]}>🗓 Estimated due date: {partnerEddPreview}</Text>
+                        </View>
+                      ) : (
+                        <Text style={[styles.contextHelp, { color: theme.text.tertiary }]}>{partnerDateConfig.help}</Text>
+                      )}
+                    </View>
+                  )}
+
+                  <Text style={[styles.contextHelp, { color: theme.text.tertiary }]}>
+                    You can skip this — your experience will update once you get an invite code.
+                  </Text>
+                </>
+              )}
             </View>
           )}
 
@@ -317,37 +419,47 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.base,
     lineHeight: Typography.size.base * 1.5,
   },
-  options: { gap: Spacing[3] },
-  option: {
-    borderRadius: Radius['2xl'],
-    borderWidth: 1.5,
-    padding: Spacing[4],
+  grid: {
     flexDirection: 'row',
-    alignItems: 'center',
+    flexWrap: 'wrap',
     gap: Spacing[3],
   },
-  emoji: { fontSize: 28 },
-  optionText: { flex: 1, gap: 3 },
-  optionLabel: {
-    fontFamily: Typography.fontFamily.bodySemibold,
-    fontSize: Typography.size.base,
+  gridCard: {
+    width: '47%',
+    borderRadius: Radius.xl,
+    borderWidth: 1.5,
+    padding: Spacing[4],
+    gap: Spacing[1],
+    position: 'relative',
+    minHeight: 120,
   },
-  optionDesc: {
-    fontFamily: Typography.fontFamily.body,
+  gridBadge: {
+    position: 'absolute',
+    top: Spacing[2],
+    right: Spacing[2],
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gridEmoji: { fontSize: 30, lineHeight: 40 },
+  gridLabel: {
+    fontFamily: Typography.fontFamily.bodyBold,
     fontSize: Typography.size.sm,
-    lineHeight: Typography.size.sm * 1.5,
+    lineHeight: Typography.size.sm * 1.3,
+    marginTop: 2,
   },
-  radio: {
-    width: 20,
-    height: 20,
-    borderRadius: Radius.full,
-    borderWidth: 2,
+  gridDesc: {
+    fontFamily: Typography.fontFamily.body,
+    fontSize: Typography.size.xs,
+    lineHeight: Typography.size.xs * 1.5,
   },
   contextBox: {
     borderWidth: 1,
     borderRadius: Radius['2xl'],
     padding: Spacing[4],
-    gap: Spacing[2],
+    gap: Spacing[3],
   },
   contextLabelRow: {
     flexDirection: 'row',
@@ -381,6 +493,42 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.base,
     minHeight: 52,
   },
+  connectedBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[2],
+    paddingHorizontal: Spacing[3],
+    paddingVertical: Spacing[2],
+    borderRadius: Radius.lg,
+  },
+  connectedText: {
+    fontFamily: Typography.fontFamily.bodySemibold,
+    fontSize: Typography.size.sm,
+    flex: 1,
+  },
+  divider: {
+    borderTopWidth: 1,
+    marginVertical: Spacing[1],
+  },
+  pillRow: {
+    flexDirection: 'column',
+    gap: Spacing[2],
+  },
+  stagePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[2],
+    paddingHorizontal: Spacing[4],
+    paddingVertical: Spacing[3],
+    borderRadius: Radius.xl,
+    borderWidth: 1.5,
+  },
+  stagePillEmoji: { fontSize: 16 },
+  stagePillText: {
+    fontFamily: Typography.fontFamily.bodySemibold,
+    fontSize: Typography.size.sm,
+  },
+  partnerDateSection: { gap: Spacing[2] },
   contextHelp: {
     fontFamily: Typography.fontFamily.body,
     fontSize: Typography.size.xs,

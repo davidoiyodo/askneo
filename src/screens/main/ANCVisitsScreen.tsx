@@ -5,11 +5,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import {
-  ChevronLeft, Plus, Trash2, ChevronDown, ChevronUp,
-  CheckCircle, Circle, AlertTriangle, CalendarCheck,
-  ClipboardList, Stethoscope,
-} from 'lucide-react-native';
+
 import { Calendar } from 'react-native-calendars';
 
 import { useTheme } from '../../theme/ThemeContext';
@@ -18,6 +14,7 @@ import { useANCVisits, ANCVisit, UrineResult, BinaryResult, HIVStatus } from '..
 import { useRoutine } from '../../hooks/useRoutine';
 import { getGestationalWeek } from '../../utils/chatEngine';
 import { Typography, Spacing, Radius } from '../../theme';
+import Icon from '../../components/icons/Icon';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -340,7 +337,7 @@ export default function ANCVisitsScreen({ navigation }: { navigation: any }) {
             activeOpacity={0.7}
             style={[styles.backBtn, { backgroundColor: theme.bg.subtle, borderColor: theme.border.subtle }]}
           >
-            <ChevronLeft size={20} color={theme.text.primary} strokeWidth={2} />
+            <Icon name="left" size={20} color={theme.text.primary} />
             <Text style={[styles.backLabel, { color: theme.text.primary }]}>Back</Text>
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.text.brand }]}>
@@ -362,36 +359,17 @@ export default function ANCVisitsScreen({ navigation }: { navigation: any }) {
               activeOpacity={0.7}
               style={[styles.dateTouchable, { borderColor: theme.border.default, backgroundColor: theme.bg.app }]}
             >
-              <CalendarCheck size={16} color={theme.interactive.primary} strokeWidth={2} />
+              <Icon name="calendar" size={16} color={theme.interactive.primary} />
               <Text style={[styles.dateTouchableText, { color: theme.text.primary }]}>
                 {formatDisplayDate(visitDate)}
               </Text>
               {showDatePicker
-                ? <ChevronUp size={14} color={theme.text.tertiary} strokeWidth={2} />
-                : <ChevronDown size={14} color={theme.text.tertiary} strokeWidth={2} />
+                ? <Icon name="up" size={14} color={theme.text.tertiary} />
+                : <Icon name="down" size={14} color={theme.text.tertiary} />
               }
             </TouchableOpacity>
             {showDatePicker && (
-              <Calendar
-                current={visitDate}
-                maxDate={todayKey}
-                onDayPress={(d: any) => handleDateSelect(d.dateString)}
-                markedDates={markedDates}
-                theme={{
-                  backgroundColor: 'transparent', calendarBackground: 'transparent',
-                  textSectionTitleColor: theme.text.tertiary,
-                  selectedDayBackgroundColor: theme.interactive.primary,
-                  selectedDayTextColor: '#fff',
-                  todayTextColor: theme.text.brand,
-                  dayTextColor: theme.text.primary,
-                  textDisabledColor: theme.border.default,
-                  monthTextColor: theme.text.primary,
-                  arrowColor: theme.interactive.primary,
-                  textMonthFontFamily: 'Manrope_700Bold',
-                  textDayFontFamily: 'Manrope_500Medium',
-                  textDayHeaderFontFamily: 'Manrope_600SemiBold',
-                }}
-              />
+              <Icon name="calendar" />
             )}
           </View>
 
@@ -636,8 +614,8 @@ export default function ANCVisitsScreen({ navigation }: { navigation: any }) {
             >
               <Text style={[styles.bookingToggleLabel, { color: theme.text.secondary }]}>BOOKING TESTS (FIRST VISIT)</Text>
               {showBookingTests
-                ? <ChevronUp size={14} color={theme.text.tertiary} strokeWidth={2} />
-                : <ChevronDown size={14} color={theme.text.tertiary} strokeWidth={2} />}
+                ? <Icon name="up" size={14} color={theme.text.tertiary} />
+                : <Icon name="down" size={14} color={theme.text.tertiary} />}
             </TouchableOpacity>
 
             {showBookingTests && (
@@ -788,36 +766,17 @@ export default function ANCVisitsScreen({ navigation }: { navigation: any }) {
               activeOpacity={0.7}
               style={[styles.dateTouchable, { borderColor: theme.border.default, backgroundColor: theme.bg.app }]}
             >
-              <CalendarCheck size={16} color={theme.interactive.primary} strokeWidth={2} />
+              <Icon name="calendar" size={16} color={theme.interactive.primary} />
               <Text style={[styles.dateTouchableText, { color: nextApptDate ? theme.text.primary : theme.text.tertiary }]}>
                 {nextApptDate ? formatDisplayDate(nextApptDate) : 'Tap to set next appointment'}
               </Text>
               {showNextApptPicker
-                ? <ChevronUp size={14} color={theme.text.tertiary} strokeWidth={2} />
-                : <ChevronDown size={14} color={theme.text.tertiary} strokeWidth={2} />
+                ? <Icon name="up" size={14} color={theme.text.tertiary} />
+                : <Icon name="down" size={14} color={theme.text.tertiary} />
               }
             </TouchableOpacity>
             {showNextApptPicker && (
-              <Calendar
-                current={nextApptDate ?? todayKey}
-                minDate={todayKey}
-                onDayPress={(d: any) => { setNextApptDate(d.dateString); setShowNextApptPicker(false); }}
-                markedDates={markedNextAppt}
-                theme={{
-                  backgroundColor: 'transparent', calendarBackground: 'transparent',
-                  textSectionTitleColor: theme.text.tertiary,
-                  selectedDayBackgroundColor: theme.interactive.primary,
-                  selectedDayTextColor: '#fff',
-                  todayTextColor: theme.text.brand,
-                  dayTextColor: theme.text.primary,
-                  textDisabledColor: theme.border.default,
-                  monthTextColor: theme.text.primary,
-                  arrowColor: theme.interactive.primary,
-                  textMonthFontFamily: 'Manrope_700Bold',
-                  textDayFontFamily: 'Manrope_500Medium',
-                  textDayHeaderFontFamily: 'Manrope_600SemiBold',
-                }}
-              />
+              <Icon name="calendar" />
             )}
           </View>
 
@@ -840,8 +799,8 @@ export default function ANCVisitsScreen({ navigation }: { navigation: any }) {
               style={[styles.toggleRow, { marginTop: Spacing[3] }]}
             >
               {concernFlagged
-                ? <CheckCircle size={18} color={theme.accent.rose.text} strokeWidth={2} />
-                : <Circle size={18} color={theme.border.default} strokeWidth={2} />
+                ? <Icon name="check_circle" size={18} color={theme.accent.rose.text} />
+                : <Icon name="circle_dash" size={18} color={theme.border.default} />
               }
               <Text style={[styles.toggleLabel, { color: theme.text.secondary, fontSize: 13 }]}>
                 Concern was flagged by midwife
@@ -854,8 +813,8 @@ export default function ANCVisitsScreen({ navigation }: { navigation: any }) {
                 style={[styles.toggleRow, { marginTop: Spacing[2], marginLeft: Spacing[5] }]}
               >
                 {referredToDoctor
-                  ? <CheckCircle size={18} color={theme.accent.rose.text} strokeWidth={2} />
-                  : <Circle size={18} color={theme.border.default} strokeWidth={2} />
+                  ? <Icon name="check_circle" size={18} color={theme.accent.rose.text} />
+                  : <Icon name="circle_dash" size={18} color={theme.border.default} />
                 }
                 <Text style={[styles.toggleLabel, { color: theme.text.secondary, fontSize: 13 }]}>
                   Referred to see the doctor
@@ -871,7 +830,7 @@ export default function ANCVisitsScreen({ navigation }: { navigation: any }) {
             activeOpacity={0.85}
             style={[styles.saveBtn, { backgroundColor: theme.interactive.primary }]}
           >
-            <CheckCircle size={18} color="#fff" strokeWidth={2.5} />
+            <Icon name="check_circle" size={18} color="#fff" />
             <Text style={styles.saveBtnText}>{saving ? 'Saving…' : 'Save visit'}</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -899,7 +858,7 @@ export default function ANCVisitsScreen({ navigation }: { navigation: any }) {
           activeOpacity={0.7}
           style={[styles.backBtn, { backgroundColor: theme.bg.subtle, borderColor: theme.border.subtle }]}
         >
-          <ChevronLeft size={20} color={theme.text.primary} strokeWidth={2} />
+          <Icon name="left" size={20} color={theme.text.primary} />
           <Text style={[styles.backLabel, { color: theme.text.primary }]}>Back</Text>
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.text.brand }]}>ANC Visits</Text>
@@ -908,7 +867,7 @@ export default function ANCVisitsScreen({ navigation }: { navigation: any }) {
           activeOpacity={0.7}
           style={[styles.addBtn, { backgroundColor: theme.interactive.primary }]}
         >
-          <Plus size={16} color="#fff" strokeWidth={2.5} />
+          <Icon name="add" size={16} color="#fff" />
           <Text style={styles.addBtnText}>Log visit</Text>
         </TouchableOpacity>
       </View>
@@ -983,7 +942,7 @@ export default function ANCVisitsScreen({ navigation }: { navigation: any }) {
         {/* Next appointment banner */}
         {nextAppointment && nextApptDays !== null && nextApptDays >= 0 && nextApptDays <= 7 && (
           <View style={[styles.apptBanner, { backgroundColor: theme.accent.gold.bg, borderColor: theme.accent.gold.border }]}>
-            <AlertTriangle size={16} color={theme.accent.gold.text} strokeWidth={2} />
+            <Icon name="warning" size={16} color={theme.accent.gold.text} />
             <Text style={[styles.apptBannerText, { color: theme.text.primary }]}>
               Your next ANC visit is {nextApptLabel?.toLowerCase()} — {formatDisplayDate(nextAppointment)}
             </Text>
@@ -1044,7 +1003,7 @@ function VisitCard({
       >
         <View style={styles.visitCardLeft}>
           <View style={[styles.visitIconWrap, { backgroundColor: theme.accent.sky.bg }]}>
-            <Stethoscope size={16} color={theme.accent.sky.text} strokeWidth={2} />
+            <Icon name="stethoscope" size={16} color={theme.accent.sky.text} />
           </View>
           <View>
             <Text style={[styles.visitDate, { color: theme.text.primary }]}>
@@ -1061,11 +1020,11 @@ function VisitCard({
         </View>
         <View style={styles.visitCardRight}>
           {visit.concernFlagged && (
-            <AlertTriangle size={14} color={theme.accent.rose.text} strokeWidth={2} />
+            <Icon name="warning" size={14} color={theme.accent.rose.text} />
           )}
           {expanded
-            ? <ChevronUp size={16} color={theme.text.tertiary} strokeWidth={2} />
-            : <ChevronDown size={16} color={theme.text.tertiary} strokeWidth={2} />
+            ? <Icon name="up" size={16} color={theme.text.tertiary} />
+            : <Icon name="down" size={16} color={theme.text.tertiary} />
           }
         </View>
       </TouchableOpacity>
@@ -1152,7 +1111,7 @@ function VisitCard({
           {/* Concerns */}
           {visit.concernFlagged && (
             <View style={[styles.concernBadge, { backgroundColor: theme.accent.rose.bg, borderColor: theme.accent.rose.border }]}>
-              <AlertTriangle size={13} color={theme.accent.rose.text} strokeWidth={2} />
+              <Icon name="warning" size={13} color={theme.accent.rose.text} />
               <Text style={[styles.concernText, { color: theme.accent.rose.text }]}>
                 {visit.referredToDoctor ? 'Concern flagged · Referred to doctor' : 'Concern flagged by midwife'}
               </Text>
@@ -1193,7 +1152,7 @@ function VisitCard({
               activeOpacity={0.7}
               style={[styles.cardActionBtn, { borderColor: theme.border.default }]}
             >
-              <Trash2 size={14} color={theme.accent.rose.text} strokeWidth={2} />
+              <Icon name="delete_2" size={14} color={theme.accent.rose.text} />
               <Text style={[styles.cardActionText, { color: theme.accent.rose.text }]}>Delete</Text>
             </TouchableOpacity>
           </View>

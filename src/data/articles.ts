@@ -69,6 +69,7 @@ export interface Article {
   maxWeek?: number;
   minDay?: number;   // days postpartum
   maxDay?: number;
+  partnerContext?: 'ttc' | 'pregnancy' | 'newmom';  // narrows partner articles by partner's woman stage
 }
 
 export const articles: Article[] = [
@@ -809,6 +810,76 @@ Be direct with your GP. Ask specifically for a fertility referral if you meet th
 
 The earlier issues are identified, the more options there are. Seeking help is not giving up — it's information-gathering.`,
   },
+  // ── TTC PARTNER ───────────────────────────────────────────
+
+  {
+    id: 'ttcp-support-ttc',
+    stages: ['partner'],
+    partnerContext: 'ttc',
+    tag: 'Supporting Her',
+    readMinutes: 4,
+    author: AUTHORS.kwame,
+    coverEmoji: '🌱',
+    coverBg: '#D8EDD8',
+    coverImage: 'https://images.unsplash.com/photo-1516589091380-5d8e87df6999?auto=format&fit=crop&w=800&q=80',
+    title: 'How to support your partner through TTC',
+    excerpt: 'Trying to conceive can be emotionally intense — for both of you. Here\'s what a genuinely supportive presence looks like month to month.',
+    body: `Trying to conceive (TTC) is a journey that looks simple from the outside and rarely feels simple from the inside. The monthly cycle of hope and disappointment, the pressure of timing, and the uncertainty of outcomes can be genuinely exhausting. Your presence and understanding matter more than most partners realise.
+
+**What she's going through:**
+Each cycle involves a two-week wait — the period between ovulation and when a test gives a result. During this time, she is likely hyper-aware of every sensation in her body, simultaneously hoping and bracing. She may feel anxious, withdrawn, or irritable without being able to fully explain why. This is not irrational — it's the normal emotional weight of something she can't control.
+
+**What actually helps:**
+Don't make every conversation about TTC. Create space for her to be a whole person during this time, not just someone who is trying to get pregnant. Date nights, walks, the things you enjoy together — these protect your relationship and reduce the tunnel vision that TTC can create.
+
+During the two-week wait, her job is to wait. Yours is to distract, be present, and not press her for updates or speculate about symptoms. If she brings it up, be present. If she doesn't, let her lead.
+
+After a negative test, don't rush to "next month." Give it a moment. A negative test is a small loss every time, even if the pregnancy never began. Let her grieve it if she needs to, then reset together.
+
+**When it's been a long time:**
+If you've been trying for 12 months without success — or 6 months if she's over 35 — the conversation about seeing a doctor together is worth having. Frame it as gathering information, not acknowledging failure. Both of you will be evaluated; male factor is involved in around 40% of fertility challenges, so this is a shared investigation.
+
+Staying connected, staying present, and staying patient: that's what this stage asks of you.`,
+  },
+
+  {
+    id: 'ttcp-male-fertility',
+    stages: ['partner'],
+    partnerContext: 'ttc',
+    tag: 'Your Health',
+    readMinutes: 4,
+    author: AUTHORS.kwame,
+    coverEmoji: '💪',
+    coverBg: '#D6EEFF',
+    coverImage: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=800&q=80',
+    title: 'Male fertility: what you can actually control',
+    excerpt: 'Sperm quality is affected by lifestyle in ways most men don\'t know about. Here\'s what the evidence says — and what\'s worth changing.',
+    body: `Male factors contribute to around 40–50% of fertility challenges. This isn't a blame statistic — it's an empowering one. It means your health directly influences your chances of conceiving, and there is meaningful action you can take.
+
+**How sperm quality works:**
+Sperm take approximately 74 days to develop (spermatogenesis). This means the choices you make today affect the sperm that will be available in about 2–3 months. Changes you make now are not immediately visible, but they are real — and they accumulate.
+
+**Heat:**
+Sperm production requires a temperature slightly below core body temperature — which is why the testes sit outside the body. Prolonged exposure to heat impairs sperm production. Practical changes: avoid long hot baths or saunas, keep laptops off your lap, switch to looser-fitting underwear, and avoid seated jobs that involve sustained heat without breaks.
+
+**Smoking:**
+Smoking significantly reduces sperm count, motility, and morphology. If you smoke, stopping is the single most impactful change you can make for fertility. The effects begin reversing within weeks of stopping.
+
+**Alcohol:**
+Heavy drinking reduces testosterone and sperm quality. The evidence for moderate drinking is less clear — current guidance is to limit alcohol significantly while trying to conceive.
+
+**Weight:**
+Both underweight and overweight are associated with lower testosterone and poorer sperm parameters. A modest improvement in BMI — through diet and exercise, not crash dieting — has measurable effects.
+
+**Supplements:**
+The evidence for male fertility supplements is mixed. Antioxidants (vitamin C, vitamin E, zinc, selenium, coenzyme Q10) have reasonable supporting evidence for improving sperm parameters in men with lower-quality results. A basic men's fertility supplement from a reputable brand is unlikely to harm and may help. Folic acid (400mcg) is also reasonable.
+
+**What not to do:**
+Anabolic steroids and testosterone supplements dramatically reduce sperm production — often to zero. These should be stopped entirely if conception is the goal.
+
+A semen analysis is a simple, non-invasive test that gives you real data about where you stand. If you've been trying for a while and haven't had one, it's worth requesting.`,
+  },
+
 ];
 
 /**
@@ -819,8 +890,15 @@ export function getArticlesForUser(
   stage: UserStage,
   currentWeek: number = 0,
   currentDay: number = 0,
+  partnerContext?: 'ttc' | 'pregnancy' | 'newmom',
 ): Article[] {
-  const stageArticles = articles.filter(a => a.stages.includes(stage));
+  const stageArticles = articles.filter(a => {
+    if (!a.stages.includes(stage)) return false;
+    if (stage === 'partner' && a.partnerContext) {
+      return a.partnerContext === (partnerContext ?? 'pregnancy');
+    }
+    return true;
+  });
 
   const scored = stageArticles.map(a => {
     let score = 0;

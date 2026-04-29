@@ -4,10 +4,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ChevronLeft, Mic, FileText, Clock, CheckCircle2, AlertCircle, Plus } from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { Typography, Spacing, Radius, Shadow } from '../../theme';
 import { ConsultationSession, SessionType } from '../../types/consultation';
+import Icon from '../../components/icons/Icon';
 
 const STORAGE_KEY = 'askneo_consultations';
 
@@ -72,7 +73,7 @@ export default function ConsultationsScreen({ navigation }: { navigation: any })
           activeOpacity={0.7}
           style={[styles.backBtn, { backgroundColor: theme.bg.subtle, borderColor: theme.border.subtle }]}
         >
-          <ChevronLeft size={20} color={theme.text.primary} strokeWidth={2} />
+          <Icon name="left" size={20} color={theme.text.primary} />
           <Text style={[styles.backLabel, { color: theme.text.primary }]}>Back</Text>
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.text.primary }]}>Consultations</Text>
@@ -81,7 +82,7 @@ export default function ConsultationsScreen({ navigation }: { navigation: any })
           activeOpacity={0.8}
           style={[styles.newBtn, { backgroundColor: theme.interactive.primary }]}
         >
-          <Plus size={18} color="#fff" strokeWidth={2.5} />
+          <Icon name="add" size={18} color="#fff" />
         </TouchableOpacity>
       </View>
 
@@ -89,7 +90,7 @@ export default function ConsultationsScreen({ navigation }: { navigation: any })
         {sessions.length === 0 ? (
           <View style={styles.emptyState}>
             <View style={[styles.emptyIcon, { backgroundColor: theme.bg.subtle }]}>
-              <Mic size={32} color={theme.text.tertiary} strokeWidth={1.5} />
+              <Icon name="mic" size={32} color={theme.text.tertiary} />
             </View>
             <Text style={[styles.emptyTitle, { color: theme.text.primary }]}>
               No consultations recorded yet
@@ -102,7 +103,7 @@ export default function ConsultationsScreen({ navigation }: { navigation: any })
               activeOpacity={0.85}
               style={[styles.emptyBtn, { backgroundColor: theme.interactive.primary }]}
             >
-              <Mic size={16} color="#fff" strokeWidth={2} />
+              <Icon name="mic" size={16} color="#fff" />
               <Text style={styles.emptyBtnLabel}>Record a consultation</Text>
             </TouchableOpacity>
           </View>
@@ -117,10 +118,10 @@ export default function ConsultationsScreen({ navigation }: { navigation: any })
               >
                 <View style={[styles.sessionIconBg, { backgroundColor: theme.bg.subtle }]}>
                   {s.status === 'done'
-                    ? <FileText size={20} color={theme.text.brand} strokeWidth={1.75} />
+                    ? <Icon name="file" size={20} color={theme.text.brand} />
                     : s.status === 'error'
-                      ? <AlertCircle size={20} color={theme.accent.rose.text} strokeWidth={1.75} />
-                      : <Mic size={20} color={theme.accent.gold.text} strokeWidth={1.75} />
+                      ? <Icon name="alert" size={20} color={theme.accent.rose.text} />
+                      : <Icon name="mic" size={20} color={theme.accent.gold.text} />
                   }
                 </View>
                 <View style={styles.sessionInfo}>
@@ -132,14 +133,14 @@ export default function ConsultationsScreen({ navigation }: { navigation: any })
                     {s.durationSeconds > 0 && (
                       <>
                         <Text style={[styles.metaDot, { color: theme.text.tertiary }]}>·</Text>
-                        <Clock size={12} color={theme.text.tertiary} strokeWidth={2} />
+                        <Icon name="time" size={12} color={theme.text.tertiary} />
                         <Text style={[styles.sessionDate, { color: theme.text.tertiary }]}>{formatDuration(s.durationSeconds)}</Text>
                       </>
                     )}
                   </View>
                   {s.status === 'done' && s.actionItems.length > 0 && (
                     <View style={styles.actionItemsRow}>
-                      <CheckCircle2 size={12} color={theme.accent.sage.text} strokeWidth={2} />
+                      <Icon name="check_circle" size={12} color={theme.accent.sage.text} />
                       <Text style={[styles.actionItemsLabel, { color: theme.accent.sage.text }]}>
                         {s.actionItems.filter(a => a.done).length}/{s.actionItems.length} action items done
                       </Text>

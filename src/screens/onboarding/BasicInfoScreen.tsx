@@ -12,12 +12,12 @@ import { UserStage } from '../../hooks/useAppContext';
 
 type Props = {
   navigation: NativeStackNavigationProp<any>;
-  route: { params: { stage: UserStage; date: string; inviteCode: string } };
+  route: { params: { stage: UserStage; date: string; inviteCode: string; partnerStage?: string; partnerDueDate?: string; partnerBabyDOB?: string } };
 };
 
 export default function BasicInfoScreen({ navigation, route }: Props) {
   const { theme } = useTheme();
-  const { stage, date, inviteCode } = route.params;
+  const { stage, date, inviteCode, partnerStage, partnerDueDate, partnerBabyDOB } = route.params;
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -42,13 +42,16 @@ export default function BasicInfoScreen({ navigation, route }: Props) {
       return;
     }
     setPasswordError('');
-    navigation.navigate('EmergencyContacts', {
+    navigation.navigate('NiceToMeetYou', {
       stage,
       name: name.trim(),
       email: email.trim().toLowerCase(),
       date,
       inviteCode,
       password,
+      partnerStage,
+      partnerDueDate,
+      partnerBabyDOB,
     });
   };
 

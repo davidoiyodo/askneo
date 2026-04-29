@@ -4,14 +4,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  ChevronLeft, Calendar, Pill, ClipboardList, FileText,
-  RotateCcw, Trash2, ChevronDown, ChevronUp, PlusCircle, MinusCircle, ScanLine,
-} from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { Typography, Spacing, Radius, Shadow } from '../../theme';
 import { useAppContext } from '../../hooks/useAppContext';
 import { ConsultationSession } from '../../types/consultation';
+import Icon from '../../components/icons/Icon';
 
 const STORAGE_KEY = 'askneo_consultations';
 
@@ -43,7 +41,6 @@ export default function ConsultationDetailScreen({ navigation, route }: { naviga
   };
 
   useEffect(() => { load(); }, [sessionId]);
-
 
   const deleteSession = () => {
     Alert.alert(
@@ -84,11 +81,11 @@ export default function ConsultationDetailScreen({ navigation, route }: { naviga
           activeOpacity={0.7}
           style={[styles.backBtn, { backgroundColor: theme.bg.subtle, borderColor: theme.border.subtle }]}
         >
-          <ChevronLeft size={20} color={theme.text.primary} strokeWidth={2} />
+          <Icon name="left" size={20} color={theme.text.primary} />
           <Text style={[styles.backLabel, { color: theme.text.primary }]}>Back</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={deleteSession} activeOpacity={0.7}>
-          <Trash2 size={18} color={theme.text.tertiary} strokeWidth={2} />
+          <Icon name="delete_2" size={18} color={theme.text.tertiary} />
         </TouchableOpacity>
       </View>
 
@@ -114,7 +111,7 @@ export default function ConsultationDetailScreen({ navigation, route }: { naviga
         {session.sessionType === 'scan' && (session.scanType || session.gestationalWeek || session.imagingFacility) && (
           <View style={styles.section}>
             <SectionHeader
-              icon={<ScanLine size={16} color={theme.text.brand} strokeWidth={2} />}
+              icon={<Icon name="scan" size={16} color={theme.text.brand} />}
               label="Scan details"
             />
             <View style={[styles.scanCard, { backgroundColor: theme.accent.gold.bg, borderColor: theme.accent.gold.border }]}>
@@ -144,7 +141,7 @@ export default function ConsultationDetailScreen({ navigation, route }: { naviga
         {session.actionItems.length > 0 && (
           <View style={styles.section}>
             <SectionHeader
-              icon={<ClipboardList size={16} color={theme.text.brand} strokeWidth={2} />}
+              icon={<Icon name="clipboard" size={16} color={theme.text.brand} />}
               label="Action items"
             />
             <View style={[styles.card, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}>
@@ -166,8 +163,8 @@ export default function ConsultationDetailScreen({ navigation, route }: { naviga
                       onPress={() => addedTask ? removeTask(addedTask.id) : addTask(item.text, sessionId)}
                     >
                       {addedTask
-                        ? <MinusCircle size={18} strokeWidth={2} color={theme.interactive.primary} />
-                        : <PlusCircle size={18} strokeWidth={2} color={theme.border.default} />
+                        ? <Icon name="minus_circle" size={18} color={theme.interactive.primary} />
+                        : <Icon name="add_circle" size={18} color={theme.border.default} />
                       }
                     </TouchableOpacity>
                   </View>
@@ -181,11 +178,11 @@ export default function ConsultationDetailScreen({ navigation, route }: { naviga
         {ex?.nextAppointment && (
           <View style={styles.section}>
             <SectionHeader
-              icon={<Calendar size={16} color={theme.text.brand} strokeWidth={2} />}
+              icon={<Icon name="calendar" size={16} color={theme.text.brand} />}
               label="Next appointment"
             />
             <View style={[styles.appointmentCard, { backgroundColor: theme.accent.gold.bg, borderColor: theme.accent.gold.border }]}>
-              <Calendar size={20} color={theme.accent.gold.text} strokeWidth={1.75} />
+              <Icon name="calendar" size={20} color={theme.accent.gold.text} />
               <Text style={[styles.appointmentDate, { color: theme.accent.gold.text }]}>
                 {formatShortDate(ex.nextAppointment)}
               </Text>
@@ -197,7 +194,7 @@ export default function ConsultationDetailScreen({ navigation, route }: { naviga
         {ex?.medications && ex.medications.length > 0 && (
           <View style={styles.section}>
             <SectionHeader
-              icon={<Pill size={16} color={theme.text.brand} strokeWidth={2} />}
+              icon={<Icon name="capsule" size={16} color={theme.text.brand} />}
               label="Medications prescribed"
             />
             <View style={[styles.card, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}>
@@ -213,7 +210,7 @@ export default function ConsultationDetailScreen({ navigation, route }: { naviga
                     ]}
                   >
                     <View style={[styles.medDot, { backgroundColor: theme.accent.peach.bg }]}>
-                      <Pill size={14} color={theme.accent.peach.text} strokeWidth={2} />
+                      <Icon name="capsule" size={14} color={theme.accent.peach.text} />
                     </View>
                     <View style={styles.medInfo}>
                       <Text style={[styles.medName, { color: theme.text.primary }]}>
@@ -227,8 +224,8 @@ export default function ConsultationDetailScreen({ navigation, route }: { naviga
                       onPress={() => medsTask ? removeTask(medsTask.id) : addTask('Take your medications', sessionId)}
                     >
                       {medsTask
-                        ? <MinusCircle size={18} strokeWidth={2} color={theme.interactive.primary} />
-                        : <PlusCircle size={18} strokeWidth={2} color={theme.border.default} />
+                        ? <Icon name="minus_circle" size={18} color={theme.interactive.primary} />
+                        : <Icon name="add_circle" size={18} color={theme.border.default} />
                       }
                     </TouchableOpacity>
                   </View>
@@ -242,7 +239,7 @@ export default function ConsultationDetailScreen({ navigation, route }: { naviga
         {ex?.instructions && ex.instructions.length > 0 && (
           <View style={styles.section}>
             <SectionHeader
-              icon={<ClipboardList size={16} color={theme.text.brand} strokeWidth={2} />}
+              icon={<Icon name="clipboard" size={16} color={theme.text.brand} />}
               label={
                 session.sessionType === 'midwife' ? "Midwife's instructions" :
                 session.sessionType === 'scan'    ? 'Notes from scan' :
@@ -277,13 +274,13 @@ export default function ConsultationDetailScreen({ navigation, route }: { naviga
             >
               <View style={styles.sectionHeader}>
                 <View style={[styles.sectionIconBg, { backgroundColor: theme.bg.subtle }]}>
-                  <FileText size={16} color={theme.text.brand} strokeWidth={2} />
+                  <Icon name="file" size={16} color={theme.text.brand} />
                 </View>
                 <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Full transcript</Text>
               </View>
               {showTranscript
-                ? <ChevronUp size={16} color={theme.text.tertiary} strokeWidth={2} />
-                : <ChevronDown size={16} color={theme.text.tertiary} strokeWidth={2} />
+                ? <Icon name="up" size={16} color={theme.text.tertiary} />
+                : <Icon name="down" size={16} color={theme.text.tertiary} />
               }
             </TouchableOpacity>
             {showTranscript && (
@@ -300,7 +297,7 @@ export default function ConsultationDetailScreen({ navigation, route }: { naviga
           style={[styles.reExtractBtn, { borderColor: theme.border.default }]}
           onPress={() => Alert.alert('Re-extract', 'This will re-process the recording. Available when backend is connected.')}
         >
-          <RotateCcw size={16} color={theme.text.secondary} strokeWidth={2} />
+          <Icon name="refresh_anticlockwise_1" size={16} color={theme.text.secondary} />
           <Text style={[styles.reExtractLabel, { color: theme.text.secondary }]}>Re-extract insights</Text>
         </TouchableOpacity>
       </ScrollView>

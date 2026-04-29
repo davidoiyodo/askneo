@@ -4,11 +4,12 @@ import {
   Alert, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Siren, Phone, ChevronLeft } from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext } from '../../hooks/useAppContext';
 import { Typography, Spacing, Radius, Shadow, Colors } from '../../theme';
 import AddContactModal from '../../components/modals/AddContactModal';
+import Icon from '../../components/icons/Icon';
 export default function QuickHelpScreen({ navigation }: { navigation: any }) {
   const { theme } = useTheme();
   const { user } = useAppContext();
@@ -55,7 +56,7 @@ export default function QuickHelpScreen({ navigation }: { navigation: any }) {
           activeOpacity={0.7}
           style={[styles.backBtn, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}
         >
-          <ChevronLeft size={20} color={theme.text.primary} strokeWidth={2} />
+          <Icon name="left" size={20} color={theme.text.primary} />
           <Text style={[styles.backLabel, { color: theme.text.primary }]}>Back</Text>
         </TouchableOpacity>
 
@@ -72,7 +73,7 @@ export default function QuickHelpScreen({ navigation }: { navigation: any }) {
           activeOpacity={0.85}
           style={[styles.sosBtn, { backgroundColor: Colors.danger[500] }]}
         >
-          <Siren size={32} color="#fff" strokeWidth={1.75} />
+          <Icon name="alarm_1" size={32} color="#fff" />
           <View>
             <Text style={styles.sosLabel}>Emergency Alert</Text>
             <Text style={styles.sosDesc}>
@@ -89,7 +90,7 @@ export default function QuickHelpScreen({ navigation }: { navigation: any }) {
           activeOpacity={0.85}
           style={[styles.callBtn, { backgroundColor: theme.bg.surface, borderColor: Colors.danger[500] }]}
         >
-          <Phone size={26} color={Colors.danger[500]} strokeWidth={1.75} />
+          <Icon name="phone" size={26} color={Colors.danger[500]} />
           <View>
             <Text style={[styles.callLabel, { color: Colors.danger[500] }]}>Call Emergency Services</Text>
             <Text style={[styles.callDesc, { color: theme.text.secondary }]}>Dial 112 (Emergency number)</Text>
@@ -103,7 +104,7 @@ export default function QuickHelpScreen({ navigation }: { navigation: any }) {
             activeOpacity={0.85}
             style={[styles.callBtn, { backgroundColor: theme.bg.surface, borderColor: theme.border.default }]}
           >
-            <Phone size={26} color={theme.text.brand} strokeWidth={1.75} />
+            <Icon name="phone" size={26} color={theme.text.brand} />
             <View>
               <Text style={[styles.callLabel, { color: theme.text.primary }]}>
                 {user.doctorName ? `Call ${user.doctorName}` : 'Call your doctor'}
@@ -132,7 +133,7 @@ export default function QuickHelpScreen({ navigation }: { navigation: any }) {
                     <Text style={[styles.contactName, { color: theme.text.primary }]}>{c.name}</Text>
                     <Text style={[styles.contactMeta, { color: theme.text.secondary }]}>{c.relation} · {c.phone}</Text>
                   </View>
-                  <Phone size={16} color={theme.text.link} strokeWidth={2} />
+                  <Icon name="phone" size={16} color={theme.text.link} />
                 </TouchableOpacity>
               ))}
             </View>

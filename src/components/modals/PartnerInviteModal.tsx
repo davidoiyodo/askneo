@@ -3,10 +3,11 @@ import {
   Modal, View, Text, TextInput, TouchableOpacity,
   StyleSheet, KeyboardAvoidingView, Platform, Share,
 } from 'react-native';
-import { X, Send, CheckCircle2, Clock } from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext } from '../../hooks/useAppContext';
 import { Typography, Spacing, Radius } from '../../theme';
+import Icon from '../icons/Icon';
 
 const BENEFITS = [
   '💬 Receives prompts on how to support you',
@@ -62,14 +63,14 @@ export default function PartnerInviteModal({ visible, onClose }: Props) {
               {isActive ? 'Partner connected' : isInvited ? 'Invite sent' : 'Invite your partner'}
             </Text>
             <TouchableOpacity onPress={handleClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
-              <X size={20} color={theme.text.tertiary} strokeWidth={2} />
+              <Icon name="close" size={20} color={theme.text.tertiary} />
             </TouchableOpacity>
           </View>
 
           {/* Active state */}
           {isActive && (
             <View style={[styles.statusBanner, { backgroundColor: theme.accent.sage.bg, borderColor: theme.accent.sage.border }]}>
-              <CheckCircle2 size={20} color={theme.accent.sage.text} strokeWidth={2} />
+              <Icon name="check_circle" size={20} color={theme.accent.sage.text} />
               <Text style={[styles.statusText, { color: theme.accent.sage.text }]}>
                 {user?.partnerName ?? 'Your partner'} has joined AskNeo
               </Text>
@@ -80,17 +81,17 @@ export default function PartnerInviteModal({ visible, onClose }: Props) {
           {isInvited && !isActive && (
             <>
               <View style={[styles.statusBanner, { backgroundColor: theme.accent.gold.bg, borderColor: theme.accent.gold.border }]}>
-                <Clock size={20} color={theme.accent.gold.text} strokeWidth={2} />
+                <Icon name="time" size={20} color={theme.accent.gold.text} />
                 <Text style={[styles.statusText, { color: theme.accent.gold.text }]}>
                   Waiting for {user?.partnerName ?? 'partner'} to accept
                 </Text>
               </View>
               <TouchableOpacity onPress={handleInvite} activeOpacity={0.7} style={[styles.resendBtn, { borderColor: theme.border.default }]}>
-                <Send size={14} color={theme.text.brand} strokeWidth={2} />
+                <Icon name="send" size={14} color={theme.text.brand} />
                 <Text style={[styles.resendLabel, { color: theme.text.brand }]}>Resend invite</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={markActive} activeOpacity={0.7} style={[styles.activeBtn, { backgroundColor: theme.interactive.primary }]}>
-                <CheckCircle2 size={16} color="#fff" strokeWidth={2} />
+                <Icon name="check_circle" size={16} color="#fff" />
                 <Text style={styles.activeBtnLabel}>Partner joined — mark as active</Text>
               </TouchableOpacity>
             </>
@@ -123,7 +124,7 @@ export default function PartnerInviteModal({ visible, onClose }: Props) {
                 activeOpacity={0.85}
                 style={[styles.inviteBtn, { backgroundColor: theme.interactive.primary }]}
               >
-                <Send size={16} color="#fff" strokeWidth={2} />
+                <Icon name="send" size={16} color="#fff" />
                 <Text style={styles.inviteBtnLabel}>Send invite link</Text>
               </TouchableOpacity>
             </>

@@ -12,12 +12,24 @@ import { EmergencyContact, UserStage } from '../../hooks/useAppContext';
 
 type Props = {
   navigation: NativeStackNavigationProp<any>;
-  route: { params: { stage: UserStage; name: string; email: string; date: string; inviteCode: string; password: string } };
+  route: {
+    params: {
+      stage: UserStage;
+      name: string;
+      email: string;
+      date: string;
+      inviteCode: string;
+      password: string;
+      partnerStage?: string;
+      partnerDueDate?: string;
+      partnerBabyDOB?: string;
+    };
+  };
 };
 
 export default function EmergencyContactsScreen({ navigation, route }: Props) {
   const { theme } = useTheme();
-  const { stage, name, email, date, inviteCode, password } = route.params;
+  const { stage, name, email, date, inviteCode, password, partnerStage, partnerDueDate, partnerBabyDOB } = route.params;
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
@@ -110,11 +122,17 @@ export default function EmergencyContactsScreen({ navigation, route }: Props) {
           <View style={styles.actions}>
             <Button
               label="Continue"
-              onPress={() => navigation.navigate('PartnerInvite', { stage, name, email, date, inviteCode, password, emergencyContacts: contacts })}
+              onPress={() => {
+                const sharedParams = { stage, name, email, date, inviteCode, password, emergencyContacts: contacts, partnerStage, partnerDueDate, partnerBabyDOB };
+                navigation.navigate(stage === 'partner' ? 'Goals' : 'PartnerInvite', sharedParams);
+              }}
               fullWidth
             />
             {contacts.length === 0 && (
-              <TouchableOpacity onPress={() => navigation.navigate('PartnerInvite', { stage, name, email, date, inviteCode, password, emergencyContacts: [] })}>
+              <TouchableOpacity onPress={() => {
+                const sharedParams = { stage, name, email, date, inviteCode, password, emergencyContacts: [], partnerStage, partnerDueDate, partnerBabyDOB };
+                navigation.navigate(stage === 'partner' ? 'Goals' : 'PartnerInvite', sharedParams);
+              }}>
                 <Text style={[styles.skip, { color: theme.text.link }]}>Skip for now</Text>
               </TouchableOpacity>
             )}

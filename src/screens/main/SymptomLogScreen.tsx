@@ -7,9 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Calendar } from 'react-native-calendars';
-import {
-  ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, X, CheckCircle, Circle, Pencil, CalendarDays,
-} from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext } from '../../hooks/useAppContext';
 import { useDailyLogs, toDateKey } from '../../hooks/useDailyLogs';
@@ -21,6 +19,7 @@ import {
   DailyLog, MoodLevel, EnergyLevel, SleepQuality, SymptomSeverity, MedEntry, BabyMood,
 } from '../../types/symptomLog';
 import { ConsultationSession } from '../../types/consultation';
+import Icon from '../../components/icons/Icon';
 
 // ─── Mood ─────────────────────────────────────────────────────────────────────
 
@@ -71,7 +70,6 @@ const SEV_THEME = {
   moderate: { bg: '#FFFBEB', border: '#FCD34D', text: '#92400E' },
   severe:   { bg: '#FEF2F2', border: '#FCA5A5', text: '#991B1B' },
 };
-
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -275,7 +273,6 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
     Alert.alert('Saved ✓', todayLog ? 'Today\'s entry updated.' : 'Diary entry saved.');
   }, [canSave, todayKey, stage, mood, energy, symptoms, symptomSeverity, medications, sleepHours, sleepQuality, kickCount, babyFeedings, babyNappies, babySleepHours, babyMood, babySymptoms, babySymSeverity, notes, waterGlasses, isPregnancy, isNewmom, isTTC, saveDayLog, todayLog, completeItem]);
 
-
   // ── Calendar helpers ─────────────────────────────────────────────────────────
   const streak = useMemo(() => {
     let count = 0;
@@ -305,7 +302,6 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
     return marks;
   }, [logs, selectedDate, theme.interactive.primary]);
 
-
   // ── Week strip (all dates computed in UTC to match toDateKey) ────────────────
   const [todayY, todayM, todayD] = todayKey.split('-').map(Number);
   const todayUTC = new Date(Date.UTC(todayY, todayM - 1, todayD));
@@ -333,7 +329,7 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
             activeOpacity={0.7}
             style={[styles.backBtn, { backgroundColor: theme.bg.subtle, borderColor: theme.border.subtle }]}
           >
-            <ChevronLeft size={20} color={theme.text.primary} strokeWidth={2} />
+            <Icon name="left" size={20} color={theme.text.primary} />
             <Text style={[styles.backLabel, { color: theme.text.primary }]}>Back</Text>
           </TouchableOpacity>
           <View style={styles.headerRight}>
@@ -349,35 +345,14 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
               style={[styles.calIconBtn, { backgroundColor: showFullCalendar ? theme.bg.subtle : 'transparent' }]}
               activeOpacity={0.7}
             >
-              <CalendarDays size={18} color={showFullCalendar ? theme.text.brand : theme.text.secondary} strokeWidth={2} />
+              <Icon name="calendar_2" size={18} color={showFullCalendar ? theme.text.brand : theme.text.secondary} />
             </TouchableOpacity>
           </View>
         </View>
 
         {/* ── Week strip or full calendar ──────────────────────────────── */}
         {showFullCalendar ? (
-        <Calendar
-          current={selectedDate}
-          onDayPress={(day: any) => { setSelectedDate(day.dateString); setShowFullCalendar(false); }}
-          markedDates={markedDates}
-          theme={{
-            backgroundColor: 'transparent',
-            calendarBackground: 'transparent',
-            textSectionTitleColor: theme.text.tertiary,
-            selectedDayBackgroundColor: theme.interactive.primary,
-            selectedDayTextColor: '#fff',
-            todayTextColor: theme.text.brand,
-            dayTextColor: theme.text.primary,
-            textDisabledColor: theme.border.default,
-            dotColor: theme.interactive.primary,
-            selectedDotColor: '#fff',
-            monthTextColor: theme.text.primary,
-            arrowColor: theme.interactive.primary,
-            textMonthFontFamily: Typography.fontFamily.bodyBold,
-            textDayFontFamily: Typography.fontFamily.bodyMedium,
-            textDayHeaderFontFamily: Typography.fontFamily.bodySemibold,
-          }}
-        />
+        <Icon name="calendar" />
         ) : (
         <View style={styles.weekStrip}>
           <TouchableOpacity
@@ -385,7 +360,7 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
             hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
             activeOpacity={0.5}
           >
-            <ChevronLeft size={16} color={theme.text.secondary} strokeWidth={2.5} />
+            <Icon name="left" size={16} color={theme.text.secondary} />
           </TouchableOpacity>
 
           {weekStripDates.map((d, i) => {
@@ -426,7 +401,7 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
             activeOpacity={weekStripOffset < 0 ? 0.5 : 1}
             disabled={weekStripOffset === 0}
           >
-            <ChevronRight size={16} color={weekStripOffset < 0 ? theme.text.secondary : theme.border.default} strokeWidth={2.5} />
+            <Icon name="right" size={16} color={weekStripOffset < 0 ? theme.text.secondary : theme.border.default} />
           </TouchableOpacity>
         </View>
         )}
@@ -505,8 +480,8 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
                 {`Any symptoms? ${symptoms.length > 0 ? `(${symptoms.length} selected)` : ''}`}
               </SectionHeader>
               {showSymptoms
-                ? <ChevronUp size={16} color={theme.text.tertiary} strokeWidth={2} />
-                : <ChevronDown size={16} color={theme.text.tertiary} strokeWidth={2} />
+                ? <Icon name="up" size={16} color={theme.text.tertiary} />
+                : <Icon name="down" size={16} color={theme.text.tertiary} />
               }
             </TouchableOpacity>
 
@@ -581,8 +556,8 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
               <View key={i} style={[styles.medRow, { borderColor: theme.border.subtle }]}>
                 <TouchableOpacity onPress={() => toggleMed(i)} activeOpacity={0.7} style={styles.medCheck}>
                   {med.taken
-                    ? <CheckCircle size={20} color={theme.interactive.primary} strokeWidth={2} />
-                    : <Circle size={20} color={theme.border.default} strokeWidth={2} />
+                    ? <Icon name="check_circle" size={20} color={theme.interactive.primary} />
+                    : <Icon name="circle_dash" size={20} color={theme.border.default} />
                   }
                 </TouchableOpacity>
                 <Text style={[styles.medName, { color: med.taken ? theme.text.tertiary : theme.text.primary,
@@ -594,7 +569,7 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   activeOpacity={0.7}
                 >
-                  <X size={14} color={theme.text.tertiary} strokeWidth={2} />
+                  <Icon name="close" size={14} color={theme.text.tertiary} />
                 </TouchableOpacity>
               </View>
             ))}
@@ -610,7 +585,7 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
                 returnKeyType="done"
               />
               <TouchableOpacity onPress={addMed} activeOpacity={0.7} disabled={!newMedName.trim()}>
-                <Plus size={18} color={newMedName.trim() ? theme.interactive.primary : theme.border.default} strokeWidth={2.5} />
+                <Icon name="add" size={18} color={newMedName.trim() ? theme.interactive.primary : theme.border.default} />
               </TouchableOpacity>
             </View>
           </View>
@@ -833,8 +808,8 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
                     {`Any symptoms in baby? ${babySymptoms.length > 0 ? `(${babySymptoms.length} selected)` : ''}`}
                   </SectionHeader>
                   {showBabySymptoms
-                    ? <ChevronUp size={16} color={theme.text.tertiary} strokeWidth={2} />
-                    : <ChevronDown size={16} color={theme.text.tertiary} strokeWidth={2} />
+                    ? <Icon name="up" size={16} color={theme.text.tertiary} />
+                    : <Icon name="down" size={16} color={theme.text.tertiary} />
                   }
                 </TouchableOpacity>
 
@@ -957,7 +932,7 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
             activeOpacity={0.85}
             style={[styles.saveBtn, { backgroundColor: canSave ? theme.interactive.primary : theme.border.subtle }]}
           >
-            <CheckCircle size={18} color="#fff" strokeWidth={2.5} />
+            <Icon name="check_circle" size={18} color="#fff" />
             <Text style={styles.saveBtnText}>{saving ? 'Saving…' : 'Save entry'}</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -983,7 +958,7 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
                       activeOpacity={0.85}
                       style={[styles.dayCardBtn, { backgroundColor: theme.interactive.primary }]}
                     >
-                      <Pencil size={14} color="#fff" strokeWidth={2} />
+                      <Icon name="pencil" size={14} color="#fff" />
                       <Text style={styles.dayCardBtnText}>Log today</Text>
                     </TouchableOpacity>
                   )}
@@ -1007,7 +982,7 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
                       activeOpacity={0.8}
                       style={[styles.dayCardEditBtn, { backgroundColor: theme.bg.subtle, borderColor: theme.border.default }]}
                     >
-                      <Pencil size={12} color={theme.text.brand} strokeWidth={2} />
+                      <Icon name="pencil" size={12} color={theme.text.brand} />
                       <Text style={[styles.dayCardEditText, { color: theme.text.brand }]}>Edit</Text>
                     </TouchableOpacity>
                   )}

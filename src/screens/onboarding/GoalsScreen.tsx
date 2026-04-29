@@ -1,24 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
-  TextInput, Platform, KeyboardAvoidingView,
+  TextInput, Platform, KeyboardAvoidingView, Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Check } from 'lucide-react-native';
+import Icon from '../../components/icons/Icon';
 import { useTheme } from '../../theme/ThemeContext';
 import { Typography, Spacing, Radius } from '../../theme';
 import Button from '../../components/ui/Button';
 import OnboardingBackButton from '../../components/ui/OnboardingBackButton';
 import {
   useAppContext, UserStage, GoalId, SubGoalId,
-  BirthIntention, FeedingIntention, EmergencyContact,
+  BirthIntention, FeedingIntention, EmergencyContact, AppUser,
 } from '../../hooks/useAppContext';
 import { GOALS, SUB_GOALS } from '../../data/goals';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type InternalStep = 'ttc-profile' | 'goals' | 'subgoals' | 'intentions' | 'personal';
+type InternalStep = 'ttc-profile' | 'goals' | 'affirm' | 'subgoals' | 'intentions' | 'personal' | 'preview' | 'ready';
 type TtcDuration = '0-3m' | '3-6m' | '6-12m' | '12m+';
 
 type Props = {
@@ -34,6 +34,9 @@ type Props = {
       emergencyContacts: EmergencyContact[];
       partnerName?: string;
       partnerStatus?: 'invited' | 'active';
+      partnerStage?: string;
+      partnerDueDate?: string;
+      partnerBabyDOB?: string;
     };
   };
 };
@@ -47,7 +50,8 @@ function nextStep(current: InternalStep, goals: GoalId[], stage: UserStage): Int
   );
   switch (current) {
     case 'ttc-profile': return 'goals';
-    case 'goals':
+    case 'goals':       return 'affirm';
+    case 'affirm':
       if (needsSubs) return 'subgoals';
       if (needsIntentions) return 'intentions';
       return 'personal';
@@ -56,6 +60,10 @@ function nextStep(current: InternalStep, goals: GoalId[], stage: UserStage): Int
     case 'intentions':
       return 'personal';
     case 'personal':
+      return 'preview';
+    case 'preview':
+      return 'done';
+    case 'ready':
       return 'done';
   }
 }
@@ -68,12 +76,15 @@ function prevStep(current: InternalStep, goals: GoalId[], stage: UserStage): Int
   switch (current) {
     case 'ttc-profile': return 'nav-back';
     case 'goals':      return stage === 'ttc' ? 'ttc-profile' : 'nav-back';
+    case 'affirm':     return 'goals';
     case 'subgoals':   return 'goals';
     case 'intentions': return needsSubs ? 'subgoals' : 'goals';
     case 'personal':
       if (needsIntentions) return 'intentions';
       if (needsSubs)       return 'subgoals';
       return 'goals';
+    case 'preview':    return 'personal';
+    case 'ready':      return 'personal';
   }
 }
 
@@ -86,12 +97,71 @@ function computeTtcStartDate(duration: TtcDuration | null): string | undefined {
   return now.toISOString().split('T')[0];
 }
 
+// ─── Affirm-screen copy ────────────────────────────────────────────────────────
+
+const AFFIRM_COPY: Record<UserStage, { emoji: string; headline: string; message: string }> = {
+  pregnancy: {
+    emoji: '🤰',
+    headline: 'Great choices.',
+    message: "Preparing well makes all the difference. We'll make sure you have the right support at every step of your pregnancy.",
+  },
+  newmom: {
+    emoji: '👶',
+    headline: "You're doing great.",
+    message: "The fact that you're thinking about these things already makes you an incredible parent. We're here with you.",
+  },
+  ttc: {
+    emoji: '🌱',
+    headline: "You've got this.",
+    message: "Understanding your cycle is the most powerful thing you can do right now. Neo will help you track, learn, and act.",
+  },
+  partner: {
+    emoji: '🤝',
+    headline: 'Your support matters.',
+    message: "Involved partners make a real difference. We'll make sure you always know how to show up.",
+  },
+};
+
+// ─── Preview-screen features ───────────────────────────────────────────────────
+
+const PREVIEW_FEATURES: Record<UserStage, Array<{ emoji: string; title: string; desc: string; accent: 'rose' | 'gold' | 'sky' }>> = {
+  ttc: [
+    { emoji: '🗓', title: 'Cycle Tracker', desc: 'Log your period, BBT, and OPK results. See your fertile window mapped out day by day.', accent: 'rose' },
+    { emoji: '💬', title: 'Ask Neo', desc: 'Get instant, personalised answers to your TTC questions — any time, day or night.', accent: 'gold' },
+    { emoji: '✅', title: 'Preconception Checklist', desc: 'A step-by-step guide to prepare your body and your life for conception.', accent: 'sky' },
+  ],
+  pregnancy: [
+    { emoji: '🏥', title: 'ANC Visit Tracker', desc: 'Log every antenatal visit, track your baby\'s growth, and prep your next appointment.', accent: 'rose' },
+    { emoji: '💬', title: 'Ask Neo', desc: 'Get clear, calm answers about your symptoms, scan results, and what to expect each week.', accent: 'gold' },
+    { emoji: '🍼', title: 'Week-by-Week Guide', desc: 'Follow your baby\'s development with personalised updates matched to your pregnancy week.', accent: 'sky' },
+  ],
+  newmom: [
+    { emoji: '📊', title: 'Daily Logs', desc: 'Track feeds, sleep, nappies, and baby milestones — everything in one organised place.', accent: 'rose' },
+    { emoji: '💬', title: 'Ask Neo', desc: 'Not sure if something is normal? Ask Neo any time and get triage-level guidance instantly.', accent: 'gold' },
+    { emoji: '👶', title: 'Baby Development', desc: 'Age-appropriate milestones and practical tips matched to exactly where your baby is today.', accent: 'sky' },
+  ],
+  partner: [
+    { emoji: '📰', title: 'Weekly Updates', desc: 'Stay in the loop with what\'s happening in your partner\'s pregnancy, week by week.', accent: 'rose' },
+    { emoji: '💬', title: 'Ask Neo', desc: 'Ask the questions you might feel awkward asking anyone else — Neo is here for partners too.', accent: 'gold' },
+    { emoji: '🤝', title: 'Care Tips', desc: 'Practical, specific advice on how to show up for your partner and baby at every stage.', accent: 'sky' },
+  ],
+};
+
+// ─── Ready-screen copy ─────────────────────────────────────────────────────────
+
+const READY_COPY: Record<UserStage, string> = {
+  pregnancy:  'Your pregnancy companion is ready',
+  newmom:     'Your newborn support is ready',
+  ttc:        'Your cycle tracker is ready',
+  partner:    'Your family companion is ready',
+};
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function GoalsScreen({ navigation, route }: Props) {
   const { theme } = useTheme();
   const { setUser } = useAppContext();
-  const { stage, name, email, password, date, inviteCode, emergencyContacts, partnerName, partnerStatus } = route.params;
+  const { stage, name, email, password, date, inviteCode, emergencyContacts, partnerName, partnerStatus, partnerStage, partnerDueDate, partnerBabyDOB } = route.params;
 
   const [step, setStep] = useState<InternalStep>(stage === 'ttc' ? 'ttc-profile' : 'goals');
   const [selectedGoals, setSelectedGoals]         = useState<GoalId[]>([]);
@@ -102,6 +172,42 @@ export default function GoalsScreen({ navigation, route }: Props) {
   // TTC-specific
   const [ttcDuration, setTtcDuration]             = useState<TtcDuration | null>(null);
   const [knownConditions, setKnownConditions]     = useState<string[]>([]);
+  // Ready-step state
+  const [pendingUser, setPendingUser]             = useState<AppUser | null>(null);
+  const readyFade     = useRef(new Animated.Value(0)).current;
+  const readyProgress = useRef(new Animated.Value(0)).current;
+  const affirmFade    = useRef(new Animated.Value(0)).current;
+
+  // Affirm step: fade in + auto-advance
+  useEffect(() => {
+    if (step !== 'affirm') return;
+    affirmFade.setValue(0);
+    Animated.timing(affirmFade, { toValue: 1, duration: 500, useNativeDriver: true }).start();
+    const next = nextStep('affirm', selectedGoals, stage);
+    const t = setTimeout(() => {
+      if (next === 'done') finish();
+      else setStep(next as InternalStep);
+    }, 2600);
+    return () => clearTimeout(t);
+  }, [step]);
+
+  // Kick off animations when ready step mounts
+  useEffect(() => {
+    if (step !== 'ready') return;
+    readyFade.setValue(0);
+    readyProgress.setValue(0);
+    Animated.sequence([
+      Animated.timing(readyFade,     { toValue: 1, duration: 600,  useNativeDriver: true }),
+      Animated.timing(readyProgress, { toValue: 1, duration: 2000, useNativeDriver: false }),
+    ]).start();
+  }, [step]);
+
+  // Commit user after animation completes
+  useEffect(() => {
+    if (step !== 'ready' || !pendingUser) return;
+    const t = setTimeout(() => setUser(pendingUser), 2800);
+    return () => clearTimeout(t);
+  }, [step, pendingUser]);
 
   const stageGoals = GOALS.filter(g => g.stages.includes(stage));
 
@@ -149,7 +255,7 @@ export default function GoalsScreen({ navigation, route }: Props) {
     const cyclesIrregular = knownConditions.some(c =>
       ['pcos', 'irregular-cycles', 'endometriosis'].includes(c)
     );
-    setUser({
+    setPendingUser({
       name,
       email,
       password,
@@ -157,8 +263,11 @@ export default function GoalsScreen({ navigation, route }: Props) {
       dueDate,
       babyDOB,
       inviteCode: inviteCode || undefined,
-      partnerName:   partnerName   || undefined,
-      partnerStatus: partnerStatus || undefined,
+      partnerName:    partnerName    || undefined,
+      partnerStatus:  partnerStatus  || undefined,
+      partnerStage:   (partnerStage  as AppUser['partnerStage'])  || undefined,
+      partnerDueDate: partnerDueDate || undefined,
+      partnerBabyDOB: partnerBabyDOB || undefined,
       emergencyContacts,
       goals:     selectedGoals,
       subGoals:  selectedSubGoals,
@@ -168,7 +277,6 @@ export default function GoalsScreen({ navigation, route }: Props) {
         !skipPersonal && personalIntention.trim()
           ? [personalIntention.trim()]
           : [],
-      // TTC profile
       ...(stage === 'ttc' ? {
         ttcStartDate: computeTtcStartDate(ttcDuration),
         knownConditions: knownConditions.length > 0 ? knownConditions : undefined,
@@ -176,12 +284,12 @@ export default function GoalsScreen({ navigation, route }: Props) {
       } : {}),
       onboardingComplete: true,
     });
-    navigation.replace('MainApp');
+    setStep('ready');
   };
 
-  // ── Shared card renderer ─────────────────────────────────────────────────
+  // ── Grid goal card ────────────────────────────────────────────────────────
 
-  const GoalCard = ({
+  const GridGoalCard = ({
     icon, label, description, selected, onPress,
   }: { icon: string; label: string; description: string; selected: boolean; onPress: () => void }) => (
     <TouchableOpacity
@@ -189,31 +297,26 @@ export default function GoalsScreen({ navigation, route }: Props) {
       activeOpacity={0.75}
       accessibilityRole="checkbox"
       accessibilityState={{ checked: selected }}
-      accessibilityLabel={`${label}: ${description}`}
       style={[
-        styles.card,
+        styles.gridCard,
         {
-          backgroundColor: selected ? theme.bg.brand : theme.bg.surface,
-          borderColor: selected ? theme.border.brand : theme.border.subtle,
+          backgroundColor: selected ? theme.bg.subtle : theme.bg.surface,
+          borderColor: selected ? theme.interactive.primary : theme.border.subtle,
         },
       ]}
     >
-      <View style={[styles.cardIcon, { backgroundColor: selected ? 'rgba(255,255,255,0.15)' : theme.bg.subtle }]}>
-        <Text style={styles.cardEmoji}>{icon}</Text>
-      </View>
-      <View style={styles.cardBody}>
-        <Text style={[styles.cardLabel, { color: selected ? theme.text.inverse : theme.text.primary }]}>{label}</Text>
-        <Text style={[styles.cardDesc, { color: selected ? theme.text.inverse : theme.text.secondary, opacity: selected ? 0.8 : 1 }]}>{description}</Text>
-      </View>
-      <View style={[
-        styles.check,
-        {
-          backgroundColor: selected ? 'rgba(255,255,255,0.25)' : 'transparent',
-          borderColor: selected ? 'rgba(255,255,255,0.6)' : theme.border.default,
-        },
-      ]}>
-        {selected && <Check size={12} color={theme.text.inverse} strokeWidth={3} />}
-      </View>
+      {selected ? (
+        <View style={[styles.gridBadge, { backgroundColor: theme.interactive.primary }]}>
+          <Icon name="check" size={11} color="#fff" />
+        </View>
+      ) : (
+        <View style={[styles.gridBadge, { backgroundColor: theme.bg.app, borderWidth: 1.5, borderColor: theme.border.default }]}>
+          <Icon name="add" size={11} color={theme.text.tertiary} />
+        </View>
+      )}
+      <Text style={styles.gridEmoji}>{icon}</Text>
+      <Text style={[styles.gridCardLabel, { color: theme.text.primary }]}>{label}</Text>
+      <Text style={[styles.gridCardDesc, { color: theme.text.secondary }]} numberOfLines={2}>{description}</Text>
     </TouchableOpacity>
   );
 
@@ -247,6 +350,94 @@ export default function GoalsScreen({ navigation, route }: Props) {
   };
 
   // ── Render ───────────────────────────────────────────────────────────────
+
+  const progressWidth = readyProgress.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
+  const { emoji: affirmEmoji, headline: affirmHeadline, message: affirmMessage } = AFFIRM_COPY[stage];
+  const previewFeatures = PREVIEW_FEATURES[stage];
+
+  // ── AFFIRM ────────────────────────────────────────────────────────────────
+
+  if (step === 'affirm') {
+    return (
+      <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg.brand }]}>
+        <Animated.View style={[styles.readyContainer, { opacity: affirmFade }]}>
+          <View style={styles.readyBody}>
+            <Text style={styles.readyGlobe}>{affirmEmoji}</Text>
+            <Text style={[styles.readyHeadline, { color: theme.text.inverse }]}>
+              {affirmHeadline}
+            </Text>
+            <Text style={[styles.readySub, { color: theme.text.inverse, opacity: 0.85, paddingHorizontal: Spacing[4] }]}>
+              {affirmMessage}
+            </Text>
+          </View>
+        </Animated.View>
+      </SafeAreaView>
+    );
+  }
+
+  // ── PREVIEW ───────────────────────────────────────────────────────────────
+
+  if (step === 'preview') {
+    return (
+      <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg.app }]}>
+        <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+          <View style={styles.header}>
+            <Text style={[styles.eyebrow, { color: theme.text.link }]}>What you'll find inside</Text>
+            <Text style={[styles.title, { color: theme.text.primary }]}>
+              Everything you need,{'\n'}in one place
+            </Text>
+          </View>
+
+          <View style={styles.previewList}>
+            {previewFeatures.map((f, i) => {
+              const accent = theme.accent[f.accent];
+              return (
+                <View
+                  key={i}
+                  style={[styles.previewCard, { backgroundColor: accent.bg, borderColor: accent.border }]}
+                >
+                  <View style={[styles.previewIconWrap, { backgroundColor: 'rgba(0,0,0,0.06)' }]}>
+                    <Text style={styles.previewEmoji}>{f.emoji}</Text>
+                  </View>
+                  <View style={styles.cardBody}>
+                    <Text style={[styles.cardLabel, { color: accent.text }]}>{f.title}</Text>
+                    <Text style={[styles.cardDesc, { color: accent.text, opacity: 0.8 }]}>{f.desc}</Text>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+
+          <Button label="Enter AskNeo" onPress={advance} fullWidth />
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  if (step === 'ready') {
+    return (
+      <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg.brand }]}>
+        <Animated.View style={[styles.readyContainer, { opacity: readyFade }]}>
+          <View style={styles.readyBody}>
+            <Text style={styles.readyGlobe}>🌍</Text>
+            <Text style={[styles.readyHeadline, { color: theme.text.inverse }]}>
+              {'Setting up your\nNeo experience'}
+            </Text>
+            <Text style={[styles.readySub, { color: theme.text.inverse }]}>
+              {READY_COPY[stage]}
+            </Text>
+          </View>
+          <View style={styles.progressWrap}>
+            <View style={[styles.progressBg, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+              <Animated.View
+                style={[styles.progressFill, { width: progressWidth, backgroundColor: theme.text.inverse }]}
+              />
+            </View>
+          </View>
+        </Animated.View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg.app }]}>
@@ -349,9 +540,9 @@ export default function GoalsScreen({ navigation, route }: Props) {
                 </Text>
               </View>
 
-              <View style={styles.list}>
+              <View style={styles.goalGrid}>
                 {stageGoals.map(goal => (
-                  <GoalCard
+                  <GridGoalCard
                     key={goal.id}
                     icon={goal.icon}
                     label={goal.label}
@@ -387,9 +578,9 @@ export default function GoalsScreen({ navigation, route }: Props) {
                 </Text>
               </View>
 
-              <View style={styles.list}>
+              <View style={styles.goalGrid}>
                 {SUB_GOALS.map(sg => (
-                  <GoalCard
+                  <GridGoalCard
                     key={sg.id}
                     icon={sg.icon}
                     label={sg.label}
@@ -501,11 +692,11 @@ export default function GoalsScreen({ navigation, route }: Props) {
               </View>
 
               <Button
-                label="Enter AskNeo"
-                onPress={() => finish(false)}
+                label="Continue"
+                onPress={advance}
                 fullWidth
               />
-              <TouchableOpacity onPress={() => finish(true)} style={styles.skip}>
+              <TouchableOpacity onPress={() => { setPersonalIntention(''); advance(); }} style={styles.skip}>
                 <Text style={[styles.skipText, { color: theme.text.tertiary }]}>Skip</Text>
               </TouchableOpacity>
             </>
@@ -545,26 +736,48 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.base,
     lineHeight: Typography.size.base * 1.55,
   },
-  list: { gap: Spacing[3] },
-
-  // Goal / sub-goal card
-  card: {
+  // Goal / sub-goal grid
+  goalGrid: {
     flexDirection: 'row',
-    alignItems: 'center',
+    flexWrap: 'wrap',
     gap: Spacing[3],
-    borderRadius: Radius['2xl'],
+  },
+  gridCard: {
+    width: '47%',
+    borderRadius: Radius.xl,
     borderWidth: 1.5,
     padding: Spacing[4],
+    gap: Spacing[1],
+    position: 'relative',
+    minHeight: 120,
   },
-  cardIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.xl,
+  gridBadge: {
+    position: 'absolute',
+    top: Spacing[2],
+    right: Spacing[2],
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
-    flexShrink: 0,
   },
-  cardEmoji: { fontSize: 22 },
+  gridEmoji: {
+    fontSize: 28,
+    lineHeight: 38,
+  },
+  gridCardLabel: {
+    fontFamily: Typography.fontFamily.bodyBold,
+    fontSize: Typography.size.sm,
+    lineHeight: Typography.size.sm * 1.3,
+    marginTop: 2,
+  },
+  gridCardDesc: {
+    fontFamily: Typography.fontFamily.body,
+    fontSize: Typography.size.xs,
+    lineHeight: Typography.size.xs * 1.5,
+  },
+
+  // Preview card text (reused in preview step)
   cardBody: { flex: 1, gap: 2 },
   cardLabel: {
     fontFamily: Typography.fontFamily.bodySemibold,
@@ -574,15 +787,6 @@ const styles = StyleSheet.create({
     fontFamily: Typography.fontFamily.body,
     fontSize: Typography.size.sm,
     lineHeight: Typography.size.sm * 1.5,
-  },
-  check: {
-    width: 22,
-    height: 22,
-    borderRadius: Radius.full,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
   },
 
   // Intention pills
@@ -634,5 +838,64 @@ const styles = StyleSheet.create({
   skipText: {
     fontFamily: Typography.fontFamily.bodyMedium,
     fontSize: Typography.size.sm,
+  },
+
+  // Preview step
+  previewList: { gap: Spacing[3] },
+  previewCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[3],
+    borderRadius: Radius['2xl'],
+    borderWidth: 1.5,
+    padding: Spacing[4],
+  },
+  previewIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: Radius.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  previewEmoji: { fontSize: 24 },
+
+  // Ready step
+  readyContainer: {
+    flex: 1,
+    paddingHorizontal: Spacing[8],
+    paddingBottom: Spacing[12],
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  readyBody: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: Spacing[5],
+  },
+  readyGlobe: { fontSize: 64 },
+  readyHeadline: {
+    fontFamily: Typography.fontFamily.bodyBold,
+    fontSize: Typography.size['2xl'],
+    textAlign: 'center',
+    letterSpacing: -0.3,
+    lineHeight: Typography.size['2xl'] * 1.25,
+  },
+  readySub: {
+    fontFamily: Typography.fontFamily.body,
+    fontSize: Typography.size.base,
+    textAlign: 'center',
+    opacity: 0.8,
+  },
+  progressWrap: { width: '100%' },
+  progressBg: {
+    height: 4,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 2,
   },
 });

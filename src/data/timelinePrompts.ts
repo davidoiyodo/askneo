@@ -180,6 +180,39 @@ export const partnerPrompts: TimelinePrompt[] = [
   },
 ];
 
+export const ttcPartnerPrompts: TimelinePrompt[] = [
+  {
+    id: 'ttcp-01',
+    category: 'partner',
+    title: 'This is a team journey — your health matters too',
+    body: "Male factors contribute to around 40–50% of fertility challenges. That's not a blame statistic — it's an empowering one. Your lifestyle directly affects sperm quality: sleep, smoking, alcohol, heat (laptops, tight underwear), and stress all have measurable impact. Small changes you make now improve the odds for both of you.",
+  },
+  {
+    id: 'ttcp-02',
+    category: 'partner',
+    title: 'The two-week wait is harder than it looks',
+    body: "The two-week wait (after ovulation, before a pregnancy test) is one of the most emotionally intense periods in the TTC journey. Your partner can't do anything but wait — and that powerlessness is exhausting. Your job during this time is not to fix it. It's to distract, to be present, to not make every conversation about it, and to let her feel whatever she's feeling without judgment.",
+  },
+  {
+    id: 'ttcp-03',
+    category: 'partner',
+    title: "How to handle a negative test — together",
+    body: "A negative test is a loss, even if the pregnancy never began. Don't rush past it. Don't say 'we'll try again next month' in the same breath. Give it a moment. Ask her how she's feeling. Let her grieve if she needs to. Then, when she's ready, reset together. TTC is a marathon, and how you handle the hard moments defines the partnership more than the good ones.",
+  },
+  {
+    id: 'ttcp-04',
+    category: 'partner',
+    title: 'Know when to suggest seeing a doctor — and how',
+    body: "If you've been trying for 12 months (or 6 months if she's over 35) without success, it's time to speak to a doctor together. Both of you should be evaluated — a semen analysis is simple and non-invasive and should happen alongside any investigations for her. Frame it as 'let's get information' not 'something is wrong.' Getting answers is always better than guessing.",
+  },
+  {
+    id: 'ttcp-05',
+    category: 'partner',
+    title: "TTC can strain a relationship — here's how to protect yours",
+    body: "Timed sex, monthly disappointments, and the weight of a shared goal can erode intimacy. Couples who do best through TTC make a deliberate effort to stay connected outside of trying: date nights, conversations that have nothing to do with ovulation, physical affection that isn't goal-driven. Protect your relationship during this — it's the foundation everything else is built on.",
+  },
+];
+
 export const ttcPrompts: TimelinePrompt[] = [
   {
     id: 'ttc-01',

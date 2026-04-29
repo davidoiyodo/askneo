@@ -3,10 +3,11 @@ import {
   Modal, View, Text, TextInput, TouchableOpacity,
   StyleSheet, KeyboardAvoidingView, Platform, Alert,
 } from 'react-native';
-import { X, Plus } from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext, EmergencyContact } from '../../hooks/useAppContext';
 import { Typography, Spacing, Radius } from '../../theme';
+import Icon from '../icons/Icon';
 
 interface Props {
   visible: boolean;
@@ -60,7 +61,7 @@ export default function AddContactModal({ visible, onClose }: Props) {
           <View style={styles.sheetHeader}>
             <Text style={[styles.sheetTitle, { color: theme.text.primary }]}>Add emergency contact</Text>
             <TouchableOpacity onPress={handleClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
-              <X size={20} color={theme.text.tertiary} strokeWidth={2} />
+              <Icon name="close" size={20} color={theme.text.tertiary} />
             </TouchableOpacity>
           </View>
 
@@ -103,7 +104,7 @@ export default function AddContactModal({ visible, onClose }: Props) {
             activeOpacity={0.85}
             style={[styles.addBtn, { backgroundColor: theme.interactive.primary }]}
           >
-            <Plus size={16} color="#fff" strokeWidth={2.5} />
+            <Icon name="add" size={16} color="#fff" />
             <Text style={styles.addBtnLabel}>Add contact</Text>
           </TouchableOpacity>
         </View>

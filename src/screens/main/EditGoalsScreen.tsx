@@ -4,12 +4,13 @@ import {
   KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, Check } from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext, GoalId, SubGoalId, BirthIntention, FeedingIntention } from '../../hooks/useAppContext';
 import { getGoalsForStage, SUB_GOALS } from '../../data/goals';
 import { Typography, Spacing, Radius } from '../../theme';
 import Button from '../../components/ui/Button';
+import Icon from '../../components/icons/Icon';
 
 interface Props {
   navigation: any;
@@ -72,7 +73,7 @@ export default function EditGoalsScreen({ navigation }: Props) {
           activeOpacity={0.7}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <ChevronLeft size={24} color={theme.text.primary} strokeWidth={2} />
+          <Icon name="left" size={24} color={theme.text.primary} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.text.primary }]}>Edit goals</Text>
         <TouchableOpacity activeOpacity={0.7} onPress={save} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -106,7 +107,7 @@ export default function EditGoalsScreen({ navigation }: Props) {
                 >
                   {selected && (
                     <View style={[styles.checkBadge, { backgroundColor: theme.interactive.primary }]}>
-                      <Check size={11} color="#fff" strokeWidth={3} />
+                      <Icon name="check" size={11} color="#fff" />
                     </View>
                   )}
                   <Text style={styles.goalIcon}>{goal.icon}</Text>
@@ -150,7 +151,7 @@ export default function EditGoalsScreen({ navigation }: Props) {
                         {sg.description}
                       </Text>
                     </View>
-                    {selected && <Check size={16} color={theme.interactive.primary} strokeWidth={2.5} />}
+                    {selected && <Icon name="check" size={16} color={theme.interactive.primary} />}
                   </TouchableOpacity>
                 );
               })}

@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowUp, ChevronLeft, X } from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext } from '../../hooks/useAppContext';
 import { Typography, Spacing, Radius, Shadow } from '../../theme';
@@ -16,6 +16,7 @@ import { getResponse, isVisitQuery, buildVisitContext, isRoutineQuery, buildRout
 import { useDailyLogs } from '../../hooks/useDailyLogs';
 import { useRoutine } from '../../hooks/useRoutine';
 import { useANCVisits } from '../../hooks/useANCVisits';
+import Icon from '../../components/icons/Icon';
 
 const CHAT_HISTORY_KEY = 'askneo_chat_history';
 
@@ -256,7 +257,7 @@ export default function AskNeoScreen({ navigation, route }: { navigation: any; r
             activeOpacity={0.7}
             style={[styles.backBtn, { backgroundColor: theme.bg.subtle, borderColor: theme.border.subtle }]}
           >
-            <ChevronLeft size={20} color={theme.text.primary} strokeWidth={2} />
+            <Icon name="left" size={20} color={theme.text.primary} />
             <Text style={[styles.backLabel, { color: theme.text.primary }]}>Back</Text>
           </TouchableOpacity>
           <Text style={[styles.headerLogo, { color: theme.text.brand }]}>AskNeo</Text>
@@ -325,7 +326,7 @@ export default function AskNeoScreen({ navigation, route }: { navigation: any; r
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               activeOpacity={0.7}
             >
-              <X size={16} color={theme.text.tertiary} strokeWidth={2} />
+              <Icon name="close" size={16} color={theme.text.tertiary} />
             </TouchableOpacity>
           </View>
         )}
@@ -354,7 +355,7 @@ export default function AskNeoScreen({ navigation, route }: { navigation: any; r
               { backgroundColor: inputText.trim() ? theme.interactive.primary : theme.border.subtle },
             ]}
           >
-            <ArrowUp size={20} color="#fff" strokeWidth={2.5} />
+            <Icon name="arrow_up" size={20} color="#fff" />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

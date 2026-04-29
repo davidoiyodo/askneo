@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet } from 'react-native';
-import { ChevronLeft } from 'lucide-react-native';
+import Icon from '../icons/Icon';
 import { useTheme } from '../../theme/ThemeContext';
 
 interface Props {
@@ -17,7 +17,7 @@ export default function OnboardingBackButton({ onPress }: Props) {
       accessibilityLabel="Go back"
       style={styles.btn}
     >
-      <ChevronLeft size={22} color={theme.text.secondary} strokeWidth={2.5} />
+      <Icon name="left" size={22} color={theme.text.secondary} />
     </TouchableOpacity>
   );
 }

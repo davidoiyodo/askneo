@@ -3,13 +3,14 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, PanResponder,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { X, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext, GoalId } from '../../hooks/useAppContext';
 import { useRoutine, WeekStats } from '../../hooks/useRoutine';
 import { getGoalById } from '../../data/goals';
 import { GOAL_ACCENT } from '../../utils/goalColors';
 import { Typography, Spacing, Radius, Shadow } from '../../theme';
+import Icon from '../../components/icons/Icon';
 
 const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
@@ -219,7 +220,7 @@ export default function StreakDetailScreen({ navigation }: Props) {
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             style={[styles.closeBtn, { backgroundColor: showHistory ? theme.bg.subtle : 'transparent' }]}
           >
-            <CalendarDays size={18} color={showHistory ? theme.text.brand : theme.text.secondary} strokeWidth={2} />
+            <Icon name="calendar_2" size={18} color={showHistory ? theme.text.brand : theme.text.secondary} />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
@@ -227,7 +228,7 @@ export default function StreakDetailScreen({ navigation }: Props) {
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             style={[styles.closeBtn, { backgroundColor: theme.bg.subtle }]}
           >
-            <X size={18} color={theme.text.secondary} strokeWidth={2.5} />
+            <Icon name="close" size={18} color={theme.text.secondary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -254,7 +255,7 @@ export default function StreakDetailScreen({ navigation }: Props) {
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 activeOpacity={0.5}
               >
-                <ChevronLeft size={16} color={theme.text.secondary} strokeWidth={2.5} />
+                <Icon name="left" size={16} color={theme.text.secondary} />
               </TouchableOpacity>
               <Text style={[styles.calNavLabel, { color: theme.text.secondary }]}>
                 {getWeekLabel(weekOffset)}
@@ -265,11 +266,7 @@ export default function StreakDetailScreen({ navigation }: Props) {
                 activeOpacity={weekOffset < 0 ? 0.5 : 1}
                 disabled={weekOffset === 0}
               >
-                <ChevronRight
-                  size={16}
-                  color={weekOffset < 0 ? theme.text.secondary : theme.border.default}
-                  strokeWidth={2.5}
-                />
+                <Icon name="right" size={16} color={weekOffset < 0 ? theme.text.secondary : theme.border.default} />
               </TouchableOpacity>
             </View>
             {/* Dots */}
@@ -308,7 +305,7 @@ export default function StreakDetailScreen({ navigation }: Props) {
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 activeOpacity={0.5}
               >
-                <ChevronLeft size={16} color={theme.text.secondary} strokeWidth={2.5} />
+                <Icon name="left" size={16} color={theme.text.secondary} />
               </TouchableOpacity>
               <Text style={[styles.calNavLabel, { color: theme.text.secondary }]}>{monthLabel}</Text>
               <TouchableOpacity
@@ -317,11 +314,7 @@ export default function StreakDetailScreen({ navigation }: Props) {
                 activeOpacity={monthOffset < 0 ? 0.5 : 1}
                 disabled={monthOffset === 0}
               >
-                <ChevronRight
-                  size={16}
-                  color={monthOffset < 0 ? theme.text.secondary : theme.border.default}
-                  strokeWidth={2.5}
-                />
+                <Icon name="right" size={16} color={monthOffset < 0 ? theme.text.secondary : theme.border.default} />
               </TouchableOpacity>
             </View>
             {/* Day-of-week labels + cells */}

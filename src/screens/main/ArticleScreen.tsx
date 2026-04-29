@@ -3,9 +3,10 @@ import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity, Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Clock, MessageCircle } from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { Typography, Spacing, Radius } from '../../theme';
+import Icon from '../../components/icons/Icon';
 
 interface Props {
   navigation: any;
@@ -59,7 +60,7 @@ export default function ArticleScreen({ navigation, route }: Props) {
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           style={[styles.backBtn, { top: insets.top + Spacing[3], backgroundColor: theme.bg.surface }]}
         >
-          <ArrowLeft size={18} color={theme.text.primary} strokeWidth={2} />
+          <Icon name="arrow_left" size={18} color={theme.text.primary} />
         </TouchableOpacity>
 
         {/* Content */}
@@ -71,7 +72,7 @@ export default function ArticleScreen({ navigation, route }: Props) {
               <Text style={[styles.tagText, { color: theme.text.brand }]}>{article.tag}</Text>
             </View>
             <View style={styles.readTime}>
-              <Clock size={12} color={theme.text.tertiary} strokeWidth={2} />
+              <Icon name="time" size={12} color={theme.text.tertiary} />
               <Text style={[styles.readTimeText, { color: theme.text.tertiary }]}>
                 {article.readMinutes} min read
               </Text>
@@ -116,7 +117,7 @@ export default function ArticleScreen({ navigation, route }: Props) {
             })}
             style={[styles.ctaBtn, { backgroundColor: theme.interactive.primary }]}
           >
-            <MessageCircle size={18} color="#fff" strokeWidth={2} />
+            <Icon name="chat_1" size={18} color="#fff" />
             <Text style={styles.ctaText}>Ask Neo about this</Text>
           </TouchableOpacity>
 

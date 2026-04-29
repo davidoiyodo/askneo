@@ -3,7 +3,7 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, Image, FlatList, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, ShoppingCart, Heart, Plus, Trash2 } from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext } from '../../hooks/useAppContext';
 import { Typography, Spacing, Radius, Shadow, Colors } from '../../theme';
@@ -13,6 +13,7 @@ import BuildBundleModal from '../../components/modals/BuildBundleModal';
 import ListItemModal from '../../components/modals/ListItemModal';
 import { bundles, p2pItems, bundleCatalog, Product, BundleItem } from '../../data/neostore';
 import { useP2PListings, UserListing } from '../../hooks/useP2PListings';
+import Icon from '../../components/icons/Icon';
 
 const SHOP_CATEGORIES = ['Feeding', 'Clothing', 'Hygiene', 'Health', 'Comfort', 'Sleep'] as const;
 
@@ -172,7 +173,7 @@ export default function NeoStoreScreen({ navigation }: { navigation: any }) {
             activeOpacity={0.7}
             style={[styles.backBtn, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}
           >
-            <ChevronLeft size={20} color={theme.text.primary} strokeWidth={2} />
+            <Icon name="left" size={20} color={theme.text.primary} />
             <Text style={[styles.backLabel, { color: theme.text.primary }]}>Back</Text>
           </TouchableOpacity>
 
@@ -182,12 +183,7 @@ export default function NeoStoreScreen({ navigation }: { navigation: any }) {
               activeOpacity={0.8}
               style={[styles.wishlistIconBtn, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}
             >
-              <Heart
-                size={18}
-                color={wishlist.length > 0 ? Colors.accent.rose.text : theme.text.secondary}
-                fill={wishlist.length > 0 ? Colors.accent.rose.text : 'none'}
-                strokeWidth={2}
-              />
+              <Icon name="heart" size={18} color={wishlist.length > 0 ? Colors.accent.rose.text : theme.text.secondary} />
               {wishlist.length > 0 && (
                 <View style={[styles.wishlistBadge, { backgroundColor: Colors.accent.rose.text }]}>
                   <Text style={styles.wishlistBadgeText}>{wishlist.length}</Text>
@@ -200,7 +196,7 @@ export default function NeoStoreScreen({ navigation }: { navigation: any }) {
               activeOpacity={0.8}
               style={[styles.wishlistIconBtn, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}
             >
-              <ShoppingCart size={18} color={cartCount > 0 ? theme.text.brand : theme.text.secondary} strokeWidth={2} />
+              <Icon name="shopping_cart_1" size={18} color={cartCount > 0 ? theme.text.brand : theme.text.secondary} />
               {cartCount > 0 && (
                 <View style={[styles.wishlistBadge, { backgroundColor: theme.interactive.primary }]}>
                   <Text style={styles.wishlistBadgeText}>{cartCount}</Text>
@@ -257,12 +253,7 @@ export default function NeoStoreScreen({ navigation }: { navigation: any }) {
                       activeOpacity={0.7}
                       style={[styles.carouselHeartBtn, { backgroundColor: theme.bg.surface }]}
                     >
-                      <Heart
-                        size={16}
-                        color={isWishlisted(b.id) ? Colors.accent.rose.text : theme.text.tertiary}
-                        fill={isWishlisted(b.id) ? Colors.accent.rose.text : 'none'}
-                        strokeWidth={2}
-                      />
+                      <Icon name="heart" size={16} color={isWishlisted(b.id) ? Colors.accent.rose.text : theme.text.tertiary} />
                     </TouchableOpacity>
                   </View>
 
@@ -389,12 +380,7 @@ export default function NeoStoreScreen({ navigation }: { navigation: any }) {
                             activeOpacity={0.7}
                             style={[styles.shopGridHeartBtn, { backgroundColor: theme.bg.surface }]}
                           >
-                            <Heart
-                              size={14}
-                              color={isWishlisted(item.id) ? Colors.accent.rose.text : theme.text.tertiary}
-                              fill={isWishlisted(item.id) ? Colors.accent.rose.text : 'none'}
-                              strokeWidth={2}
-                            />
+                            <Icon name="heart" size={14} color={isWishlisted(item.id) ? Colors.accent.rose.text : theme.text.tertiary} />
                           </TouchableOpacity>
                         </View>
                       )}
@@ -448,7 +434,7 @@ export default function NeoStoreScreen({ navigation }: { navigation: any }) {
                   activeOpacity={0.8}
                   style={[styles.listItemBtn, { backgroundColor: theme.interactive.primary }]}
                 >
-                  <Plus size={14} color="#fff" strokeWidth={2.5} />
+                  <Icon name="add" size={14} color="#fff" />
                   <Text style={styles.listItemBtnLabel}>List item</Text>
                 </TouchableOpacity>
               )}
@@ -471,12 +457,7 @@ export default function NeoStoreScreen({ navigation }: { navigation: any }) {
                         activeOpacity={0.7}
                         style={[styles.carouselHeartBtn, { backgroundColor: theme.bg.surface }]}
                       >
-                        <Heart
-                          size={16}
-                          color={isWishlisted(item.id) ? Colors.accent.rose.text : theme.text.tertiary}
-                          fill={isWishlisted(item.id) ? Colors.accent.rose.text : 'none'}
-                          strokeWidth={2}
-                        />
+                        <Icon name="heart" size={16} color={isWishlisted(item.id) ? Colors.accent.rose.text : theme.text.tertiary} />
                       </TouchableOpacity>
                     </View>
 
@@ -539,7 +520,7 @@ export default function NeoStoreScreen({ navigation }: { navigation: any }) {
                         </Text>
                       </View>
                       <TouchableOpacity onPress={() => confirmRemoveListing(listing.id)} activeOpacity={0.7} style={styles.removeBtn}>
-                        <Trash2 size={16} color={theme.text.tertiary} strokeWidth={2} />
+                        <Icon name="delete_2" size={16} color={theme.text.tertiary} />
                       </TouchableOpacity>
                     </View>
                   ))
@@ -549,7 +530,7 @@ export default function NeoStoreScreen({ navigation }: { navigation: any }) {
                   activeOpacity={0.8}
                   style={[styles.listItemBtn, styles.listItemBtnFull, { backgroundColor: theme.interactive.primary }]}
                 >
-                  <Plus size={16} color="#fff" strokeWidth={2.5} />
+                  <Icon name="add" size={16} color="#fff" />
                   <Text style={[styles.listItemBtnLabel, { fontSize: Typography.size.base }]}>List another item</Text>
                 </TouchableOpacity>
               </>
@@ -577,7 +558,7 @@ export default function NeoStoreScreen({ navigation }: { navigation: any }) {
       {cartCount > 0 && (
         <View style={[styles.cartBar, { backgroundColor: theme.interactive.primary, ...Shadow.md }]}>
           <View style={styles.cartBarLeft}>
-            <ShoppingCart size={18} color="#fff" strokeWidth={2} />
+            <Icon name="shopping_cart_1" size={18} color="#fff" />
             <Text style={styles.cartBarCount}>{cartCount} item{cartCount !== 1 ? 's' : ''}</Text>
           </View>
           <TouchableOpacity onPress={handleCheckout} activeOpacity={0.85} style={styles.cartBarBtn}>

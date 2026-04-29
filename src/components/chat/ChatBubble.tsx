@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Bookmark, BookmarkCheck, Circle, CheckCircle2, CornerUpLeft } from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext } from '../../hooks/useAppContext';
 import { useRoutine } from '../../hooks/useRoutine';
@@ -8,6 +8,7 @@ import { ROUTINE_ITEMS } from '../../data/routineItems';
 import { Typography, Spacing, Radius } from '../../theme';
 import TriageCard from '../triage/TriageCard';
 import { NeoResponse } from '../../data/responses';
+import Icon from '../icons/Icon';
 
 export interface Message {
   id: string;
@@ -49,7 +50,7 @@ export default function ChatBubble({ message, onReply }: ChatBubbleProps) {
           style={[styles.actionBtn, styles.actionBtnCenter]}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <CornerUpLeft size={14} color={theme.text.tertiary} strokeWidth={2} />
+          <Icon name="corner_up_left" size={14} color={theme.text.tertiary} />
         </TouchableOpacity>
       )}
 
@@ -130,8 +131,8 @@ export default function ChatBubble({ message, onReply }: ChatBubbleProps) {
                 )}
               </View>
               {done
-                ? <CheckCircle2 size={18} color={theme.accent.sage.text} strokeWidth={2} />
-                : <Circle size={18} color={theme.text.tertiary} strokeWidth={1.5} />
+                ? <Icon name="check_circle" size={18} color={theme.accent.sage.text} />
+                : <Icon name="circle_dash" size={18} color={theme.text.tertiary} />
               }
             </TouchableOpacity>
           );
@@ -151,7 +152,7 @@ export default function ChatBubble({ message, onReply }: ChatBubbleProps) {
             style={styles.actionBtn}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <CornerUpLeft size={14} color={theme.text.tertiary} strokeWidth={2} />
+            <Icon name="corner_up_left" size={14} color={theme.text.tertiary} />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={toggleBookmark}
@@ -160,8 +161,8 @@ export default function ChatBubble({ message, onReply }: ChatBubbleProps) {
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             {isSaved
-              ? <BookmarkCheck size={15} color={theme.text.tertiary} strokeWidth={2} />
-              : <Bookmark size={15} color={theme.text.tertiary} strokeWidth={2} />
+              ? <Icon name="bookmark_edit" size={15} color={theme.text.tertiary} />
+              : <Icon name="bookmark" size={15} color={theme.text.tertiary} />
             }
           </TouchableOpacity>
         </View>

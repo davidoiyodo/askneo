@@ -7,6 +7,7 @@ import { Typography, Spacing, Radius } from '../../theme';
 import Button from '../../components/ui/Button';
 import OnboardingBackButton from '../../components/ui/OnboardingBackButton';
 import { UserStage, EmergencyContact } from '../../hooks/useAppContext';
+import { generateInviteCode } from '../../utils/inviteCode';
 
 type Props = {
   navigation: NativeStackNavigationProp<any>;
@@ -34,10 +35,11 @@ export default function PartnerInviteScreen({ navigation, route }: Props) {
   };
 
   const shareInvite = async () => {
-    const pName = partnerName.trim();
+    // Encode stage + date so the partner's app can decode it automatically
+    const code = generateInviteCode(stage, date || undefined);
     try {
       await Share.share({
-        message: `${name} has invited you to join their AskNeo care circle. Download AskNeo and use invite code: ${name.toUpperCase().slice(0, 4)}2025`,
+        message: `${name} has invited you to join their AskNeo care circle as her partner.\n\nDownload AskNeo and enter this invite code when you sign up:\n\n${code}\n\nThis will connect your experience to hers automatically.`,
       });
       setInviteStatus('invited');
     } catch {}

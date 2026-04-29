@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, LayoutChangeEvent, Modal, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, TrendingUp, Repeat, Flame, Info, X } from 'lucide-react-native';
+
 import { Calendar } from 'react-native-calendars';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -10,6 +10,7 @@ import { useAppContext } from '../../hooks/useAppContext';
 import { useCycleLogs, toDateKey, daysBetween, CycleEntry, FlowIntensity, HPTResult } from '../../hooks/useCycleLogs';
 import { Typography, Spacing, Radius } from '../../theme';
 import BBTChart from '../../components/cycle/BBTChart';
+import Icon from '../../components/icons/Icon';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -309,7 +310,7 @@ function DayDetailModal({
               )}
             </View>
             <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={modalStyles.closeBtn}>
-              <X size={20} color={theme.text.secondary} strokeWidth={2} />
+              <Icon name="close" size={20} color={theme.text.secondary} />
             </TouchableOpacity>
           </View>
 
@@ -574,7 +575,7 @@ export default function CycleHistoryScreen({ navigation }: Props) {
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7} style={styles.backBtn}>
-          <ChevronLeft size={22} color={theme.text.secondary} strokeWidth={2.5} />
+          <Icon name="left" size={22} color={theme.text.secondary} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.text.primary }]}>Cycle History</Text>
         <View style={{ width: 38 }} />
@@ -658,26 +659,26 @@ export default function CycleHistoryScreen({ navigation }: Props) {
 
           <View style={styles.statsGrid}>
             <StatCard
-              icon={<Repeat size={18} color={theme.text.link} strokeWidth={2} />}
+              icon={<Icon name="repeat" size={18} color={theme.text.link} />}
               label="Cycles tracked"
               value={cyclesTracked > 0 ? String(cyclesTracked) : '—'}
               theme={theme}
             />
             <StatCard
-              icon={<TrendingUp size={18} color={theme.text.link} strokeWidth={2} />}
+              icon={<Icon name="trending_up" size={18} color={theme.text.link} />}
               label="Avg cycle length"
               value={completedCycles.length > 0 ? `${avgCycleLength} days` : '28 days (est.)'}
               theme={theme}
             />
             <StatCard
-              icon={<Flame size={18} color={theme.text.link} strokeWidth={2} />}
+              icon={<Icon name="flame" size={18} color={theme.text.link} />}
               label="Current cycle day"
               value={`CD ${cd}`}
               theme={theme}
             />
             {ovCD != null && (
               <StatCard
-                icon={<Info size={18} color={theme.text.link} strokeWidth={2} />}
+                icon={<Icon name="information" size={18} color={theme.text.link} />}
                 label="Ovulation confirmed"
                 value={`CD ${ovCD}`}
                 theme={theme}
@@ -685,7 +686,7 @@ export default function CycleHistoryScreen({ navigation }: Props) {
             )}
             {ovCD != null && (
               <StatCard
-                icon={<Info size={18} color={ovCD != null && (avgCycleLength - ovCD) < 10 ? '#D64545' : theme.text.link} strokeWidth={2} />}
+                icon={<Icon name="information" size={18} color={ovCD != null && (avgCycleLength - ovCD) < 10 ? '#D64545' : theme.text.link} />}
                 label="Luteal phase"
                 value={`${avgCycleLength - ovCD} days${(avgCycleLength - ovCD) < 10 ? ' ⚠️' : ''}`}
                 theme={theme}
@@ -693,7 +694,7 @@ export default function CycleHistoryScreen({ navigation }: Props) {
             )}
             {longestCycle != null && (
               <StatCard
-                icon={<TrendingUp size={18} color={theme.text.link} strokeWidth={2} />}
+                icon={<Icon name="trending_up" size={18} color={theme.text.link} />}
                 label="Longest cycle"
                 value={`${longestCycle} days`}
                 theme={theme}
@@ -701,7 +702,7 @@ export default function CycleHistoryScreen({ navigation }: Props) {
             )}
             {shortestCycle != null && (
               <StatCard
-                icon={<TrendingUp size={18} color={theme.text.link} strokeWidth={2} />}
+                icon={<Icon name="trending_up" size={18} color={theme.text.link} />}
                 label="Shortest cycle"
                 value={`${shortestCycle} days`}
                 theme={theme}

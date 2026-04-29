@@ -4,7 +4,7 @@ import {
   Animated, ImageBackground,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronLeft, CheckCircle2, RotateCcw } from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { useRoutine } from '../../hooks/useRoutine';
 import { getGoalById } from '../../data/goals';
@@ -13,6 +13,7 @@ import { GOAL_ACCENT } from '../../utils/goalColors';
 import { ITEM_IMAGES } from '../../utils/itemImages';
 import { GOAL_IMAGES } from '../../utils/goalImages';
 import { Typography, Spacing, Radius, Shadow } from '../../theme';
+import Icon from '../../components/icons/Icon';
 
 interface Props {
   navigation: any;
@@ -73,7 +74,7 @@ export default function RoutineItemScreen({ navigation, route }: Props) {
         style={[styles.backBtn, { top: insets.top + Spacing[3] }]}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       >
-        <ChevronLeft size={20} color="#fff" strokeWidth={2} />
+        <Icon name="left" size={20} color="#fff" />
       </TouchableOpacity>
 
       {/* ── Scrollable content ───────────────────────────────────────────────── */}
@@ -90,7 +91,7 @@ export default function RoutineItemScreen({ navigation, route }: Props) {
           <View style={styles.heroScrim} />
           {achieved && (
             <Animated.View style={[styles.heroDoneOverlay, { opacity: checkOpacity }]}>
-              <CheckCircle2 size={40} color="#fff" strokeWidth={2} />
+              <Icon name="check_circle" size={40} color="#fff" />
               <Text style={styles.heroDoneText}>Done!</Text>
             </Animated.View>
           )}
@@ -183,7 +184,7 @@ export default function RoutineItemScreen({ navigation, route }: Props) {
             ]}
           >
             {achieved
-              ? <CheckCircle2 size={18} color={theme.accent.sage.text} strokeWidth={2} />
+              ? <Icon name="check_circle" size={18} color={theme.accent.sage.text} />
               : null
             }
             <Text style={[
@@ -193,7 +194,7 @@ export default function RoutineItemScreen({ navigation, route }: Props) {
               {achieved ? 'Achieved ✓' : 'Mark as achieved'}
             </Text>
             {achieved
-              ? <RotateCcw size={14} color={theme.accent.sage.text} strokeWidth={2} style={{ opacity: 0.6 }} />
+              ? <Icon name="refresh_anticlockwise_1" size={14} color={theme.accent.sage.text} />
               : null
             }
           </TouchableOpacity>

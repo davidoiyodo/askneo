@@ -3,10 +3,11 @@ import {
   Modal, View, Text, ScrollView, TouchableOpacity, StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { X, Plus, Minus } from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { Typography, Spacing, Radius, Shadow } from '../../theme';
 import { bundleCatalog } from '../../data/neostore';
+import Icon from '../icons/Icon';
 
 const CATEGORIES = ['Feeding', 'Clothing', 'Hygiene', 'Health', 'Comfort', 'Sleep'];
 
@@ -75,7 +76,7 @@ export default function BuildBundleModal({ visible, initialSelection, onClose, o
               activeOpacity={0.7}
               style={[styles.closeBtn, { backgroundColor: theme.bg.subtle }]}
             >
-              <X size={18} color={theme.text.secondary} strokeWidth={2} />
+              <Icon name="close" size={18} color={theme.text.secondary} />
             </TouchableOpacity>
           </View>
 
@@ -115,16 +116,16 @@ export default function BuildBundleModal({ visible, initialSelection, onClose, o
                             activeOpacity={0.8}
                             style={[styles.addBtn, { backgroundColor: theme.interactive.primary }]}
                           >
-                            <Plus size={15} color="#fff" strokeWidth={2.5} />
+                            <Icon name="add" size={15} color="#fff" />
                           </TouchableOpacity>
                         ) : (
                           <View style={[styles.qtyControl, { backgroundColor: theme.bg.subtle, borderColor: theme.border.subtle }]}>
                             <TouchableOpacity onPress={() => remove(item.id)} style={styles.qtyBtn} activeOpacity={0.7}>
-                              <Minus size={13} color={theme.text.brand} strokeWidth={2.5} />
+                              <Icon name="minus_circle" size={13} color={theme.text.brand} />
                             </TouchableOpacity>
                             <Text style={[styles.qtyText, { color: theme.text.primary }]}>{qty}</Text>
                             <TouchableOpacity onPress={() => add(item.id)} style={styles.qtyBtn} activeOpacity={0.7}>
-                              <Plus size={13} color={theme.text.brand} strokeWidth={2.5} />
+                              <Icon name="add" size={13} color={theme.text.brand} />
                             </TouchableOpacity>
                           </View>
                         )}

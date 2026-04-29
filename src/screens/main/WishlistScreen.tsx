@@ -3,11 +3,12 @@ import {
   View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, Gift, Trash2, Share2 } from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext } from '../../hooks/useAppContext';
 import { Typography, Spacing, Radius, Shadow, Colors } from '../../theme';
 import Button from '../../components/ui/Button';
+import Icon from '../../components/icons/Icon';
 
 export default function WishlistScreen({ navigation }: { navigation: any }) {
   const { theme } = useTheme();
@@ -55,13 +56,13 @@ export default function WishlistScreen({ navigation }: { navigation: any }) {
               activeOpacity={0.7}
               style={[styles.backBtn, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}
             >
-              <ChevronLeft size={20} color={theme.text.primary} strokeWidth={2} />
+              <Icon name="left" size={20} color={theme.text.primary} />
               <Text style={[styles.backLabel, { color: theme.text.primary }]}>Back</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.emptyState}>
             <View style={[styles.emptyIcon, { backgroundColor: theme.bg.subtle }]}>
-              <Gift size={36} color={theme.text.tertiary} strokeWidth={1.5} />
+              <Icon name="gift" size={36} color={theme.text.tertiary} />
             </View>
             <Text style={[styles.emptyTitle, { color: theme.text.primary }]}>Your wishlist is empty</Text>
             <Text style={[styles.emptyBody, { color: theme.text.secondary }]}>
@@ -83,7 +84,7 @@ export default function WishlistScreen({ navigation }: { navigation: any }) {
           activeOpacity={0.7}
           style={[styles.backBtn, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}
         >
-          <ChevronLeft size={20} color={theme.text.primary} strokeWidth={2} />
+          <Icon name="left" size={20} color={theme.text.primary} />
           <Text style={[styles.backLabel, { color: theme.text.primary }]}>Back</Text>
         </TouchableOpacity>
 
@@ -121,7 +122,7 @@ export default function WishlistScreen({ navigation }: { navigation: any }) {
                   activeOpacity={0.7}
                   style={styles.trashBtn}
                 >
-                  <Trash2 size={18} color={Colors.danger[500]} strokeWidth={1.75} />
+                  <Icon name="delete_2" size={18} color={Colors.danger[500]} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -133,7 +134,7 @@ export default function WishlistScreen({ navigation }: { navigation: any }) {
           activeOpacity={0.85}
           style={[styles.shareBtn, { backgroundColor: theme.interactive.primary }]}
         >
-          <Share2 size={18} color="#fff" strokeWidth={2} />
+          <Icon name="share_2" size={18} color="#fff" />
           <Text style={styles.shareBtnLabel}>Share Wishlist</Text>
         </TouchableOpacity>
 

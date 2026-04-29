@@ -5,12 +5,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Audio } from 'expo-av';
-import { ChevronLeft, Mic, Square, Shield } from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext } from '../../hooks/useAppContext';
 import { Typography, Spacing, Radius } from '../../theme';
 import Button from '../../components/ui/Button';
 import { ConsultationSession, SessionType } from '../../types/consultation';
+import Icon from '../../components/icons/Icon';
 
 const STORAGE_KEY = 'askneo_consultations';
 
@@ -242,7 +243,7 @@ export default function RecordConsultationScreen({ navigation }: { navigation: a
             activeOpacity={0.7}
             style={[styles.backBtn, { backgroundColor: theme.bg.subtle, borderColor: theme.border.subtle }]}
           >
-            <ChevronLeft size={20} color={theme.text.primary} strokeWidth={2} />
+            <Icon name="left" size={20} color={theme.text.primary} />
             <Text style={[styles.backLabel, { color: theme.text.primary }]}>Back</Text>
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.text.primary }]}>New consultation</Text>
@@ -256,7 +257,7 @@ export default function RecordConsultationScreen({ navigation }: { navigation: a
         >
         <ScrollView contentContainerStyle={styles.consentScroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View style={[styles.shieldIcon, { backgroundColor: theme.accent.sky.bg }]}>
-            <Shield size={36} color={theme.accent.sky.text} strokeWidth={1.5} />
+            <Icon name="shield" size={36} color={theme.accent.sky.text} />
           </View>
 
           <Text style={[styles.consentTitle, { color: theme.text.primary }]}>
@@ -380,7 +381,7 @@ export default function RecordConsultationScreen({ navigation }: { navigation: a
       <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: theme.bg.app }]}>
         <View style={styles.processingContainer}>
           <View style={[styles.processingPulse, { backgroundColor: theme.accent.sky.bg }]}>
-            <Mic size={36} color={theme.accent.sky.text} strokeWidth={1.5} />
+            <Icon name="mic" size={36} color={theme.accent.sky.text} />
           </View>
           <Text style={[styles.processingTitle, { color: theme.text.primary }]}>Extracting insights…</Text>
           <Text style={[styles.processingBody, { color: theme.text.secondary }]}>
@@ -437,7 +438,7 @@ export default function RecordConsultationScreen({ navigation }: { navigation: a
           activeOpacity={0.85}
           style={[styles.stopBtn, { backgroundColor: theme.accent.rose.text }]}
         >
-          <Square size={22} color="#fff" strokeWidth={2} fill="#fff" />
+          <Icon name="square" size={22} color="#fff" />
           <Text style={styles.stopBtnLabel}>Stop & extract insights</Text>
         </TouchableOpacity>
 

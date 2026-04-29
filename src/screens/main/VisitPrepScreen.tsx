@@ -6,10 +6,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar as RNCalendar } from 'react-native-calendars';
-import {
-  ChevronLeft, Plus, X, Calendar, Pill, ClipboardList, CheckSquare,
-  AlertTriangle, FileText, ShoppingBag, CheckCircle, Activity,
-} from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext } from '../../hooks/useAppContext';
 import { useDailyLogs } from '../../hooks/useDailyLogs';
@@ -22,6 +19,7 @@ import { TriageLevel } from '../../data/responses';
 import { DailyLog } from '../../types/symptomLog';
 import { GoalId } from '../../hooks/useAppContext';
 import { getGoalById } from '../../data/goals';
+import Icon from '../../components/icons/Icon';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -359,7 +357,7 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
           activeOpacity={0.7}
           style={[styles.backBtn, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}
         >
-          <ChevronLeft size={20} color={theme.text.primary} strokeWidth={2} />
+          <Icon name="left" size={20} color={theme.text.primary} />
           <Text style={[styles.backLabel, { color: theme.text.primary }]}>Back</Text>
         </TouchableOpacity>
 
@@ -376,14 +374,14 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
         {/* Chips */}
         <View style={styles.chipRow}>
           <View style={[styles.chip, { backgroundColor: theme.accent.sage.bg }]}>
-            <Calendar size={13} color={theme.accent.sage.text} strokeWidth={2} />
+            <Icon name="calendar" size={13} color={theme.accent.sage.text} />
             <Text style={[styles.chipText, { color: theme.accent.sage.text }]}>
               {periodSessions.length} consultation{periodSessions.length !== 1 ? 's' : ''}
             </Text>
           </View>
           {periodEvents.length > 0 && (
             <View style={[styles.chip, { backgroundColor: urgentCount > 0 ? theme.accent.rose.bg : theme.accent.peach.bg }]}>
-              <AlertTriangle size={13} color={urgentCount > 0 ? theme.accent.rose.text : theme.accent.peach.text} strokeWidth={2} />
+              <Icon name="warning" size={13} color={urgentCount > 0 ? theme.accent.rose.text : theme.accent.peach.text} />
               <Text style={[styles.chipText, { color: urgentCount > 0 ? theme.accent.rose.text : theme.accent.peach.text }]}>
                 {periodEvents.length} concern{periodEvents.length !== 1 ? 's' : ''} flagged
               </Text>
@@ -391,7 +389,7 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
           )}
           {nextAppt && (
             <View style={[styles.chip, { backgroundColor: theme.accent.gold.bg }]}>
-              <Calendar size={13} color={theme.accent.gold.text} strokeWidth={2} />
+              <Icon name="calendar" size={13} color={theme.accent.gold.text} />
               <Text style={[styles.chipText, { color: theme.accent.gold.text }]}>
                 Appt: {formatDate(nextAppt)}
               </Text>
@@ -418,7 +416,7 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
         {periodANCVisits.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Activity size={15} color={theme.text.brand} strokeWidth={2} />
+              <Icon name="heartbeat" size={15} color={theme.text.brand} />
               <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Antenatal visit{periodANCVisits.length !== 1 ? 's' : ''}</Text>
             </View>
             <Card padding="none">
@@ -464,7 +462,7 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
         {periodEvents.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <AlertTriangle size={15} color={theme.text.brand} strokeWidth={2} />
+              <Icon name="warning" size={15} color={theme.text.brand} />
               <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Concerns raised with NEO</Text>
             </View>
             <Text style={[styles.sectionNote, { color: theme.text.secondary }]}>
@@ -499,7 +497,7 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
         {periodSymptomLogs.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Activity size={15} color={theme.text.brand} strokeWidth={2} />
+              <Icon name="heartbeat" size={15} color={theme.text.brand} />
               <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Daily check-ins</Text>
             </View>
             <Text style={[styles.sectionNote, { color: theme.text.secondary }]}>
@@ -563,7 +561,7 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
         {periodSessions.filter(s => s.summary).length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <FileText size={15} color={theme.text.brand} strokeWidth={2} />
+              <Icon name="file" size={15} color={theme.text.brand} />
               <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>What happened at your visits</Text>
             </View>
             {periodSessions.filter(s => s.summary).map(s => (
@@ -580,7 +578,7 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
         {uniqueMeds.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Pill size={15} color={theme.text.brand} strokeWidth={2} />
+              <Icon name="capsule" size={15} color={theme.text.brand} />
               <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Medications prescribed</Text>
             </View>
             <Card padding="none">
@@ -609,7 +607,7 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
         {allInstructions.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <ClipboardList size={15} color={theme.text.brand} strokeWidth={2} />
+              <Icon name="clipboard" size={15} color={theme.text.brand} />
               <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>What your doctor told you</Text>
             </View>
             <Card padding="none">
@@ -633,7 +631,7 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
         {(openConsultTasks.length > 0 || openMedTask || completedConsultTasks.length > 0) && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <CheckSquare size={15} color={theme.text.brand} strokeWidth={2} />
+              <Icon name="checkbox" size={15} color={theme.text.brand} />
               <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Action items</Text>
             </View>
             <Card padding="none">
@@ -661,7 +659,7 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
                   key={task.id}
                   style={[styles.taskRow, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.border.subtle }]}
                 >
-                  <CheckCircle size={13} color={theme.accent.sage.text} strokeWidth={2} />
+                  <Icon name="check_circle" size={13} color={theme.accent.sage.text} />
                   <Text style={[styles.taskText, { color: theme.text.tertiary, textDecorationLine: 'line-through' }]}>
                     {task.text}
                   </Text>
@@ -674,7 +672,7 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
         {/* ── Things to bring ──────────────────────────── */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <ShoppingBag size={15} color={theme.text.brand} strokeWidth={2} />
+            <Icon name="shopping_bag_1" size={15} color={theme.text.brand} />
             <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Things to bring</Text>
           </View>
           <Card padding="none">
@@ -697,7 +695,7 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
         {ancDerivedQuestions.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <ClipboardList size={15} color={theme.text.brand} strokeWidth={2} />
+              <Icon name="clipboard" size={15} color={theme.text.brand} />
               <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Based on your last visit</Text>
             </View>
             <Text style={[styles.sectionNote, { color: theme.text.secondary }]}>
@@ -740,7 +738,7 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
           return (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <ClipboardList size={15} color={theme.text.brand} strokeWidth={2} />
+                <Icon name="clipboard" size={15} color={theme.text.brand} />
                 <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Suggested questions by goal</Text>
               </View>
               <Text style={[styles.sectionNote, { color: theme.text.secondary }]}>
@@ -782,7 +780,7 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
         {/* ── Questions for your doctor ────────────────── */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <ClipboardList size={15} color={theme.text.brand} strokeWidth={2} />
+            <Icon name="clipboard" size={15} color={theme.text.brand} />
             <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Questions for your doctor</Text>
           </View>
           <Text style={[styles.sectionNote, { color: theme.text.secondary }]}>
@@ -806,7 +804,7 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
                     activeOpacity={0.7}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
-                    <X size={14} color={theme.text.tertiary} strokeWidth={2} />
+                    <Icon name="close" size={14} color={theme.text.tertiary} />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -828,7 +826,7 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
               activeOpacity={0.7}
               style={[styles.addBtn, { backgroundColor: theme.interactive.primary }]}
             >
-              <Plus size={16} color="#fff" strokeWidth={2.5} />
+              <Icon name="add" size={16} color="#fff" />
             </TouchableOpacity>
           </View>
         </View>
@@ -837,7 +835,7 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
         {user?.stage !== 'pregnancy' && !nextAppt && (
           <View style={[styles.section, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.border.subtle, paddingTop: Spacing[5] }]}>
             <View style={styles.sectionHeader}>
-              <Calendar size={15} color={theme.text.brand} strokeWidth={2} />
+              <Icon name="calendar" size={15} color={theme.text.brand} />
               <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Next appointment</Text>
             </View>
             <Text style={[styles.sectionNote, { color: theme.text.secondary }]}>
@@ -848,7 +846,7 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
               onPress={() => setShowApptPicker(v => !v)}
               style={[styles.apptSetRow, { backgroundColor: theme.bg.surface, borderColor: theme.border.default }]}
             >
-              <Calendar size={15} color={theme.text.secondary} strokeWidth={2} />
+              <Icon name="calendar" size={15} color={theme.text.secondary} />
               <Text style={[styles.apptSetLabel, { color: theme.text.secondary }]}>
                 {showApptPicker ? 'Hide calendar' : 'Pick a date'}
               </Text>

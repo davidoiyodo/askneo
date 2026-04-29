@@ -3,12 +3,13 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, CheckCircle2, Circle } from 'lucide-react-native';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { useTheme } from '../../theme/ThemeContext';
 import { Typography, Spacing, Radius } from '../../theme';
+import Icon from '../../components/icons/Icon';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -194,7 +195,7 @@ export default function PreconceptionChecklistScreen({ navigation }: Props) {
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7} style={styles.backBtn}>
-          <ChevronLeft size={22} color={theme.text.secondary} strokeWidth={2.5} />
+          <Icon name="left" size={22} color={theme.text.secondary} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.text.primary }]}>Preconception Checklist</Text>
         <View style={{ width: 38 }} />
@@ -276,8 +277,8 @@ export default function PreconceptionChecklistScreen({ navigation }: Props) {
                     </View>
                     <View style={styles.checkIcon}>
                       {done
-                        ? <CheckCircle2 size={22} color={theme.interactive.primary} strokeWidth={2} />
-                        : <Circle size={22} color={theme.border.default} strokeWidth={2} />
+                        ? <Icon name="check_circle" size={22} color={theme.interactive.primary} />
+                        : <Icon name="circle_dash" size={22} color={theme.border.default} />
                       }
                     </View>
                   </TouchableOpacity>

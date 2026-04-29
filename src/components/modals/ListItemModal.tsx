@@ -3,12 +3,13 @@ import {
   Modal, View, Text, TextInput, TouchableOpacity,
   StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert, Image,
 } from 'react-native';
-import { X, Camera, ImagePlus, Trash2 } from 'lucide-react-native';
+
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext } from '../../hooks/useAppContext';
 import { Typography, Spacing, Radius } from '../../theme';
 import { UserListing } from '../../hooks/useP2PListings';
+import Icon from '../icons/Icon';
 
 const CONDITIONS = [
   { key: 'like-new', label: 'Like new' },
@@ -131,7 +132,7 @@ export default function ListItemModal({ visible, onClose, onSubmit }: Props) {
           <View style={styles.sheetHeader}>
             <Text style={[styles.sheetTitle, { color: theme.text.primary }]}>List an item</Text>
             <TouchableOpacity onPress={handleClose} activeOpacity={0.7} style={styles.closeBtn}>
-              <X size={20} color={theme.text.secondary} strokeWidth={2} />
+              <Icon name="close" size={20} color={theme.text.secondary} />
             </TouchableOpacity>
           </View>
 
@@ -155,7 +156,7 @@ export default function ListItemModal({ visible, onClose, onSubmit }: Props) {
                       activeOpacity={0.8}
                       style={[styles.imageRemoveBtn, { backgroundColor: 'rgba(0,0,0,0.55)' }]}
                     >
-                      <Trash2 size={12} color="#fff" strokeWidth={2.5} />
+                      <Icon name="delete_2" size={12} color="#fff" />
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -165,7 +166,7 @@ export default function ListItemModal({ visible, onClose, onSubmit }: Props) {
                     activeOpacity={0.7}
                     style={[styles.addImageBtn, { backgroundColor: theme.bg.subtle, borderColor: theme.border.subtle }]}
                   >
-                    <ImagePlus size={22} color={theme.text.tertiary} strokeWidth={1.5} />
+                    <Icon name="pic_2" size={22} color={theme.text.tertiary} />
                     <Text style={[styles.addImageLabel, { color: theme.text.tertiary }]}>Add photo</Text>
                   </TouchableOpacity>
                 )}

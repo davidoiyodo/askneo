@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Mic, Plus } from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { Typography, Spacing, Radius, Shadow } from '../../theme';
 import { ConsultationSession } from '../../types/consultation';
+import Icon from '../icons/Icon';
 
 const STORAGE_KEY = 'askneo_consultations';
 
@@ -44,7 +45,7 @@ export default function ConsultationWidget({ navigation }: Props) {
     >
       {/* Left icon */}
       <View style={[styles.iconBg, { backgroundColor: theme.accent.sky.bg }]}>
-        <Mic size={20} color={theme.accent.sky.text} strokeWidth={1.75} />
+        <Icon name="mic" size={20} color={theme.accent.sky.text} />
       </View>
 
       {/* Text block */}
@@ -63,7 +64,7 @@ export default function ConsultationWidget({ navigation }: Props) {
         onPress={() => navigation.navigate('RecordConsultation')}
         style={[styles.recordBtn, { backgroundColor: theme.interactive.primary }]}
       >
-        <Plus size={14} color="#fff" strokeWidth={2.5} />
+        <Icon name="add" size={14} color="#fff" />
         <Text style={styles.recordBtnLabel}>Record</Text>
       </TouchableOpacity>
     </TouchableOpacity>

@@ -4,10 +4,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, Polyline, PROVIDER_DEFAULT } from 'react-native-maps';
-import { ChevronLeft, Phone, Navigation, MapPin, Clock, Car } from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { Typography, Spacing, Radius, Shadow, Colors } from '../../theme';
 import { facilities, getDistanceKm, openDirections } from '../../data/facilities';
+import Icon from '../../components/icons/Icon';
 
 type Params = {
   facilityId: string;
@@ -121,7 +122,7 @@ export default function FacilityMapScreen({ route, navigation }: { route: any; n
           activeOpacity={0.85}
           style={[styles.backBtn, { backgroundColor: theme.bg.surface }]}
         >
-          <ChevronLeft size={20} color={theme.text.primary} strokeWidth={2} />
+          <Icon name="left" size={20} color={theme.text.primary} />
           <Text style={[styles.backLabel, { color: theme.text.primary }]}>Back</Text>
         </TouchableOpacity>
       </SafeAreaView>
@@ -137,13 +138,13 @@ export default function FacilityMapScreen({ route, navigation }: { route: any; n
                 {facility.name}
               </Text>
               <View style={styles.metaRow}>
-                <MapPin size={12} color={theme.text.tertiary} strokeWidth={2} />
+                <Icon name="map_pin" size={12} color={theme.text.tertiary} />
                 <Text style={[styles.metaText, { color: theme.text.secondary }]}>
                   {facility.area} · {facility.address}
                 </Text>
               </View>
               <View style={styles.metaRow}>
-                <Clock size={12} color={theme.text.tertiary} strokeWidth={2} />
+                <Icon name="time" size={12} color={theme.text.tertiary} />
                 <Text style={[styles.metaText, { color: theme.text.secondary }]}>{facility.hours}</Text>
               </View>
             </View>
@@ -155,7 +156,7 @@ export default function FacilityMapScreen({ route, navigation }: { route: any; n
               </View>
               {etaLabel && (
                 <View style={[styles.etaBadge, { backgroundColor: theme.accent.gold.bg }]}>
-                  <Car size={10} color={theme.accent.gold.text} strokeWidth={2} />
+                  <Icon name="car_2" size={10} color={theme.accent.gold.text} />
                   <Text style={[styles.etaBadgeText, { color: theme.accent.gold.text }]}>{etaLabel}</Text>
                 </View>
               )}
@@ -183,7 +184,7 @@ export default function FacilityMapScreen({ route, navigation }: { route: any; n
               activeOpacity={0.8}
               style={[styles.actionBtn, styles.callBtn, { borderColor: theme.border.default }]}
             >
-              <Phone size={16} color={theme.text.brand} strokeWidth={2} />
+              <Icon name="phone" size={16} color={theme.text.brand} />
               <Text style={[styles.actionLabel, { color: theme.text.brand }]}>Call</Text>
             </TouchableOpacity>
 
@@ -192,7 +193,7 @@ export default function FacilityMapScreen({ route, navigation }: { route: any; n
               activeOpacity={0.8}
               style={[styles.actionBtn, styles.directionsBtn, { backgroundColor: theme.interactive.primary }]}
             >
-              <Navigation size={16} color="#fff" strokeWidth={2} />
+              <Icon name="navigation" size={16} color="#fff" />
               <Text style={[styles.actionLabel, { color: '#fff' }]}>Start Navigation</Text>
             </TouchableOpacity>
           </View>

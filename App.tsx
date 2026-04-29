@@ -29,6 +29,8 @@ import BasicInfoScreen from './src/screens/onboarding/BasicInfoScreen';
 import EmergencyContactsScreen from './src/screens/onboarding/EmergencyContactsScreen';
 import PartnerInviteScreen from './src/screens/onboarding/PartnerInviteScreen';
 import GoalsScreen from './src/screens/onboarding/GoalsScreen';
+import PrivacyPledgeScreen from './src/screens/onboarding/PrivacyPledgeScreen';
+import NiceToMeetYouScreen from './src/screens/onboarding/NiceToMeetYouScreen';
 import SignInScreen from './src/screens/onboarding/SignInScreen';
 import MainNavigator from './src/navigation/MainNavigator';
 
@@ -57,7 +59,9 @@ function RootNavigator() {
             <Stack.Screen name="Splash" component={SplashScreen} />
             <Stack.Screen name="Welcome" component={WelcomeScreen} />
             <Stack.Screen name="UserType" component={UserTypeScreen} />
+            <Stack.Screen name="PrivacyPledge" component={PrivacyPledgeScreen as any} />
             <Stack.Screen name="BasicInfo" component={BasicInfoScreen as any} />
+            <Stack.Screen name="NiceToMeetYou" component={NiceToMeetYouScreen as any} />
             <Stack.Screen name="EmergencyContacts" component={EmergencyContactsScreen as any} />
             <Stack.Screen name="PartnerInvite" component={PartnerInviteScreen as any} />
             <Stack.Screen name="Goals" component={GoalsScreen as any} />

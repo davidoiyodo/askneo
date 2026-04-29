@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Home, MessageCircle, AlertCircle, ShoppingBag } from 'lucide-react-native';
+import Icon from '../components/icons/Icon';
 import { useTheme } from '../theme/ThemeContext';
 import { Typography, Spacing, Radius } from '../theme';
 import HomeScreen from '../screens/main/HomeScreen';
@@ -44,12 +44,11 @@ const TAB_LABELS: Record<TabName, string> = {
 };
 
 function TabIcon({ name, color, size }: { name: TabName; color: string; size: number }) {
-  const props = { size, color, strokeWidth: 2 };
   switch (name) {
-    case 'Home':      return <Home {...props} />;
-    case 'AskNeo':    return <MessageCircle {...props} />;
-    case 'QuickHelp': return <AlertCircle {...props} />;
-    case 'NeoStore':  return <ShoppingBag {...props} />;
+    case 'Home':      return <Icon name="home_3" size={size} color={color} />;
+    case 'AskNeo':    return <Icon name="chat_1" size={size} color={color} />;
+    case 'QuickHelp': return <Icon name="alarm_1" size={size} color={color} />;
+    case 'NeoStore':  return <Icon name="shopping_bag_1" size={size} color={color} />;
   }
 }
 

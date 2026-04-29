@@ -5,7 +5,7 @@ import {
   TextInput, KeyboardAvoidingView, Platform, Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { HeartPulse, Activity, NotebookPen, X, Circle, Siren, Send, CheckCircle2, Stethoscope, ChevronDown, ChevronUp, CalendarHeart } from 'lucide-react-native';
+
 import { Calendar } from 'react-native-calendars';
 import { getPregnancyDevelopment, getPostnatalDevelopment, getPostnatalAgeLabel } from '../../data/babyDevelopment';
 import { useTheme } from '../../theme/ThemeContext';
@@ -21,10 +21,11 @@ import ConsultationWidget from '../../components/home/ConsultationWidget';
 import GoalStoryCircle from '../../components/home/GoalStoryCircle';
 import { Typography, Spacing, Radius, Shadow } from '../../theme';
 import Card from '../../components/ui/Card';
-import { pregnancyPrompts, babyPrompts, ttcPrompts, partnerPrompts, TimelinePrompt } from '../../data/timelinePrompts';
+import { pregnancyPrompts, babyPrompts, ttcPrompts, partnerPrompts, ttcPartnerPrompts, TimelinePrompt } from '../../data/timelinePrompts';
 import { getArticlesForUser } from '../../data/articles';
 import { getGestationalWeek, getBabyAgeLabel } from '../../utils/chatEngine';
 import { useFocusEffect } from '@react-navigation/native';
+import Icon from '../../components/icons/Icon';
 
 interface Props {
   navigation: any;
@@ -57,7 +58,17 @@ export default function HomeScreen({ navigation }: Props) {
       return `Baby is ${getBabyAgeLabel(new Date(user.babyDOB))}`;
     }
     if (user.stage === 'ttc') return 'Trying to Conceive';
-    if (user.stage === 'partner') return 'Partner & Support';
+    if (user.stage === 'partner') {
+      if (user.partnerStage === 'pregnancy' && user.partnerDueDate) {
+        const week = getGestationalWeek(new Date(user.partnerDueDate));
+        return `Partner · Week ${week}`;
+      }
+      if (user.partnerStage === 'newmom' && user.partnerBabyDOB) {
+        return `Partner · Baby is ${getBabyAgeLabel(new Date(user.partnerBabyDOB))}`;
+      }
+      if (user.partnerStage === 'ttc') return 'Partner · TTC';
+      return 'Partner & Support';
+    }
     return '';
   };
 
@@ -78,7 +89,10 @@ export default function HomeScreen({ navigation }: Props) {
         .sort((a, b) => (a.dayPostpartum ?? 0) - (b.dayPostpartum ?? 0));
       return relevant.length >= 3 ? relevant.slice(0, 6) : babyPrompts.slice(0, 6);
     }
-    if (user.stage === 'partner') return partnerPrompts.slice(0, 6);
+    if (user.stage === 'partner') {
+      if (user.partnerStage === 'ttc') return ttcPartnerPrompts.slice(0, 6);
+      return partnerPrompts.slice(0, 6);
+    }
     return ttcPrompts.slice(0, 6);
   };
 
@@ -88,6 +102,9 @@ export default function HomeScreen({ navigation }: Props) {
       ? getGestationalWeek(new Date(user.dueDate)) : 0;
     const day = user.stage === 'newmom' && user.babyDOB
       ? Math.floor((Date.now() - new Date(user.babyDOB).getTime()) / 86400000) : 0;
+    if (user.stage === 'partner' && user.partnerStage === 'ttc') {
+      return getArticlesForUser('partner', 0, 0, 'ttc').slice(0, 5);
+    }
     return getArticlesForUser(user.stage, week, day).slice(0, 5);
   };
 
@@ -217,7 +234,6 @@ export default function HomeScreen({ navigation }: Props) {
       return next;
     });
 
-
   return (
     <KeyboardAvoidingView
       style={styles.kav}
@@ -245,7 +261,7 @@ export default function HomeScreen({ navigation }: Props) {
               activeOpacity={0.8}
               style={[styles.sosBtn, { backgroundColor: theme.accent.rose.bg }]}
             >
-              <Siren size={18} color={theme.accent.rose.text} strokeWidth={2} />
+              <Icon name="alarm_1" size={18} color={theme.accent.rose.text} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => navigation.navigate('Profile')}
@@ -279,14 +295,14 @@ export default function HomeScreen({ navigation }: Props) {
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 activeOpacity={0.7}
               >
-                <X size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />
+                <Icon name="close" size={18} color="rgba(255,255,255,0.7)" />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleAskSubmit}
                 activeOpacity={0.7}
                 style={[styles.askSendBtn, { backgroundColor: 'rgba(255,255,255,0.2)', opacity: askText.trim() ? 1 : 0.4 }]}
               >
-                <Send size={16} color="#fff" strokeWidth={2} />
+                <Icon name="send" size={16} color="#fff" />
               </TouchableOpacity>
             </View>
           ) : (
@@ -379,9 +395,19 @@ export default function HomeScreen({ navigation }: Props) {
               onPress={() => navigation.navigate('CycleTracker')}
               style={[styles.quickCard, { backgroundColor: ttcCardBg, borderColor: 'transparent' }]}
             >
-              <CalendarHeart size={24} color={ttcCardText} strokeWidth={1.75} />
+              <Icon name="calendar" size={24} color={ttcCardText} />
               <Text style={[styles.quickLabel, { color: ttcCardText }]}>{`CD ${ttcCD}`}</Text>
               <Text style={[styles.quickSublabel, { color: ttcCardText }]}>{ttcSubLabel}</Text>
+            </TouchableOpacity>
+          ) : user?.stage === 'partner' ? (
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('AskNeo')}
+              style={[styles.quickCard, { backgroundColor: theme.accent.gold.bg, borderColor: 'transparent' }]}
+            >
+              <Icon name="chat_1" size={24} color={theme.accent.gold.text} />
+              <Text style={[styles.quickLabel, { color: theme.accent.gold.text }]}>{'Ask\nNeo'}</Text>
+              <Text style={[styles.quickSublabel, { color: theme.accent.gold.text }]}>{'Support tips'}</Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
@@ -389,7 +415,7 @@ export default function HomeScreen({ navigation }: Props) {
               onPress={() => navigation.navigate('QuickHelp')}
               style={[styles.quickCard, { backgroundColor: theme.accent.rose.bg, borderColor: 'transparent' }]}
             >
-              <HeartPulse size={24} color={theme.accent.rose.text} strokeWidth={1.75} />
+              <Icon name="heartbeat_2" size={24} color={theme.accent.rose.text} />
               <Text style={[styles.quickLabel, { color: theme.accent.rose.text }]}>{'Symptom\ncheck'}</Text>
             </TouchableOpacity>
           )}
@@ -398,7 +424,7 @@ export default function HomeScreen({ navigation }: Props) {
             onPress={() => navigation.navigate('SymptomLog')}
             style={[styles.quickCard, { backgroundColor: theme.accent.sage.bg, borderColor: 'transparent' }]}
           >
-            <NotebookPen size={24} color={theme.accent.sage.text} strokeWidth={1.75} />
+            <Icon name="notebook" size={24} color={theme.accent.sage.text} />
             <Text style={[styles.quickLabel, { color: theme.accent.sage.text }]}>{'Wellness\nDiary'}</Text>
           </TouchableOpacity>
         </View>
@@ -416,7 +442,7 @@ export default function HomeScreen({ navigation }: Props) {
             <View style={[styles.ancSetupCard, { backgroundColor: theme.accent.gold.bg, borderColor: theme.accent.gold.border }]}>
               <View style={styles.ancSetupHeaderRow}>
                 <View style={[styles.ancIconWrap, { backgroundColor: theme.accent.gold.border }]}>
-                  <Stethoscope size={18} color={theme.accent.gold.text} strokeWidth={1.75} />
+                  <Icon name="stethoscope" size={18} color={theme.accent.gold.text} />
                 </View>
                 <Text style={[styles.ancSetupTitle, { color: theme.text.primary }]}>Antenatal care</Text>
               </View>
@@ -482,8 +508,8 @@ export default function HomeScreen({ navigation }: Props) {
                         : 'Select date (optional)'}
                     </Text>
                     {ancSetupShowCal
-                      ? <ChevronUp size={14} color={theme.text.tertiary} strokeWidth={2} />
-                      : <ChevronDown size={14} color={theme.text.tertiary} strokeWidth={2} />}
+                      ? <Icon name="up" size={14} color={theme.text.tertiary} />
+                      : <Icon name="down" size={14} color={theme.text.tertiary} />}
                   </TouchableOpacity>
                   {ancSetupShowCal && (
                     <Calendar
@@ -619,7 +645,7 @@ export default function HomeScreen({ navigation }: Props) {
                     activeOpacity={0.7}
                     style={styles.highlightDeleteBtn}
                   >
-                    <X size={12} color={theme.text.tertiary} strokeWidth={2.5} />
+                    <Icon name="close" size={12} color={theme.text.tertiary} />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -643,14 +669,13 @@ export default function HomeScreen({ navigation }: Props) {
                     i === 0 && { borderTopWidth: 0 },
                   ]}
                 >
-                  <Circle size={20} color={theme.border.default} strokeWidth={2} />
+                  <Icon name="circle_dash" size={20} color={theme.border.default} />
                   <Text style={[styles.taskLabel, { color: theme.text.primary, flex: 1 }]}>{task.text}</Text>
                 </TouchableOpacity>
               ))}
             </View>
           </View>
         )}
-
 
         {/* Appointment nudge card */}
         {showApptCard && (
@@ -725,7 +750,7 @@ export default function HomeScreen({ navigation }: Props) {
               activeOpacity={0.7}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <X size={16} color={theme.text.tertiary} strokeWidth={2} />
+              <Icon name="close" size={16} color={theme.text.tertiary} />
             </TouchableOpacity>
           </View>
         )}
@@ -758,7 +783,7 @@ export default function HomeScreen({ navigation }: Props) {
                         onPress={() => dismissPrompt(p.id)}
                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                       >
-                        <X size={16} color={theme.text.tertiary} strokeWidth={2} />
+                        <Icon name="close" size={16} color={theme.text.tertiary} />
                       </TouchableOpacity>
                     </View>
                     <TouchableOpacity activeOpacity={0.7} onPress={() => toggleExpand(p.id)}>
@@ -782,7 +807,6 @@ export default function HomeScreen({ navigation }: Props) {
             </View>
           </View>
         )}
-
 
         {/* Journal articles */}
         {journalArticles.length > 0 && (
@@ -821,7 +845,6 @@ export default function HomeScreen({ navigation }: Props) {
             </ScrollView>
           </View>
         )}
-
 
       </ScrollView>
     </SafeAreaView>

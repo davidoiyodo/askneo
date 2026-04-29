@@ -4,7 +4,7 @@ import {
   TextInput, Keyboard, KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { X, CheckCircle2, Send } from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext } from '../../hooks/useAppContext';
 import { useRoutine } from '../../hooks/useRoutine';
@@ -13,6 +13,7 @@ import { GOAL_ACCENT } from '../../utils/goalColors';
 import { GOAL_IMAGES } from '../../utils/goalImages';
 import { ITEM_IMAGES } from '../../utils/itemImages';
 import { Typography, Spacing, Radius } from '../../theme';
+import Icon from '../../components/icons/Icon';
 
 interface Props {
   navigation: any;
@@ -191,7 +192,7 @@ export default function GoalStoryScreen({ navigation, route }: Props) {
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             style={styles.closeBtn}
           >
-            <X size={18} color="#fff" strokeWidth={2.5} />
+            <Icon name="close" size={18} color="#fff" />
           </TouchableOpacity>
         </View>
 
@@ -230,7 +231,7 @@ export default function GoalStoryScreen({ navigation, route }: Props) {
           {/* Done state indicator */}
           {done && (
             <View style={styles.doneChip}>
-              <CheckCircle2 size={14} color="#fff" strokeWidth={2.5} />
+              <Icon name="check_circle" size={14} color="#fff" />
               <Text style={styles.doneChipText}>Done today</Text>
             </View>
           )}
@@ -269,7 +270,7 @@ export default function GoalStoryScreen({ navigation, route }: Props) {
                 pointerEvents={inputFocused ? 'none' : 'auto'}
               >
                 <TouchableOpacity onPress={handleReply} activeOpacity={0.7} style={styles.replySendBtn}>
-                  <Send size={16} color="#fff" strokeWidth={2} />
+                  <Icon name="send" size={16} color="#fff" />
                 </TouchableOpacity>
               </Animated.View>
             </View>
@@ -316,7 +317,7 @@ export default function GoalStoryScreen({ navigation, route }: Props) {
                   activeOpacity={0.7}
                   style={[styles.externalSendBtn, { opacity: reply.trim() ? 1 : 0.5 }]}
                 >
-                  <Send size={18} color="#fff" strokeWidth={2} />
+                  <Icon name="send" size={18} color="#fff" />
                 </TouchableOpacity>
               </Animated.View>
 

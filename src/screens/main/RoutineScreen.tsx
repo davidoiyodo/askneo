@@ -3,13 +3,14 @@ import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, Circle, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react-native';
+
 import { useTheme } from '../../theme/ThemeContext';
 import { useAppContext } from '../../hooks/useAppContext';
 import { useRoutine } from '../../hooks/useRoutine';
 import { getGoalById } from '../../data/goals';
 import { RoutineItem } from '../../data/routineItems';
 import { Typography, Spacing, Radius } from '../../theme';
+import Icon from '../../components/icons/Icon';
 
 interface Props {
   navigation: any;
@@ -107,8 +108,8 @@ export default function RoutineScreen({ navigation }: Props) {
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             {done
-              ? <CheckCircle2 size={22} color={theme.accent.sage.text} strokeWidth={2} />
-              : <Circle size={22} color={theme.border.default} strokeWidth={2} />
+              ? <Icon name="check_circle" size={22} color={theme.accent.sage.text} />
+              : <Icon name="circle_dash" size={22} color={theme.border.default} />
             }
           </TouchableOpacity>
         </TouchableOpacity>
@@ -142,7 +143,7 @@ export default function RoutineScreen({ navigation }: Props) {
           activeOpacity={0.7}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <ChevronLeft size={24} color={theme.text.primary} strokeWidth={2} />
+          <Icon name="left" size={24} color={theme.text.primary} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.text.primary }]}>My routine</Text>
         <View style={{ width: 24 }} />
@@ -254,8 +255,8 @@ export default function RoutineScreen({ navigation }: Props) {
                         </View>
                       </View>
                       {isExpanded
-                        ? <ChevronUp size={18} color={theme.text.tertiary} strokeWidth={2} />
-                        : <ChevronDown size={18} color={theme.text.tertiary} strokeWidth={2} />
+                        ? <Icon name="up" size={18} color={theme.text.tertiary} />
+                        : <Icon name="down" size={18} color={theme.text.tertiary} />
                       }
                     </TouchableOpacity>
 

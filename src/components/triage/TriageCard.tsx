@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking, Alert, ActivityIndicator } from 'react-native';
-import { Phone, MapPin, Siren, Clock, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react-native';
+
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { useTheme } from '../../theme/ThemeContext';
@@ -8,6 +8,7 @@ import { TriageResult, TriageLevel, ChatTab } from '../../data/responses';
 import { Typography, Spacing, Radius, Colors } from '../../theme';
 import { useAppContext } from '../../hooks/useAppContext';
 import { FacilitySpecialty, getFacilitiesBySpecialty } from '../../data/facilities';
+import Icon from '../icons/Icon';
 
 interface TriageCardProps {
   triage: TriageResult;
@@ -164,7 +165,7 @@ export default function TriageCard({ triage, tab }: TriageCardProps) {
               activeOpacity={0.85}
               style={[styles.ctaBtn, styles.ctaBtnPrimary, { backgroundColor: Colors.danger[500] }]}
             >
-              <Siren size={16} color="#fff" strokeWidth={2.5} />
+              <Icon name="alarm_1" size={16} color="#fff" />
               <Text style={styles.ctaLabel}>Call 112 — Emergency now</Text>
             </TouchableOpacity>
 
@@ -173,7 +174,7 @@ export default function TriageCard({ triage, tab }: TriageCardProps) {
               activeOpacity={0.85}
               style={[styles.ctaBtn, styles.ctaBtnSecondary, { borderColor: colors.border }]}
             >
-              <AlertTriangle size={15} color={colors.text} strokeWidth={2} />
+              <Icon name="warning" size={15} color={colors.text} />
               <Text style={[styles.ctaLabelSecondary, { color: colors.text }]}>
                 {contacts.length
                   ? `Alert ${contacts.length} emergency contact${contacts.length > 1 ? 's' : ''}`
@@ -189,7 +190,7 @@ export default function TriageCard({ triage, tab }: TriageCardProps) {
             >
               {locating
                 ? <ActivityIndicator size="small" color={colors.text} />
-                : <MapPin size={15} color={colors.text} strokeWidth={2} />
+                : <Icon name="map_pin" size={15} color={colors.text} />
               }
               <Text style={[styles.ctaLabelSecondary, { color: colors.text }]}>Find nearest A&E</Text>
             </TouchableOpacity>
@@ -207,7 +208,7 @@ export default function TriageCard({ triage, tab }: TriageCardProps) {
             >
               {locating
                 ? <ActivityIndicator size="small" color="#fff" />
-                : <MapPin size={15} color="#fff" strokeWidth={2.5} />
+                : <Icon name="map_pin" size={15} color="#fff" />
               }
               <Text style={styles.ctaLabel}>Find nearest hospital</Text>
             </TouchableOpacity>
@@ -217,7 +218,7 @@ export default function TriageCard({ triage, tab }: TriageCardProps) {
               activeOpacity={0.85}
               style={[styles.ctaBtn, styles.ctaBtnSecondary, { borderColor: colors.border }]}
             >
-              <Phone size={15} color={colors.text} strokeWidth={2} />
+              <Icon name="phone" size={15} color={colors.text} />
               <Text style={[styles.ctaLabelSecondary, { color: colors.text }]}>
                 {doctorPhone ? `Call ${doctorLabel}` : 'Call your doctor first'}
               </Text>
@@ -229,7 +230,7 @@ export default function TriageCard({ triage, tab }: TriageCardProps) {
                 activeOpacity={0.85}
                 style={[styles.ctaBtn, styles.ctaBtnSecondary, { borderColor: colors.border }]}
               >
-                <AlertTriangle size={15} color={colors.text} strokeWidth={2} />
+                <Icon name="warning" size={15} color={colors.text} />
                 <Text style={[styles.ctaLabelSecondary, { color: colors.text }]}>
                   Alert emergency contacts
                 </Text>
@@ -246,7 +247,7 @@ export default function TriageCard({ triage, tab }: TriageCardProps) {
               activeOpacity={0.85}
               style={[styles.ctaBtn, styles.ctaBtnPrimary, { backgroundColor: colors.border }]}
             >
-              <Phone size={15} color="#fff" strokeWidth={2.5} />
+              <Icon name="phone" size={15} color="#fff" />
               <Text style={styles.ctaLabel}>
                 {doctorPhone ? `Call ${doctorLabel}` : 'Call your doctor'}
               </Text>
@@ -260,7 +261,7 @@ export default function TriageCard({ triage, tab }: TriageCardProps) {
             >
               {locating
                 ? <ActivityIndicator size="small" color={colors.text} />
-                : <MapPin size={15} color={colors.text} strokeWidth={2} />
+                : <Icon name="map_pin" size={15} color={colors.text} />
               }
               <Text style={[styles.ctaLabelSecondary, { color: colors.text }]}>Find nearest clinic</Text>
             </TouchableOpacity>
@@ -274,11 +275,11 @@ export default function TriageCard({ triage, tab }: TriageCardProps) {
             activeOpacity={0.8}
             style={[styles.tipsToggle, { borderColor: colors.border }]}
           >
-            <Clock size={14} color={colors.text} strokeWidth={2} />
+            <Icon name="time" size={14} color={colors.text} />
             <Text style={[styles.tipsToggleLabel, { color: colors.text }]}>Monitoring tips</Text>
             {tipsOpen
-              ? <ChevronUp size={14} color={colors.text} strokeWidth={2} />
-              : <ChevronDown size={14} color={colors.text} strokeWidth={2} />
+              ? <Icon name="up" size={14} color={colors.text} />
+              : <Icon name="down" size={14} color={colors.text} />
             }
           </TouchableOpacity>
         )}

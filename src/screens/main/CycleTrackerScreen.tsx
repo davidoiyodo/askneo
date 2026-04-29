@@ -5,10 +5,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle as SvgCircle } from 'react-native-svg';
-import {
-  ChevronLeft, Thermometer, Droplets, History, ClipboardList,
-  ChevronRight, CalendarDays,
-} from 'lucide-react-native';
+
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { useTheme } from '../../theme/ThemeContext';
@@ -20,6 +17,7 @@ import {
 } from '../../hooks/useCycleLogs';
 import { useRoutine } from '../../hooks/useRoutine';
 import Button from '../../components/ui/Button';
+import Icon from '../../components/icons/Icon';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -400,7 +398,7 @@ export default function CycleTrackerScreen({ navigation }: Props) {
         {/* Header */}
         <View style={[styles.header, { borderBottomColor: theme.border.subtle }]}>
           <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7} style={styles.backBtn}>
-            <ChevronLeft size={22} color={theme.text.secondary} strokeWidth={2.5} />
+            <Icon name="left" size={22} color={theme.text.secondary} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.text.primary }]}>Cycle Tracker</Text>
           <TouchableOpacity
@@ -408,7 +406,7 @@ export default function CycleTrackerScreen({ navigation }: Props) {
             activeOpacity={0.7}
             style={styles.historyBtn}
           >
-            <CalendarDays size={20} color={theme.text.secondary} strokeWidth={2} />
+            <Icon name="calendar_2" size={20} color={theme.text.secondary} />
           </TouchableOpacity>
         </View>
 
@@ -498,7 +496,7 @@ export default function CycleTrackerScreen({ navigation }: Props) {
           {showPrediction && prediction && (
             <View style={[styles.predictionCard, { backgroundColor: theme.accent.sage.bg, borderColor: theme.accent.sage.border }]}>
               <View style={styles.predictionHeader}>
-                <CalendarDays size={18} color={theme.accent.sage.text} strokeWidth={2} />
+                <Icon name="calendar_2" size={18} color={theme.accent.sage.text} />
                 <Text style={[styles.predictionTitle, { color: theme.accent.sage.text }]}>
                   {prediction.daysUntilStart > 0
                     ? `Next fertile window in ${prediction.daysUntilStart} day${prediction.daysUntilStart !== 1 ? 's' : ''}`
@@ -718,7 +716,7 @@ export default function CycleTrackerScreen({ navigation }: Props) {
           {/* ── BBT ── */}
           <View style={[styles.section, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}>
             <View style={styles.sectionTitleRow}>
-              <Thermometer size={16} color={theme.text.secondary} strokeWidth={2} />
+              <Icon name="thermometer" size={16} color={theme.text.secondary} />
               <Text style={[styles.sectionQuestion, { color: theme.text.primary }]}>What was your temp this morning?</Text>
             </View>
             <Text style={[styles.sectionHint, { color: theme.text.secondary }]}>
@@ -756,7 +754,7 @@ export default function CycleTrackerScreen({ navigation }: Props) {
           {/* ── Cervical Mucus ── */}
           <View style={[styles.section, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}>
             <View style={styles.sectionTitleRow}>
-              <Droplets size={16} color={theme.text.secondary} strokeWidth={2} />
+              <Icon name="drop" size={16} color={theme.text.secondary} />
               <Text style={[styles.sectionQuestion, { color: theme.text.primary }]}>How's your cervical mucus?</Text>
             </View>
             <View style={styles.chipRowFull}>
@@ -881,10 +879,10 @@ export default function CycleTrackerScreen({ navigation }: Props) {
               activeOpacity={0.7}
             >
               <View style={styles.footerLinkLeft}>
-                <History size={18} color={theme.text.link} strokeWidth={2} />
+                <Icon name="history" size={18} color={theme.text.link} />
                 <Text style={[styles.footerLinkText, { color: theme.text.primary }]}>Cycle History & Analytics</Text>
               </View>
-              <ChevronRight size={16} color={theme.text.tertiary} strokeWidth={2} />
+              <Icon name="right" size={16} color={theme.text.tertiary} />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -893,10 +891,10 @@ export default function CycleTrackerScreen({ navigation }: Props) {
               activeOpacity={0.7}
             >
               <View style={styles.footerLinkLeft}>
-                <ClipboardList size={18} color={theme.text.link} strokeWidth={2} />
+                <Icon name="clipboard" size={18} color={theme.text.link} />
                 <Text style={[styles.footerLinkText, { color: theme.text.primary }]}>Preconception Checklist</Text>
               </View>
-              <ChevronRight size={16} color={theme.text.tertiary} strokeWidth={2} />
+              <Icon name="right" size={16} color={theme.text.tertiary} />
             </TouchableOpacity>
           </View>
 

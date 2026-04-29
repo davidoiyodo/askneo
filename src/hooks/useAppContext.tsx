@@ -76,6 +76,10 @@ export interface AppUser {
   inviteCode?: string;
   partnerName?: string;
   partnerStatus?: 'invited' | 'active';
+  // Linked partner context (set on partner-stage users from the invite code)
+  partnerStage?: 'pregnancy' | 'newmom' | 'ttc';
+  partnerDueDate?: string;   // ISO — woman's EDD (if pregnancy) or cycle date (if ttc)
+  partnerBabyDOB?: string;   // ISO — baby's DOB (if newmom)
   doctorName?: string;
   doctorPhone?: string;
   lastVisitDate?: string;        // ISO date of last doctor visit
