@@ -30,6 +30,7 @@ export type GoalId =
   | 'cycle-awareness'
   | 'conception-optimisation'
   | 'emotional-wellbeing'
+  | 'ivf-preparation'
   // Partner
   | 'supporting-partner'
   | 'birth-preparation'

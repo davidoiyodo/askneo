@@ -175,6 +175,16 @@ export const GOALS: GoalDef[] = [
     stages: ['ttc'],
   },
 
+  {
+    id: 'ivf-preparation',
+    label: 'IVF preparation',
+    icon: '🔬',
+    description: 'Understand the process, prepare your body, and know what to expect',
+    whyItMatters:
+      'IVF involves a precise sequence of medications, scans, and procedures. Being well-prepared — physically and emotionally — significantly improves outcomes and reduces the stress of each stage.',
+    stages: ['ttc'],
+  },
+
   // ── Partner ────────────────────────────────────────────────────────────────
   {
     id: 'supporting-partner',

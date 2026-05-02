@@ -14,6 +14,7 @@ import {
   useAppContext, UserStage, GoalId, SubGoalId,
   BirthIntention, FeedingIntention, EmergencyContact, AppUser,
 } from '../../hooks/useAppContext';
+import { registerUser } from '../../services/auth';
 import { GOALS, SUB_GOALS } from '../../data/goals';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -255,7 +256,7 @@ export default function GoalsScreen({ navigation, route }: Props) {
     const cyclesIrregular = knownConditions.some(c =>
       ['pcos', 'irregular-cycles', 'endometriosis'].includes(c)
     );
-    setPendingUser({
+    const newUser: AppUser = {
       name,
       email,
       password,
@@ -283,8 +284,15 @@ export default function GoalsScreen({ navigation, route }: Props) {
         cyclesIrregular: knownConditions.length > 0 ? cyclesIrregular : undefined,
       } : {}),
       onboardingComplete: true,
-    });
+    };
+    setPendingUser(newUser);
     setStep('ready');
+    // Fire registration in background alongside the ready animation.
+    // Local setUser still runs after the animation — app stays functional
+    // even if the request fails. Replace with blocking flow once login + /me are live.
+    registerUser(newUser).catch(err => {
+      console.warn('[Auth] Registration failed:', err);
+    });
   };
 
   // ── Grid goal card ────────────────────────────────────────────────────────
