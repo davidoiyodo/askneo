@@ -57,7 +57,7 @@ export default function BuildBundleModal({ visible, initialSelection, onClose, o
       transparent
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { backgroundColor: theme.overlay.scrim }]}>
         <TouchableOpacity style={StyleSheet.absoluteFillObject} onPress={onClose} activeOpacity={1} />
 
         <View style={[styles.sheet, { backgroundColor: theme.bg.app }]}>
@@ -178,7 +178,6 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.4)',
   },
   sheet: {
     maxHeight: '90%',

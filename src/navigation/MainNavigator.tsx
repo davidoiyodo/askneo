@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { Platform, View, Text, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Icon from '../components/icons/Icon';
@@ -17,7 +17,6 @@ import ConsultationsScreen from '../screens/consultations/ConsultationsScreen';
 import RecordConsultationScreen from '../screens/consultations/RecordConsultationScreen';
 import ConsultationDetailScreen from '../screens/consultations/ConsultationDetailScreen';
 import VisitPrepScreen from '../screens/main/VisitPrepScreen';
-import FacilityMapScreen from '../screens/main/FacilityMapScreen';
 import SymptomLogScreen from '../screens/main/SymptomLogScreen';
 import BabyDevelopmentScreen from '../screens/main/BabyDevelopmentScreen';
 import CartScreen from '../screens/main/CartScreen';
@@ -30,6 +29,15 @@ import ANCVisitsScreen from '../screens/main/ANCVisitsScreen';
 import CycleTrackerScreen from '../screens/main/CycleTrackerScreen';
 import CycleHistoryScreen from '../screens/main/CycleHistoryScreen';
 import PreconceptionChecklistScreen from '../screens/main/PreconceptionChecklistScreen';
+
+const FacilityMapScreen =
+  Platform.OS === 'web'
+    ? function FacilityMapWebFallback() {
+        return (
+          <View style={{ flex: 1 }} />
+        );
+      }
+    : require('../screens/main/FacilityMapScreen').default;
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();

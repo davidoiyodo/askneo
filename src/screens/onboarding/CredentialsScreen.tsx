@@ -38,7 +38,7 @@ export default function CredentialsScreen({ navigation, route }: Props) {
 
   const inputStyle = (focused: boolean, hasError = false) => ({
     backgroundColor: theme.bg.surface,
-    borderColor: hasError ? '#D64545' : focused ? theme.border.focus : theme.border.default,
+    borderColor: hasError ? theme.feedback.danger.border : focused ? theme.border.focus : theme.border.default,
     color: theme.text.primary,
   });
 
@@ -102,7 +102,7 @@ export default function CredentialsScreen({ navigation, route }: Props) {
                 autoCorrect={false}
               />
               {passwordError ? (
-                <Text style={[styles.help, { color: '#D64545' }]}>{passwordError}</Text>
+                <Text style={[styles.help, { color: theme.feedback.danger.text }]}>{passwordError}</Text>
               ) : null}
             </View>
           </View>

@@ -158,17 +158,16 @@ const CATEGORIES = ['Health Screening', 'Nutrition', 'Lifestyle', 'Partner Healt
 
 const STORAGE_KEY = 'askneo_preconception_checklist';
 
-const PRIORITY_COLOR: Record<string, string> = {
-  high:   '#C4566A',
-  medium: '#F4B740',
-  low:    '#5DBB8A',
-};
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function PreconceptionChecklistScreen({ navigation }: Props) {
   const { theme } = useTheme();
   const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const priorityColor = (priority: ChecklistItem['priority']) => ({
+    high: theme.dataViz.cyclePeriod,
+    medium: theme.dataViz.opkPeak,
+    low: theme.dataViz.fertile,
+  }[priority]);
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY).then(val => {
@@ -260,7 +259,7 @@ export default function PreconceptionChecklistScreen({ navigation }: Props) {
                   >
                     <View style={styles.itemLeft}>
                       <View style={styles.itemTitleRow}>
-                        <View style={[styles.priorityDot, { backgroundColor: PRIORITY_COLOR[item.priority] }]} />
+                        <View style={[styles.priorityDot, { backgroundColor: priorityColor(item.priority) }]} />
                         <Text style={[
                           styles.itemTitle,
                           { color: done ? theme.text.secondary : theme.text.primary },
@@ -293,9 +292,9 @@ export default function PreconceptionChecklistScreen({ navigation }: Props) {
           <Text style={[styles.legendTitle, { color: theme.text.secondary }]}>Priority guide</Text>
           <View style={styles.legendRow}>
             {[
-              { color: '#C4566A', label: 'High — do first' },
-              { color: '#F4B740', label: 'Medium — do soon' },
-              { color: '#5DBB8A', label: 'Low — nice to have' },
+              { color: theme.dataViz.cyclePeriod, label: 'High — do first' },
+              { color: theme.dataViz.opkPeak, label: 'Medium — do soon' },
+              { color: theme.dataViz.fertile, label: 'Low — nice to have' },
             ].map(l => (
               <View key={l.label} style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: l.color }]} />

@@ -404,7 +404,7 @@ export default function GoalsScreen({ navigation, route }: Props) {
                   key={i}
                   style={[styles.previewCard, { backgroundColor: accent.bg, borderColor: accent.border }]}
                 >
-                  <View style={[styles.previewIconWrap, { backgroundColor: 'rgba(0,0,0,0.06)' }]}>
+                  <View style={[styles.previewIconWrap, { backgroundColor: theme.overlay.scrimSubtle, opacity: 0.18 }]}>
                     <Text style={styles.previewEmoji}>{f.emoji}</Text>
                   </View>
                   <View style={styles.cardBody}>
@@ -436,7 +436,7 @@ export default function GoalsScreen({ navigation, route }: Props) {
             </Text>
           </View>
           <View style={styles.progressWrap}>
-            <View style={[styles.progressBg, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+            <View style={[styles.progressBg, { backgroundColor: theme.overlay.inverseMedium }]}>
               <Animated.View
                 style={[styles.progressFill, { width: progressWidth, backgroundColor: theme.text.inverse }]}
               />

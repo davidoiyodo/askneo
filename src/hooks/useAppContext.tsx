@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
+import { loginUser, getMe, signOutUser } from '../services/auth';
+import { ApiError, TOKEN_KEY } from '../services/api';
 
 const TASKS_KEY = 'askneo_tasks';
 
@@ -187,19 +189,37 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     Promise.all([
+      AsyncStorage.getItem(TOKEN_KEY),
       AsyncStorage.getItem('askneo_user'),
       AsyncStorage.getItem('askneo_highlights'),
       AsyncStorage.getItem('askneo_wishlist'),
       AsyncStorage.getItem(TASKS_KEY),
       AsyncStorage.getItem('askneo_cart'),
       AsyncStorage.getItem('askneo_custom_bundle'),
-    ]).then(([userVal, highlightsVal, wishlistVal, tasksVal, cartVal, customBundleVal]) => {
-      if (userVal) setUserState(JSON.parse(userVal));
+    ]).then(async ([tokenVal, userVal, highlightsVal, wishlistVal, tasksVal, cartVal, customBundleVal]) => {
       if (highlightsVal) setHighlights(JSON.parse(highlightsVal));
       if (wishlistVal) setWishlist(JSON.parse(wishlistVal));
       if (tasksVal) setTasks(JSON.parse(tasksVal));
       if (cartVal) setCartState(JSON.parse(cartVal));
       if (customBundleVal) setCustomBundleState(JSON.parse(customBundleVal));
+
+      if (tokenVal) {
+        try {
+          const serverUser = await getMe();
+          const localUser: AppUser | null = userVal ? JSON.parse(userVal) : null;
+          // Merge: server fields take priority; local preserves password + any unsynced fields
+          const merged: AppUser = { ...(localUser ?? defaultUser), ...serverUser };
+          setUserState(merged);
+          AsyncStorage.setItem('askneo_user', JSON.stringify(merged));
+        } catch {
+          // Token expired or server unreachable — fall back to local user
+          await AsyncStorage.removeItem(TOKEN_KEY);
+          if (userVal) setUserState(JSON.parse(userVal));
+        }
+      } else if (userVal) {
+        setUserState(JSON.parse(userVal));
+      }
+
       setIsLoading(false);
     });
   }, []);
@@ -300,16 +320,33 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string): Promise<'ok' | 'not_found' | 'wrong_password'> => {
-    const stored = await AsyncStorage.getItem('askneo_user');
-    if (!stored) return 'not_found';
-    const storedUser: AppUser = JSON.parse(stored);
-    if (storedUser.email !== email) return 'not_found';
-    if (storedUser.password !== password) return 'wrong_password';
-    setUserState(storedUser);
-    return 'ok';
+    try {
+      await loginUser(email, password);
+      const serverUser = await getMe();
+      const stored = await AsyncStorage.getItem('askneo_user');
+      const localUser: AppUser | null = stored ? JSON.parse(stored) : null;
+      const merged: AppUser = { ...(localUser ?? defaultUser), ...serverUser };
+      setUserState(merged);
+      AsyncStorage.setItem('askneo_user', JSON.stringify(merged));
+      return 'ok';
+    } catch (err) {
+      if (err instanceof ApiError) {
+        if (err.status === 404) return 'not_found';
+        if (err.status === 401) return 'wrong_password';
+      }
+      // API unreachable — fall back to local auth
+      const stored = await AsyncStorage.getItem('askneo_user');
+      if (!stored) return 'not_found';
+      const storedUser: AppUser = JSON.parse(stored);
+      if (storedUser.email !== email) return 'not_found';
+      if (storedUser.password !== password) return 'wrong_password';
+      setUserState(storedUser);
+      return 'ok';
+    }
   };
 
   const signOut = () => {
+    signOutUser().catch(() => {});
     AsyncStorage.multiRemove(['askneo_user', 'askneo_highlights', 'askneo_chat_history', 'askneo_wishlist', 'askneo_cart', 'askneo_custom_bundle', 'askneo_anc_visits', 'askneo_anc_setup_count']);
     setUserState(null);
     setHighlights([]);

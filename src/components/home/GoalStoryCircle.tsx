@@ -66,7 +66,7 @@ export default function GoalStoryCircle({
 
           {/* All-done green overlay + tick */}
           {allDone && (
-            <View style={styles.doneMask}>
+            <View style={[styles.doneMask, { backgroundColor: theme.feedback.success.icon + 'B8' }]}>
               <Text style={styles.doneCheck}>✓</Text>
             </View>
           )}
@@ -141,7 +141,6 @@ const styles = StyleSheet.create({
   // Green overlay when all items done
   doneMask: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(34,160,80,0.72)',
     alignItems:      'center',
     justifyContent:  'center',
   },

@@ -149,18 +149,18 @@ export default function GoalStoryScreen({ navigation, route }: Props) {
   return (
     <ImageBackground
       source={imageUri ? { uri: imageUri } : undefined}
-      style={styles.imageBg}
+      style={[styles.imageBg, { backgroundColor: theme.bg.brand }]}
       resizeMode="cover"
     >
       {/* Dark scrim so text is always legible over any photo */}
-      <View style={styles.scrim} />
+      <View style={[styles.scrim, { backgroundColor: theme.overlay.scrimStrong }]} />
 
       {/* Green flash on "mark done" */}
       <Animated.View
         pointerEvents="none"
         style={[
           StyleSheet.absoluteFillObject,
-          { backgroundColor: '#4caf50', opacity: doneFlashOpacity, zIndex: 99 },
+          { backgroundColor: theme.feedback.success.icon, opacity: doneFlashOpacity, zIndex: 99 },
         ]}
       />
 
@@ -173,16 +173,16 @@ export default function GoalStoryScreen({ navigation, route }: Props) {
         {/* ── Progress bars ─────────────────────────────────────────────────── */}
         <View style={styles.progressRow}>
           {items.map((it, i) => (
-            <View key={it.id} style={[styles.progressTrack, { flex: 1 }]}>
-              <View style={[styles.progressFill, { opacity: barOpacity(i) }]} />
+            <View key={it.id} style={[styles.progressTrack, { flex: 1, backgroundColor: theme.overlay.inverseMedium }]}>
+              <View style={[styles.progressFill, { backgroundColor: theme.text.inverse, opacity: barOpacity(i) }]} />
             </View>
           ))}
         </View>
 
         {/* ── Top bar: goal chip + close ───────────────────────────────────── */}
         <View style={styles.topBar}>
-          <View style={styles.goalChip}>
-            <Text style={styles.goalChipText}>
+          <View style={[styles.goalChip, { backgroundColor: theme.overlay.inverseSoft }]}>
+            <Text style={[styles.goalChipText, { color: theme.text.inverse }]}>
               {goalDef.icon}  {goalDef.label}
             </Text>
           </View>
@@ -190,9 +190,9 @@ export default function GoalStoryScreen({ navigation, route }: Props) {
             onPress={() => navigation.goBack()}
             activeOpacity={0.7}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            style={styles.closeBtn}
+            style={[styles.closeBtn, { backgroundColor: theme.overlay.inverseSoft }]}
           >
-            <Icon name="close" size={18} color="#fff" />
+            <Icon name="close" size={18} color={theme.text.inverse} />
           </TouchableOpacity>
         </View>
 
@@ -212,27 +212,27 @@ export default function GoalStoryScreen({ navigation, route }: Props) {
           />
 
           {/* Item count */}
-          <Text style={styles.itemCount}>
+          <Text style={[styles.itemCount, { color: theme.overlay.inverseTextMuted }]}>
             {index + 1} / {items.length}
           </Text>
 
           {/* Title */}
-          <Text style={styles.title}>
+          <Text style={[styles.title, { color: theme.text.inverse }]}>
             {item.title}
           </Text>
 
           {/* Why this matters */}
           {item.why ? (
-            <Text style={styles.why}>
+            <Text style={[styles.why, { color: theme.overlay.inverseTextStrong }]}>
               {item.why}
             </Text>
           ) : null}
 
           {/* Done state indicator */}
           {done && (
-            <View style={styles.doneChip}>
-              <Icon name="check_circle" size={14} color="#fff" />
-              <Text style={styles.doneChipText}>Done today</Text>
+            <View style={[styles.doneChip, { backgroundColor: theme.overlay.inverseMedium, borderColor: theme.overlay.inverseTextStrong }]}>
+              <Icon name="check_circle" size={14} color={theme.text.inverse} />
+              <Text style={[styles.doneChipText, { color: theme.text.inverse }]}>Done today</Text>
             </View>
           )}
 
@@ -242,23 +242,23 @@ export default function GoalStoryScreen({ navigation, route }: Props) {
             onPress={() => navigation.navigate('RoutineItem', { item })}
             style={styles.fullDetailsLink}
           >
-            <Text style={styles.fullDetailsText}>Full details →</Text>
+            <Text style={[styles.fullDetailsText, { color: theme.overlay.inverseStrong }]}>Full details →</Text>
           </TouchableOpacity>
         </View>
 
         {/* ── Bottom bar — single row ───────────────────────────────────────── */}
-        <View style={[styles.bottomBar, { paddingBottom: inputFocused ? Spacing[3] : (insets.bottom || Spacing[5]) }]}>
+        <View style={[styles.bottomBar, { borderTopColor: theme.overlay.inverseMedium, paddingBottom: inputFocused ? Spacing[3] : (insets.bottom || Spacing[5]) }]}>
           <View style={styles.bottomRow}>
 
             {/* Reply input pill */}
-            <View style={styles.replyRow}>
+            <View style={[styles.replyRow, { backgroundColor: theme.overlay.scrim, borderColor: theme.overlay.inverseStrong }]}>
               <TextInput
                 ref={inputRef}
-                style={styles.replyInput}
+                style={[styles.replyInput, { color: theme.text.inverse }]}
                 value={reply}
                 onChangeText={setReply}
                 placeholder={done ? "How did it go? Ask Neo anything…" : "Got feedback or questions? Ask Neo"}
-                placeholderTextColor="rgba(255,255,255,0.6)"
+                placeholderTextColor={theme.overlay.inverseTextMuted}
                 returnKeyType="send"
                 onFocus={handleFocus}
                 onBlur={handleBlur}
@@ -269,8 +269,8 @@ export default function GoalStoryScreen({ navigation, route }: Props) {
                 style={{ opacity: focusAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }}
                 pointerEvents={inputFocused ? 'none' : 'auto'}
               >
-                <TouchableOpacity onPress={handleReply} activeOpacity={0.7} style={styles.replySendBtn}>
-                  <Icon name="send" size={16} color="#fff" />
+                <TouchableOpacity onPress={handleReply} activeOpacity={0.7} style={[styles.replySendBtn, { backgroundColor: theme.overlay.inverseMedium }]}>
+                  <Icon name="send" size={16} color={theme.text.inverse} />
                 </TouchableOpacity>
               </Animated.View>
             </View>
@@ -290,9 +290,9 @@ export default function GoalStoryScreen({ navigation, route }: Props) {
                   <TouchableOpacity
                     activeOpacity={0.85}
                     onPress={item.navigateTo ? handleDoIt : handleMarkDone}
-                    style={styles.doneBtn}
+                    style={[styles.doneBtn, { backgroundColor: theme.text.inverse }]}
                   >
-                    <Text style={styles.doneBtnText}>
+                    <Text style={[styles.doneBtnText, { color: theme.bg.brand }]}>
                       {item.navigateTo ? 'Do it →' : 'Mark done'}
                     </Text>
                   </TouchableOpacity>
@@ -315,9 +315,9 @@ export default function GoalStoryScreen({ navigation, route }: Props) {
                 <TouchableOpacity
                   onPress={handleReply}
                   activeOpacity={0.7}
-                  style={[styles.externalSendBtn, { opacity: reply.trim() ? 1 : 0.5 }]}
+                  style={[styles.externalSendBtn, { backgroundColor: theme.overlay.inverseMedium, borderColor: theme.overlay.inverseText, opacity: reply.trim() ? 1 : 0.5 }]}
                 >
-                  <Icon name="send" size={18} color="#fff" />
+                  <Icon name="send" size={18} color={theme.text.inverse} />
                 </TouchableOpacity>
               </Animated.View>
 
@@ -336,13 +336,11 @@ export default function GoalStoryScreen({ navigation, route }: Props) {
 const styles = StyleSheet.create({
   imageBg: {
     flex: 1,
-    backgroundColor: '#1a1a2e', // fallback when no image
   },
 
   // Full-screen dark scrim for text legibility
   scrim: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.58)',
   },
 
   safe: { flex: 1 },
@@ -359,13 +357,11 @@ const styles = StyleSheet.create({
     height:           3,
     borderRadius:     Radius.full,
     overflow:         'hidden',
-    backgroundColor:  'rgba(255,255,255,0.2)',
   },
   progressFill: {
     height:           3,
     width:            '100%',
     borderRadius:     Radius.full,
-    backgroundColor:  '#fff',
   },
 
   // Top bar
@@ -380,18 +376,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing[3],
     paddingVertical:   Spacing[1],
     borderRadius:      Radius.full,
-    backgroundColor:   'rgba(255,255,255,0.18)',
   },
   goalChipText: {
     fontFamily: Typography.fontFamily.bodySemibold,
     fontSize:   Typography.size.sm,
-    color:      '#fff',
   },
   closeBtn: {
     width:           32,
     height:          32,
     borderRadius:    16,
-    backgroundColor: 'rgba(255,255,255,0.18)',
     alignItems:      'center',
     justifyContent:  'center',
   },
@@ -406,20 +399,17 @@ const styles = StyleSheet.create({
   itemCount: {
     fontFamily: Typography.fontFamily.bodyMedium,
     fontSize:   Typography.size.sm,
-    color:      'rgba(255,255,255,0.6)',
   },
   title: {
     fontFamily:    Typography.fontFamily.bodyBold,
     fontSize:      Typography.size['3xl'],
     lineHeight:    Typography.size['3xl'] * 1.2,
     letterSpacing: -0.5,
-    color:         '#fff',
   },
   why: {
     fontFamily: Typography.fontFamily.body,
     fontSize:   Typography.size.base,
     lineHeight: Typography.size.base * 1.65,
-    color:      'rgba(255,255,255,0.82)',
   },
   doneChip: {
     flexDirection:     'row',
@@ -429,14 +419,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing[3],
     paddingVertical:   Spacing[1],
     borderRadius:      Radius.full,
-    backgroundColor:   'rgba(255,255,255,0.2)',
     borderWidth:       1,
-    borderColor:       'rgba(255,255,255,0.4)',
   },
   doneChipText: {
     fontFamily: Typography.fontFamily.bodySemibold,
     fontSize:   Typography.size.xs,
-    color:      '#fff',
   },
 
   // Bottom bar — single row (paddingBottom injected inline from insets)
@@ -444,7 +431,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing[5],
     paddingTop:        Spacing[3],
     borderTopWidth:    StyleSheet.hairlineWidth,
-    borderTopColor:    'rgba(255,255,255,0.2)',
   },
   bottomRow: {
     flexDirection: 'row',
@@ -475,7 +461,6 @@ const styles = StyleSheet.create({
   fullDetailsText: {
     fontFamily: Typography.fontFamily.bodySemibold,
     fontSize:   Typography.size.sm,
-    color:      'rgba(255,255,255,0.5)',
   },
 
   // Reply input pill
@@ -486,8 +471,6 @@ const styles = StyleSheet.create({
     gap:             Spacing[2],
     borderRadius:    Radius.full,
     borderWidth:     1,
-    borderColor:     'rgba(255,255,255,0.5)',
-    backgroundColor: 'rgba(0,0,0,0.45)',
     paddingLeft:     Spacing[4],
     paddingRight:    Spacing[1],
     paddingVertical: Spacing[1],
@@ -496,14 +479,12 @@ const styles = StyleSheet.create({
     flex:            1,
     fontFamily:      Typography.fontFamily.body,
     fontSize:        Typography.size.sm,
-    color:           '#fff',
     paddingVertical: Spacing[2],
   },
   replySendBtn: {
     width:           32,
     height:          32,
     borderRadius:    Radius.full,
-    backgroundColor: 'rgba(255,255,255,0.28)',
     alignItems:      'center',
     justifyContent:  'center',
   },
@@ -531,12 +512,10 @@ const styles = StyleSheet.create({
     alignItems:     'center',
     justifyContent: 'center',
     gap:            Spacing[1],
-    backgroundColor:'#fff',
   },
   doneBtnText: {
     fontFamily: Typography.fontFamily.bodySemibold,
     fontSize:   Typography.size.sm,
-    color:      '#111',
   },
 
   // External send button — circular, appears when input focused
@@ -544,9 +523,7 @@ const styles = StyleSheet.create({
     width:           44,
     height:          44,
     borderRadius:    Radius.full,
-    backgroundColor: 'rgba(255,255,255,0.28)',
     borderWidth:     1,
-    borderColor:     'rgba(255,255,255,0.55)',
     alignItems:      'center',
     justifyContent:  'center',
   },

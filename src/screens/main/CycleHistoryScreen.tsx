@@ -86,12 +86,6 @@ const HPT_LABELS: Record<HPTResult, string> = {
   'faint-positive': '〰️ Faint line',
   'positive': '➕ Positive',
 };
-const HPT_COLORS: Record<HPTResult, string> = {
-  'negative': '#5DBB8A',
-  'faint-positive': '#B87000',
-  'positive': '#C4566A',
-};
-
 // ─── Custom Day Component ─────────────────────────────────────────────────────
 
 function CalendarDay({ date, state, marking: rawMarking, onPress }: { date?: any; state?: string; marking?: any; onPress?: (date: any) => void }) {
@@ -114,27 +108,27 @@ function CalendarDay({ date, state, marking: rawMarking, onPress }: { date?: any
   let textWeight: 'normal' | '600' = 'normal';
 
   if (m.isPeriodStart) {
-    bgColor = '#C4566A';
-    textColor = '#fff';
+    bgColor = theme.dataViz.cyclePeriod;
+    textColor = theme.text.inverse;
     textWeight = '600';
   } else if (m.isPeriodFlow) {
-    bgColor = 'rgba(196,86,106,0.28)';
-    textColor = '#C4566A';
+    bgColor = theme.dataViz.cyclePeriodFill;
+    textColor = theme.dataViz.cyclePeriod;
   } else if (m.isFertileWindow) {
-    bgColor = 'rgba(90,187,138,0.28)';
-    textColor = '#1A6644';
+    bgColor = theme.dataViz.fertileFill;
+    textColor = theme.dataViz.fertileText;
   } else if (m.isPredictedPeak) {
     borderWidth = 2;
-    borderColor = '#2E8A5A';
-    textColor = '#2E8A5A';
+    borderColor = theme.dataViz.fertileStrong;
+    textColor = theme.dataViz.fertileStrong;
   } else if (m.isPredictedFertile) {
     borderWidth = 1.5;
-    borderColor = 'rgba(90,187,138,0.8)';
+    borderColor = theme.dataViz.fertileRing;
     borderStyle = 'dashed';
     textColor = theme.text.secondary;
   } else if (m.isPredictedPeriod) {
     borderWidth = 1.5;
-    borderColor = 'rgba(196,86,106,0.7)';
+    borderColor = theme.dataViz.cyclePeriodRing;
     borderStyle = 'dashed';
     textColor = theme.text.secondary;
   }
@@ -291,7 +285,7 @@ function DayDetailModal({
 
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={modalStyles.overlay} onPress={onClose}>
+      <Pressable style={[modalStyles.overlay, { backgroundColor: theme.overlay.scrim }]} onPress={onClose}>
         <Pressable style={[modalStyles.sheet, { backgroundColor: theme.bg.surface }]} onPress={() => {}}>
 
           {/* Handle */}
@@ -376,7 +370,7 @@ function DayDetailModal({
                   <LogRow
                     label="OPK result"
                     value={entry.opkResult === 'peak' ? '🔥 Peak / Surge' : entry.opkResult === 'positive' ? '🟡 Positive' : '⬜ Negative'}
-                    valueColor={entry.opkResult === 'peak' ? '#C4566A' : entry.opkResult === 'positive' ? '#B87000' : undefined}
+                    valueColor={entry.opkResult === 'peak' ? theme.dataViz.cyclePeriod : entry.opkResult === 'positive' ? theme.dataViz.opkPositive : undefined}
                     theme={theme}
                   />
                 )}
@@ -403,7 +397,13 @@ function DayDetailModal({
                   <LogRow
                     label="Pregnancy test"
                     value={HPT_LABELS[entry.hptResult]}
-                    valueColor={HPT_COLORS[entry.hptResult]}
+                    valueColor={
+                      entry.hptResult === 'positive'
+                        ? theme.dataViz.cyclePeriod
+                        : entry.hptResult === 'faint-positive'
+                          ? theme.dataViz.opkPositive
+                          : theme.dataViz.fertile
+                    }
                     theme={theme}
                   />
                 )}
@@ -492,23 +492,23 @@ export default function CycleHistoryScreen({ navigation }: Props) {
       else if (entry.isPeriodFlow) m.isPeriodFlow = true;
 
       if (entry.bbtTemp != null)
-        m.dots!.push({ key: 'bbt', color: '#1A5A8A' });
+        m.dots!.push({ key: 'bbt', color: theme.dataViz.bbt });
       if (entry.cmType === 'egg-white' || entry.cmType === 'watery')
-        m.dots!.push({ key: 'cm', color: '#2E8A5A' });
+        m.dots!.push({ key: 'cm', color: theme.dataViz.fertileStrong });
       if (entry.opkResult === 'peak')
-        m.dots!.push({ key: 'opk', color: '#F4B740' });
+        m.dots!.push({ key: 'opk', color: theme.dataViz.opkPeak });
       else if (entry.opkResult === 'positive')
-        m.dots!.push({ key: 'opk+', color: '#B87000' });
+        m.dots!.push({ key: 'opk+', color: theme.dataViz.opkPositive });
       if (entry.hadSex)
-        m.dots!.push({ key: 'sex', color: entry.usedProtection ? '#B0B0B0' : '#E8789A' });
+        m.dots!.push({ key: 'sex', color: entry.usedProtection ? theme.text.tertiary : theme.dataViz.intimacy });
       if (entry.mood)
-        m.dots!.push({ key: 'mood', color: '#9B5DE5' });
+        m.dots!.push({ key: 'mood', color: theme.dataViz.mood });
       if (entry.symptoms && entry.symptoms.length > 0 && !entry.symptoms.includes('all-good'))
-        m.dots!.push({ key: 'symptoms', color: '#5B8ACA' });
+        m.dots!.push({ key: 'symptoms', color: theme.dataViz.symptoms });
       if (entry.hptResult === 'positive')
-        m.dots!.push({ key: 'hpt', color: '#C4566A' });
+        m.dots!.push({ key: 'hpt', color: theme.dataViz.cyclePeriod });
       else if (entry.hptResult === 'faint-positive')
-        m.dots!.push({ key: 'hpt', color: '#F4B740' });
+        m.dots!.push({ key: 'hpt', color: theme.dataViz.opkPeak });
     }
 
     // Confirmed fertile window for current cycle (past & today only)
@@ -543,7 +543,7 @@ export default function CycleHistoryScreen({ navigation }: Props) {
     ensure(todayKey).isToday = true;
 
     return marks;
-  }, [logs, lastPeriodStartKey, lmpSeed, todayKey, prediction]);
+  }, [logs, lastPeriodStartKey, lmpSeed, todayKey, prediction, theme]);
 
   // Stats
   const cyclesTracked = allCycleStartKeys.length;
@@ -609,20 +609,20 @@ export default function CycleHistoryScreen({ navigation }: Props) {
           {/* Legend */}
           <View style={[styles.legendSection, { borderTopColor: theme.border.subtle }]}>
             <View style={styles.legendRow}>
-              <LegendItem shape="fill" color="#C4566A" label="Period" />
-              <LegendItem shape="fill" color="rgba(90,187,138,0.5)" label="Fertile (logged)" />
-              <LegendItem shape="ring" color="rgba(196,86,106,0.7)" dashed label="Predicted period" />
-              <LegendItem shape="ring" color="rgba(90,187,138,0.8)" dashed label="Predicted fertile" />
-              <LegendItem shape="ring" color="#2E8A5A" label="Predicted peak" />
+              <LegendItem shape="fill" color={theme.dataViz.cyclePeriod} label="Period" />
+              <LegendItem shape="fill" color={theme.dataViz.fertileFill} label="Fertile (logged)" />
+              <LegendItem shape="ring" color={theme.dataViz.cyclePeriodRing} dashed label="Predicted period" />
+              <LegendItem shape="ring" color={theme.dataViz.fertileRing} dashed label="Predicted fertile" />
+              <LegendItem shape="ring" color={theme.dataViz.fertileStrong} label="Predicted peak" />
             </View>
             <View style={styles.legendRow}>
-              <LegendItem shape="dot" color="#1A5A8A" label="BBT logged" />
-              <LegendItem shape="dot" color="#F4B740" label="OPK peak" />
-              <LegendItem shape="dot" color="#2E8A5A" label="Fertile CM" />
-              <LegendItem shape="heart" color="#E8789A" label="Intimacy" />
-              <LegendItem shape="dot" color="#9B5DE5" label="Mood" />
-              <LegendItem shape="dot" color="#5B8ACA" label="Symptoms" />
-              <LegendItem shape="dot" color="#C4566A" label="HPT positive" />
+              <LegendItem shape="dot" color={theme.dataViz.bbt} label="BBT logged" />
+              <LegendItem shape="dot" color={theme.dataViz.opkPeak} label="OPK peak" />
+              <LegendItem shape="dot" color={theme.dataViz.fertileStrong} label="Fertile CM" />
+              <LegendItem shape="heart" color={theme.dataViz.intimacy} label="Intimacy" />
+              <LegendItem shape="dot" color={theme.dataViz.mood} label="Mood" />
+              <LegendItem shape="dot" color={theme.dataViz.symptoms} label="Symptoms" />
+              <LegendItem shape="dot" color={theme.dataViz.cyclePeriod} label="HPT positive" />
             </View>
           </View>
         </View>
@@ -686,7 +686,7 @@ export default function CycleHistoryScreen({ navigation }: Props) {
             )}
             {ovCD != null && (
               <StatCard
-                icon={<Icon name="information" size={18} color={ovCD != null && (avgCycleLength - ovCD) < 10 ? '#D64545' : theme.text.link} />}
+                icon={<Icon name="information" size={18} color={ovCD != null && (avgCycleLength - ovCD) < 10 ? theme.feedback.danger.icon : theme.text.link} />}
                 label="Luteal phase"
                 value={`${avgCycleLength - ovCD} days${(avgCycleLength - ovCD) < 10 ? ' ⚠️' : ''}`}
                 theme={theme}
@@ -998,7 +998,6 @@ const styles = StyleSheet.create({
 const modalStyles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'flex-end',
   },
   sheet: {

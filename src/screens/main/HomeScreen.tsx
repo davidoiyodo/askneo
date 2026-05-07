@@ -275,17 +275,17 @@ export default function HomeScreen({ navigation }: Props) {
 
         {/* Ask Neo CTA */}
         <View style={[styles.askCard, { backgroundColor: theme.interactive.primary, overflow: 'hidden' }]}>
-          <View style={styles.askCircle1} />
-          <View style={styles.askCircle2} />
+          <View style={[styles.askCircle1, { backgroundColor: theme.overlay.inverseWeak }]} />
+          <View style={[styles.askCircle2, { backgroundColor: theme.overlay.inverseWeak }]} />
           {askExpanded ? (
             <View style={styles.askInputRow}>
               <TextInput
                 ref={askInputRef}
-                style={[styles.askInput, { color: '#fff' }]}
+                style={[styles.askInput, { color: theme.text.inverse }]}
                 value={askText}
                 onChangeText={setAskText}
                 placeholder="Type your question..."
-                placeholderTextColor="rgba(255,255,255,0.5)"
+                placeholderTextColor={theme.overlay.inverseStrong}
                 returnKeyType="send"
                 onSubmitEditing={handleAskSubmit}
                 autoFocus
@@ -295,14 +295,14 @@ export default function HomeScreen({ navigation }: Props) {
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 activeOpacity={0.7}
               >
-                <Icon name="close" size={18} color="rgba(255,255,255,0.7)" />
+                <Icon name="close" size={18} color={theme.overlay.inverseText} />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleAskSubmit}
                 activeOpacity={0.7}
-                style={[styles.askSendBtn, { backgroundColor: 'rgba(255,255,255,0.2)', opacity: askText.trim() ? 1 : 0.4 }]}
+                style={[styles.askSendBtn, { backgroundColor: theme.overlay.inverseMedium, opacity: askText.trim() ? 1 : 0.4 }]}
               >
-                <Icon name="send" size={16} color="#fff" />
+                <Icon name="send" size={16} color={theme.text.inverse} />
               </TouchableOpacity>
             </View>
           ) : (
@@ -311,9 +311,9 @@ export default function HomeScreen({ navigation }: Props) {
               onPress={handleAskExpand}
               style={styles.askCollapsed}
             >
-              <Text style={[styles.askPrompt, { color: 'rgba(255,255,255,0.85)' }]}>What's on your mind?</Text>
-              <View style={[styles.askBadge, { backgroundColor: 'rgba(255,255,255,0.18)' }]}>
-                <Text style={[styles.askBadgeText, { color: '#FFF6F7' }]}>Ask Neo →</Text>
+              <Text style={[styles.askPrompt, { color: theme.overlay.inverseTextStrong }]}>What's on your mind?</Text>
+              <View style={[styles.askBadge, { backgroundColor: theme.overlay.inverseSoft }]}>
+                <Text style={[styles.askBadgeText, { color: theme.text.inverse }]}>Ask Neo →</Text>
               </View>
             </TouchableOpacity>
           )}
@@ -929,7 +929,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.08)',
     top: -20,
     right: 60,
   },
@@ -938,7 +937,6 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: 'rgba(255,255,255,0.05)',
     bottom: -10,
     right: -10,
   },
@@ -946,7 +944,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: Typography.fontFamily.bodySemibold,
     fontSize: Typography.size.base,
-    color: 'rgba(255,255,255,0.9)',
   },
   askBadge: {
     paddingHorizontal: Spacing[4],

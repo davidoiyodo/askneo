@@ -1,0 +1,682 @@
+================================================================================
+  ASKNEO — BACKEND API SPECIFICATION
+  Author: David Iyodo  |  Prepared for backend developer
+  Date: 2026-05-06
+================================================================================
+
+This document covers all endpoints the mobile app needs next.
+All endpoints are authenticated unless marked otherwise.
+All requests and responses use JSON (Content-Type: application/json).
+
+Authentication:
+  Every request (except /auth/*) must include:
+    Authorization: Bearer <jwt_token>
+
+  The token is issued at login/register and stored on-device.
+  Return HTTP 401 for missing/expired tokens.
+
+Base conventions:
+  - Dates stored as YYYY-MM-DD strings (no timestamps, no Unix integers)
+    EXCEPTION: addedAt / lastUpdated / created_at fields use full ISO 8601
+    e.g. "2026-05-06T14:32:00.000Z"
+  - Null means "not recorded". Do not omit nullable fields from responses —
+    return them explicitly as null so the app knows they were not set.
+  - All body field names are snake_case in the API.
+    The app converts to/from camelCase internally.
+  - Success responses wrap data in:
+      { "status": "ok", "data": { ... } }      — single object
+      { "status": "ok", "data": [ ... ] }      — array
+  - Error responses use:
+      { "status": "error", "message": "...", "code": "..." }
+  - HTTP status codes: 200 OK, 201 Created, 400 Bad Request, 401 Unauthorized,
+    404 Not Found, 409 Conflict, 422 Unprocessable Entity, 500 Server Error
+
+
+================================================================================
+  1. PATCH /users/me — Update user profile
+================================================================================
+
+PURPOSE
+  Update the authenticated user's profile after onboarding is complete.
+  This is called from the Profile screen and when any user setting changes.
+  All fields are optional — only send what changed.
+
+REQUEST BODY
+  All fields optional. Send only the fields being updated.
+
+  {
+    "name":                string,
+    "stage":               "ttc" | "pregnancy" | "newmom" | "partner",
+    "due_date":            "YYYY-MM-DD" | null,
+    "baby_dob":            "YYYY-MM-DD" | null,
+    "invite_code":         string | null,
+    "partner_stage":       "pregnancy" | "newmom" | "ttc" | null,
+    "partner_due_date":    "YYYY-MM-DD" | null,
+    "partner_baby_dob":    "YYYY-MM-DD" | null,
+    "emergency_contacts":  EmergencyContact[],
+    "goals":               GoalId[],
+    "sub_goals":           SubGoalId[],
+    "birth_intention":     "natural" | "caesarean" | "undecided",
+    "feeding_intention":   "breast" | "formula" | "undecided",
+    "personal_intentions": string[],
+    "ttc_start_date":      "YYYY-MM-DD" | null,
+    "known_conditions":    string[],
+    "irregular_cycles":    boolean,
+    "doctor_name":         string | null,
+    "doctor_phone":        string | null,
+    "last_visit_date":     "YYYY-MM-DD" | null,
+    "next_appointment_date": "YYYY-MM-DD" | null
+  }
+
+  EmergencyContact shape:
+  {
+    "id":       string,   // client-generated UUID
+    "name":     string,
+    "phone":    string,
+    "relation": string    // e.g. "Husband", "Mother"
+  }
+
+  GoalId allowed values:
+    "safe-delivery", "natural-birth", "baby-development",
+    "breastfeeding-readiness", "staying-active",
+    "feeding-success", "baby-growth", "sleep-patterns", "mom-recovery",
+    "cycle-awareness", "conception-optimisation", "emotional-wellbeing",
+    "ivf-preparation", "supporting-partner", "birth-preparation",
+    "newborn-readiness"
+
+  SubGoalId allowed values:
+    "brain-development", "vision-development", "bone-development",
+    "immune-development", "heart-development"
+
+RESPONSE 200
+  {
+    "status": "ok",
+    "data": {
+      // Full updated user object — same shape as GET /users/me
+      "name":                string,
+      "email":               string,
+      "stage":               string,
+      "due_date":            string | null,
+      "baby_dob":            string | null,
+      "invite_code":         string | null,
+      "partner_stage":       string | null,
+      "partner_due_date":    string | null,
+      "partner_baby_dob":    string | null,
+      "emergency_contacts":  EmergencyContact[],
+      "goals":               string[],
+      "sub_goals":           string[],
+      "birth_intention":     string,
+      "feeding_intention":   string,
+      "personal_intentions": string[],
+      "ttc_start_date":      string | null,
+      "known_conditions":    string[],
+      "irregular_cycles":    "0" | "1",   // match existing pattern from /auth/register
+      "doctor_name":         string | null,
+      "doctor_phone":        string | null,
+      "last_visit_date":     string | null,
+      "next_appointment_date": string | null
+    }
+  }
+
+ERRORS
+  400  Invalid field value (e.g. unknown stage)
+  401  Token missing or expired
+
+
+================================================================================
+  2. CYCLE LOGS — TTC users' daily fertility tracking
+================================================================================
+
+  One document per calendar day per user.
+  If a POST is sent for a date that already has a record, UPDATE it (upsert).
+  The date_key field is the unique identifier per user.
+
+--------------------------------------------------------------------------------
+  2a. POST /cycle-logs — Create or update a cycle entry
+--------------------------------------------------------------------------------
+
+REQUEST BODY
+  {
+    "date_key":          string,   // REQUIRED. "YYYY-MM-DD"
+    "is_period_start":   boolean,  // CD1 of a new cycle (period just started)
+    "is_period_flow":    boolean,  // any flow day, including CD2+
+    "flow_intensity":    "spotting" | "light" | "medium" | "heavy" | null,
+    "bbt_temp":          number | null,   // °C, e.g. 36.7. Basal body temperature
+    "cm_type":           "dry" | "sticky" | "creamy" | "watery" | "egg-white" | null,
+    "opk_result":        "negative" | "positive" | "peak" | null,
+    "hpt_result":        "negative" | "faint-positive" | "positive" | null,
+    "had_sex":           boolean | null,
+    "used_protection":   boolean | null,
+    "mood":              string | null,   // single selection, free string
+    "symptoms":          string[],        // multi-select, e.g. ["cramps", "bloating"]
+    "notes":             string           // free text, empty string if none
+  }
+
+RESPONSE 201 (new) or 200 (updated)
+  {
+    "status": "ok",
+    "data": {
+      "id":              string,   // server-assigned record ID
+      "user_id":         string,
+      "date_key":        "YYYY-MM-DD",
+      "is_period_start": boolean,
+      "is_period_flow":  boolean,
+      "flow_intensity":  string | null,
+      "bbt_temp":        number | null,
+      "cm_type":         string | null,
+      "opk_result":      string | null,
+      "hpt_result":      string | null,
+      "had_sex":         boolean | null,
+      "used_protection": boolean | null,
+      "mood":            string | null,
+      "symptoms":        string[],
+      "notes":           string,
+      "created_at":      string,   // ISO 8601
+      "updated_at":      string
+    }
+  }
+
+ERRORS
+  400  date_key missing or invalid format
+  401  Unauthorized
+  422  Field value not in allowed set
+
+--------------------------------------------------------------------------------
+  2b. GET /cycle-logs — Get all cycle entries for the user
+--------------------------------------------------------------------------------
+
+QUERY PARAMS (all optional)
+  from=YYYY-MM-DD   — return entries on or after this date
+  to=YYYY-MM-DD     — return entries on or before this date
+
+RESPONSE 200
+  {
+    "status": "ok",
+    "data": [
+      {
+        // Same shape as the POST 201 response above
+        "id":              string,
+        "user_id":         string,
+        "date_key":        "YYYY-MM-DD",
+        "is_period_start": boolean,
+        "is_period_flow":  boolean,
+        "flow_intensity":  string | null,
+        "bbt_temp":        number | null,
+        "cm_type":         string | null,
+        "opk_result":      string | null,
+        "hpt_result":      string | null,
+        "had_sex":         boolean | null,
+        "used_protection": boolean | null,
+        "mood":            string | null,
+        "symptoms":        string[],
+        "notes":           string,
+        "created_at":      string,
+        "updated_at":      string
+      }
+    ]
+  }
+
+  Returns entries sorted ascending by date_key.
+  Returns an empty array [] if no entries exist — do not return 404.
+
+ERRORS
+  401  Unauthorized
+
+
+================================================================================
+  3. ANC VISITS — Pregnancy users' antenatal visit records
+================================================================================
+
+  Each record represents one clinic visit. The app assigns client-side IDs
+  (Date.now().toString()) before sending — store them as-is or replace with
+  your own server-generated IDs and return the server ID in the response.
+  The app will use whichever ID comes back in the response for future PATCH calls.
+
+--------------------------------------------------------------------------------
+  3a. POST /anc-visits — Log a new antenatal visit
+--------------------------------------------------------------------------------
+
+REQUEST BODY
+  {
+    // REQUIRED
+    "date":              "YYYY-MM-DD",
+
+    // Vitals (all nullable — not every measurement is taken every visit)
+    "gestational_week":  integer | null,    // e.g. 28
+    "weight":            number  | null,    // kg, e.g. 67.5
+    "blood_pressure_sys": integer | null,   // mmHg systolic, e.g. 120
+    "blood_pressure_dia": integer | null,   // mmHg diastolic, e.g. 80
+    "fundal_height":     number  | null,    // cm
+    "baby_heart_rate":   integer | null,    // bpm
+
+    // Urine tests
+    "urine_protein":     "negative" | "trace" | "positive" | null,
+    "urine_glucose":     "negative" | "trace" | "positive" | null,
+
+    // Blood/lab
+    "pcv":               number | null,     // Packed Cell Volume %, e.g. 34.0
+    "malaria_test":      "negative" | "positive" | null,
+
+    // Booking tests — typically first visit only, null on subsequent visits
+    "blood_group":       string | null,     // e.g. "O+", "A-", "B+", "AB-"
+    "hiv_status":        "non-reactive" | "reactive" | null,
+    "hbs_ag":            "negative" | "positive" | null,
+    "vdrl":              "negative" | "positive" | null,
+    "genotype":          string | null,     // e.g. "AA", "AS", "SS", "AC"
+
+    // Visit notes
+    "class_topics":          string[],      // topics covered in antenatal class
+    "prescriptions":         string,        // free text, what was prescribed
+    "concern_flagged":       boolean,       // midwife raised a concern
+    "referred_to_doctor":    boolean,
+    "next_appointment_date": "YYYY-MM-DD" | null,
+    "notes":                 string,        // free text patient notes
+    "added_at":              string         // ISO 8601 — client timestamp of when record was created
+  }
+
+RESPONSE 201
+  {
+    "status": "ok",
+    "data": {
+      "id":                    string,   // server-assigned ID
+      "user_id":               string,
+      "date":                  "YYYY-MM-DD",
+      "gestational_week":      integer | null,
+      "weight":                number  | null,
+      "blood_pressure_sys":    integer | null,
+      "blood_pressure_dia":    integer | null,
+      "fundal_height":         number  | null,
+      "baby_heart_rate":       integer | null,
+      "urine_protein":         string  | null,
+      "urine_glucose":         string  | null,
+      "pcv":                   number  | null,
+      "malaria_test":          string  | null,
+      "blood_group":           string  | null,
+      "hiv_status":            string  | null,
+      "hbs_ag":                string  | null,
+      "vdrl":                  string  | null,
+      "genotype":              string  | null,
+      "class_topics":          string[],
+      "prescriptions":         string,
+      "concern_flagged":       boolean,
+      "referred_to_doctor":    boolean,
+      "next_appointment_date": string | null,
+      "notes":                 string,
+      "added_at":              string,
+      "created_at":            string,
+      "updated_at":            string
+    }
+  }
+
+ERRORS
+  400  date missing or invalid
+  401  Unauthorized
+
+--------------------------------------------------------------------------------
+  3b. GET /anc-visits — Get all ANC visits for the user
+--------------------------------------------------------------------------------
+
+RESPONSE 200
+  {
+    "status": "ok",
+    "data": [
+      {
+        // Same shape as POST 201 response above
+      }
+    ]
+  }
+
+  Returns records sorted descending by date (most recent first).
+  Returns an empty array [] if no records — do not return 404.
+
+ERRORS
+  401  Unauthorized
+
+--------------------------------------------------------------------------------
+  3c. PATCH /anc-visits/:id — Update an existing visit record
+--------------------------------------------------------------------------------
+
+  All fields optional. Send only what changed.
+  :id is the server-assigned ID returned from POST.
+
+REQUEST BODY
+  {
+    // Any subset of the POST body fields
+    "date":              "YYYY-MM-DD",
+    "gestational_week":  integer | null,
+    "weight":            number  | null,
+    "blood_pressure_sys": integer | null,
+    "blood_pressure_dia": integer | null,
+    "fundal_height":     number  | null,
+    "baby_heart_rate":   integer | null,
+    "urine_protein":     string  | null,
+    "urine_glucose":     string  | null,
+    "pcv":               number  | null,
+    "malaria_test":      string  | null,
+    "blood_group":       string  | null,
+    "hiv_status":        string  | null,
+    "hbs_ag":            string  | null,
+    "vdrl":             string  | null,
+    "genotype":          string  | null,
+    "class_topics":      string[],
+    "prescriptions":     string,
+    "concern_flagged":   boolean,
+    "referred_to_doctor": boolean,
+    "next_appointment_date": string | null,
+    "notes":             string
+  }
+
+RESPONSE 200
+  {
+    "status": "ok",
+    "data": {
+      // Full updated visit object — same shape as POST 201 response
+    }
+  }
+
+ERRORS
+  401  Unauthorized
+  404  Visit not found or does not belong to this user
+
+
+================================================================================
+  4. DAILY LOGS — Pregnancy + newmom daily wellbeing tracking
+================================================================================
+
+  One document per calendar day per user.
+  If a POST is sent for a date_key that already exists, UPDATE it (upsert).
+  The app sends the full log on each save — treat every POST as "overwrite this day".
+
+--------------------------------------------------------------------------------
+  4a. POST /daily-logs — Create or update a daily log
+--------------------------------------------------------------------------------
+
+REQUEST BODY
+  {
+    "date_key":       string,    // REQUIRED. "YYYY-MM-DD"
+    "last_updated":   string,    // ISO 8601 — client timestamp of save
+    "stage":          "pregnancy" | "newmom",
+
+    // Wellbeing
+    "mood":           1 | 2 | 3 | 4 | 5 | null,    // 1 = very low, 5 = great
+    "energy":         "low" | "medium" | "high" | null,
+
+    // Symptoms (user's own)
+    "symptoms":          string[],                  // free text or preset tags
+    "symptom_severity":  "mild" | "moderate" | "severe" | null,
+
+    // Medications
+    "medications": [
+      {
+        "name":  string,
+        "taken": boolean
+      }
+    ],
+
+    // Sleep (previous night)
+    "sleep_hours":    number | null,       // e.g. 7.5
+    "sleep_quality":  "poor" | "okay" | "good" | null,
+
+    // Pregnancy only
+    "kick_count":     integer | null,      // fetal kick count for the day
+
+    // Newmom: baby log (null if stage = pregnancy)
+    "baby_feedings":           integer | null,   // total feed count
+    "baby_nappies":            integer | null,   // total nappy changes
+    "baby_sleep_hours":        number  | null,
+    "baby_mood":               "settled" | "fussy" | "unsettled" | null,
+    "baby_symptoms":           string[],
+    "baby_symptom_severity":   "mild" | "moderate" | "severe" | null,
+
+    // Hydration
+    "water_glasses":  integer | null,      // number of glasses drunk
+
+    // Free-write
+    "notes":          string               // empty string if none
+  }
+
+RESPONSE 201 (new) or 200 (updated)
+  {
+    "status": "ok",
+    "data": {
+      "id":                    string,
+      "user_id":               string,
+      "date_key":              "YYYY-MM-DD",
+      "last_updated":          string,
+      "stage":                 string,
+      "mood":                  integer | null,
+      "energy":                string  | null,
+      "symptoms":              string[],
+      "symptom_severity":      string  | null,
+      "medications":           MedEntry[],
+      "sleep_hours":           number  | null,
+      "sleep_quality":         string  | null,
+      "kick_count":            integer | null,
+      "baby_feedings":         integer | null,
+      "baby_nappies":          integer | null,
+      "baby_sleep_hours":      number  | null,
+      "baby_mood":             string  | null,
+      "baby_symptoms":         string[],
+      "baby_symptom_severity": string  | null,
+      "water_glasses":         integer | null,
+      "notes":                 string,
+      "created_at":            string,
+      "updated_at":            string
+    }
+  }
+
+ERRORS
+  400  date_key missing or invalid
+  401  Unauthorized
+  422  Invalid field value
+
+--------------------------------------------------------------------------------
+  4b. GET /daily-logs — Get all daily logs for the user
+--------------------------------------------------------------------------------
+
+QUERY PARAMS (all optional)
+  from=YYYY-MM-DD
+  to=YYYY-MM-DD
+
+RESPONSE 200
+  {
+    "status": "ok",
+    "data": [
+      {
+        // Same shape as POST 201 response above
+      }
+    ]
+  }
+
+  Returns records sorted ascending by date_key.
+  Returns an empty array [] if no records — do not return 404.
+
+ERRORS
+  401  Unauthorized
+
+
+================================================================================
+  5. PUSH TOKEN — Register device for server-sent notifications
+================================================================================
+
+  The app uses Expo push notifications. When the user grants permission,
+  it generates an Expo push token (format: "ExponentPushToken[xxxxxx]").
+  This token must be stored server-side so the server can send notifications
+  to specific users.
+
+  Tokens are per-device. A user may have multiple devices.
+  If the same token is sent again, treat it as a no-op (idempotent).
+
+--------------------------------------------------------------------------------
+  POST /users/me/push-token
+--------------------------------------------------------------------------------
+
+REQUEST BODY
+  {
+    "token":    string,    // REQUIRED. Expo push token, e.g. "ExponentPushToken[abc123]"
+    "platform": "ios" | "android"   // optional but useful for debugging
+  }
+
+RESPONSE 200
+  {
+    "status": "ok",
+    "data": {
+      "token":      string,
+      "platform":   string | null,
+      "registered_at": string   // ISO 8601
+    }
+  }
+
+ERRORS
+  400  Token missing or malformed
+  401  Unauthorized
+
+NOTE FOR BACKEND
+  To send a push notification later, POST to Expo's push API:
+    https://exp.host/--/api/v2/push/send
+  Body: { "to": "<token>", "title": "...", "body": "..." }
+  No Expo SDK needed on the server — it's a plain HTTP call.
+
+
+================================================================================
+  6. CHAT HISTORY — Cross-device session persistence (lower priority)
+================================================================================
+
+  Currently, chat history lives only on-device (AsyncStorage).
+  These endpoints are only needed when cross-device history sync becomes a
+  requirement. The current local-only setup works fine.
+
+  The app organises chat into tabs: "baby", "pregnancy", "ttc".
+  Each tab is treated as a separate session that can accumulate messages.
+
+  For simplicity, model each tab as a long-lived session rather than
+  creating a new session every time the user opens the chat.
+
+--------------------------------------------------------------------------------
+  6a. GET /chat/sessions — List sessions for the user
+--------------------------------------------------------------------------------
+
+RESPONSE 200
+  {
+    "status": "ok",
+    "data": [
+      {
+        "id":         string,
+        "tab":        "baby" | "pregnancy" | "ttc",
+        "title":      string | null,      // optional display title
+        "created_at": string,
+        "updated_at": string,
+        "message_count": integer
+      }
+    ]
+  }
+
+--------------------------------------------------------------------------------
+  6b. POST /chat/sessions — Create a new session
+--------------------------------------------------------------------------------
+
+REQUEST BODY
+  {
+    "tab":   "baby" | "pregnancy" | "ttc",   // REQUIRED
+    "title": string | null                    // optional
+  }
+
+RESPONSE 201
+  {
+    "status": "ok",
+    "data": {
+      "id":         string,
+      "tab":        string,
+      "title":      string | null,
+      "created_at": string,
+      "updated_at": string
+    }
+  }
+
+--------------------------------------------------------------------------------
+  6c. GET /chat/sessions/:id — Get messages for a session
+--------------------------------------------------------------------------------
+
+RESPONSE 200
+  {
+    "status": "ok",
+    "data": {
+      "id":       string,
+      "tab":      string,
+      "messages": [
+        {
+          "id":         string,
+          "sender":     "user" | "neo",
+          "text":       string,
+          "timestamp":  string,    // ISO 8601
+          "reply_to": {            // null if not a reply
+            "id":     string,
+            "sender": "user" | "neo",
+            "text":   string
+          } | null
+        }
+      ]
+    }
+  }
+
+  Messages returned in ascending timestamp order.
+
+--------------------------------------------------------------------------------
+  6d. POST /chat/sessions/:id/messages — Append messages to a session
+--------------------------------------------------------------------------------
+
+  The app will call this to bulk-sync new messages at the end of a chat session.
+
+REQUEST BODY
+  {
+    "messages": [
+      {
+        "id":        string,          // client-generated ID
+        "sender":    "user" | "neo",
+        "text":      string,
+        "timestamp": string,          // ISO 8601
+        "reply_to": {
+          "id":     string,
+          "sender": "user" | "neo",
+          "text":   string
+        } | null
+      }
+    ]
+  }
+
+RESPONSE 200
+  {
+    "status": "ok",
+    "data": {
+      "appended": integer   // number of messages stored
+    }
+  }
+
+ERRORS (all chat endpoints)
+  401  Unauthorized
+  404  Session not found or does not belong to this user
+
+
+================================================================================
+  SUMMARY TABLE
+================================================================================
+
+  Endpoint                        Method   Auth   Priority
+  ─────────────────────────────────────────────────────────
+  /users/me                       PATCH    Yes    High
+  /cycle-logs                     POST     Yes    High
+  /cycle-logs                     GET      Yes    High
+  /anc-visits                     POST     Yes    High
+  /anc-visits                     GET      Yes    High
+  /anc-visits/:id                 PATCH    Yes    High
+  /daily-logs                     POST     Yes    High
+  /daily-logs                     GET      Yes    High
+  /users/me/push-token            POST     Yes    Medium
+  /chat/sessions                  GET      Yes    Low
+  /chat/sessions                  POST     Yes    Low
+  /chat/sessions/:id              GET      Yes    Low
+  /chat/sessions/:id/messages     POST     Yes    Low
+
+================================================================================
+  END OF DOCUMENT
+================================================================================

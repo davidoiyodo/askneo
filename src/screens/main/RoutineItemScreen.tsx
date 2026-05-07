@@ -71,10 +71,10 @@ export default function RoutineItemScreen({ navigation, route }: Props) {
       <TouchableOpacity
         onPress={() => navigation.goBack()}
         activeOpacity={0.7}
-        style={[styles.backBtn, { top: insets.top + Spacing[3] }]}
+        style={[styles.backBtn, { top: insets.top + Spacing[3], backgroundColor: theme.overlay.scrimSubtle, borderColor: theme.overlay.inverseTextStrong }]}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       >
-        <Icon name="left" size={20} color="#fff" />
+        <Icon name="left" size={20} color={theme.text.inverse} />
       </TouchableOpacity>
 
       {/* ── Scrollable content ───────────────────────────────────────────────── */}
@@ -88,11 +88,11 @@ export default function RoutineItemScreen({ navigation, route }: Props) {
           style={[styles.hero, { backgroundColor: accent.bg }]}
           resizeMode="cover"
         >
-          <View style={styles.heroScrim} />
+          <View style={[styles.heroScrim, { backgroundColor: theme.overlay.scrim }]} />
           {achieved && (
-            <Animated.View style={[styles.heroDoneOverlay, { opacity: checkOpacity }]}>
-              <Icon name="check_circle" size={40} color="#fff" />
-              <Text style={styles.heroDoneText}>Done!</Text>
+            <Animated.View style={[styles.heroDoneOverlay, { backgroundColor: theme.overlay.scrimStrong, opacity: checkOpacity }]}>
+              <Icon name="check_circle" size={40} color={theme.text.inverse} />
+              <Text style={[styles.heroDoneText, { color: theme.text.inverse }]}>Done!</Text>
             </Animated.View>
           )}
         </ImageBackground>
@@ -218,8 +218,6 @@ const styles = StyleSheet.create({
     height:          36,
     borderRadius:    Radius.full,
     borderWidth:     1,
-    borderColor:     'rgba(255,255,255,0.35)',
-    backgroundColor: 'rgba(0,0,0,0.35)',
     alignItems:      'center',
     justifyContent:  'center',
   },
@@ -237,19 +235,16 @@ const styles = StyleSheet.create({
   },
   heroScrim: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.42)',
   },
   heroDoneOverlay: {
     ...StyleSheet.absoluteFillObject,
     alignItems:      'center',
     justifyContent:  'center',
     gap:             Spacing[2],
-    backgroundColor: 'rgba(0,0,0,0.55)',
   },
   heroDoneText: {
     fontFamily: Typography.fontFamily.bodyBold,
     fontSize:   Typography.size.xl,
-    color:      '#fff',
   },
 
   // ── Body ──────────────────────────────────────────────────────────────────

@@ -125,7 +125,7 @@ export default function ListItemModal({ visible, onClose, onSubmit }: Props) {
         style={styles.overlay}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={handleClose} />
+        <TouchableOpacity style={[styles.backdrop, { backgroundColor: theme.overlay.scrim }]} activeOpacity={1} onPress={handleClose} />
         <View style={[styles.sheet, { backgroundColor: theme.bg.surface }]}>
           <View style={[styles.handle, { backgroundColor: theme.border.default }]} />
 
@@ -154,7 +154,7 @@ export default function ListItemModal({ visible, onClose, onSubmit }: Props) {
                     <TouchableOpacity
                       onPress={() => removeImage(i)}
                       activeOpacity={0.8}
-                      style={[styles.imageRemoveBtn, { backgroundColor: 'rgba(0,0,0,0.55)' }]}
+                      style={[styles.imageRemoveBtn, { backgroundColor: theme.overlay.scrimStrong }]}
                     >
                       <Icon name="delete_2" size={12} color="#fff" />
                     </TouchableOpacity>
@@ -265,7 +265,6 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.4)',
   },
   sheet: {
     borderTopLeftRadius: Radius['2xl'],

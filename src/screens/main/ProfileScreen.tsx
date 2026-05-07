@@ -76,7 +76,7 @@ function Row({ label, value, onPress, destructive, rightElement, last }: RowProp
       style={[styles.row, !last && { borderBottomWidth: 1, borderBottomColor: theme.border.subtle }]}
       activeOpacity={onPress ? 0.7 : 1}
     >
-      <Text style={[styles.rowLabel, { color: destructive ? '#D64545' : theme.text.primary }]}>{label}</Text>
+      <Text style={[styles.rowLabel, { color: destructive ? theme.feedback.danger.text : theme.text.primary }]}>{label}</Text>
       {rightElement ?? (
         <Text style={[styles.rowValue, { color: theme.text.tertiary }]}>
           {value}{onPress ? '  ›' : ''}
@@ -602,10 +602,10 @@ export default function ProfileScreen({ navigation }: { navigation: any }) {
             </View>
             <View style={[styles.upgradeBanner, { backgroundColor: theme.interactive.primary, borderRadius: Radius.xl }]}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.upgradeTitle}>AskNeo Plus</Text>
-                <Text style={styles.upgradeDesc}>Full care routing, partner access & more</Text>
+                <Text style={[styles.upgradeTitle, { color: theme.text.inverse }]}>AskNeo Plus</Text>
+                <Text style={[styles.upgradeDesc, { color: theme.overlay.inverseText }]}>Full care routing, partner access & more</Text>
               </View>
-              <Button label="Upgrade" onPress={() => Alert.alert('Coming soon', 'Subscription tiers will be available soon.')} size="sm" variant="ghost" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }} />
+              <Button label="Upgrade" onPress={() => Alert.alert('Coming soon', 'Subscription tiers will be available soon.')} size="sm" variant="ghost" style={{ backgroundColor: theme.overlay.inverseWeak }} />
             </View>
           </Card>
         </View>
@@ -620,7 +620,7 @@ export default function ProfileScreen({ navigation }: { navigation: any }) {
                 <Switch
                   value={isDark}
                   onValueChange={toggleTheme}
-                  trackColor={{ false: '#D0D0D0', true: '#A63A50' }}
+                  trackColor={{ false: theme.border.default, true: theme.interactive.primary }}
                   thumbColor="#fff"
                 />
               }
@@ -844,12 +844,10 @@ const styles = StyleSheet.create({
   upgradeTitle: {
     fontFamily: Typography.fontFamily.bodyBold,
     fontSize: Typography.size.base,
-    color: '#fff',
   },
   upgradeDesc: {
     fontFamily: Typography.fontFamily.body,
     fontSize: Typography.size.xs,
-    color: 'rgba(255,255,255,0.75)',
     marginTop: 2,
   },
   version: {

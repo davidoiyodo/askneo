@@ -19,6 +19,7 @@ const SHOP_CATEGORIES = ['Feeding', 'Clothing', 'Hygiene', 'Health', 'Comfort', 
 
 // ── Auto-sliding image carousel ────────────────────────────────────────────────
 function ImageCarousel({ images, height }: { images: string[]; height: number }) {
+  const { theme } = useTheme();
   const [activeIndex, setActiveIndex] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
 
@@ -45,7 +46,14 @@ function ImageCarousel({ images, height }: { images: string[]; height: number })
       {images.length > 1 && (
         <View style={styles.carouselDots}>
           {images.map((_, i) => (
-            <View key={i} style={[styles.carouselDot, i === activeIndex && styles.carouselDotActive]} />
+            <View
+              key={i}
+              style={[
+                styles.carouselDot,
+                { backgroundColor: theme.overlay.inverseStrong },
+                i === activeIndex && [styles.carouselDotActive, { backgroundColor: theme.text.inverse }],
+              ]}
+            />
           ))}
         </View>
       )}
@@ -558,12 +566,12 @@ export default function NeoStoreScreen({ navigation }: { navigation: any }) {
       {cartCount > 0 && (
         <View style={[styles.cartBar, { backgroundColor: theme.interactive.primary, ...Shadow.md }]}>
           <View style={styles.cartBarLeft}>
-            <Icon name="shopping_cart_1" size={18} color="#fff" />
-            <Text style={styles.cartBarCount}>{cartCount} item{cartCount !== 1 ? 's' : ''}</Text>
+            <Icon name="shopping_cart_1" size={18} color={theme.text.inverse} />
+            <Text style={[styles.cartBarCount, { color: theme.text.inverse }]}>{cartCount} item{cartCount !== 1 ? 's' : ''}</Text>
           </View>
           <TouchableOpacity onPress={handleCheckout} activeOpacity={0.85} style={styles.cartBarBtn}>
-            <Text style={styles.cartBarTotal}>{cartCurrency}{cartTotal.toLocaleString()}</Text>
-            <Text style={styles.cartBarCheckout}>Checkout →</Text>
+            <Text style={[styles.cartBarTotal, { color: theme.text.inverse }]}>{cartCurrency}{cartTotal.toLocaleString()}</Text>
+            <Text style={[styles.cartBarCheckout, { color: theme.overlay.inverseText }]}>Checkout →</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -648,11 +656,9 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.5)',
   },
   carouselDotActive: {
     width: 16,
-    backgroundColor: '#fff',
   },
   carouselHeartBtn: {
     position: 'absolute',
@@ -993,17 +999,14 @@ const styles = StyleSheet.create({
   cartBarCount: {
     fontFamily: Typography.fontFamily.bodySemibold,
     fontSize: Typography.size.sm,
-    color: '#fff',
   },
   cartBarBtn: { alignItems: 'flex-end' },
   cartBarTotal: {
     fontFamily: Typography.fontFamily.bodyBold,
     fontSize: Typography.size.base,
-    color: '#fff',
   },
   cartBarCheckout: {
     fontFamily: Typography.fontFamily.bodySemibold,
     fontSize: Typography.size.xs,
-    color: 'rgba(255,255,255,0.75)',
   },
 });

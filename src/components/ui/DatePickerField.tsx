@@ -80,7 +80,7 @@ export default function DatePickerField({
           styles.field,
           {
             backgroundColor: theme.bg.surface,
-            borderColor: hasError ? '#D64545' : theme.border.default,
+            borderColor: hasError ? theme.feedback.danger.border : theme.border.default,
           },
         ]}
       >
@@ -95,7 +95,7 @@ export default function DatePickerField({
 
       {Platform.OS === 'ios' ? (
         <Modal visible={show} transparent animationType="slide">
-          <View style={styles.overlay}>
+          <View style={[styles.overlay, { backgroundColor: theme.overlay.scrimSubtle }]}>
             <View style={[styles.sheet, { backgroundColor: theme.bg.surface }]}>
               <View style={[styles.sheetHeader, { borderBottomColor: theme.border.subtle }]}>
                 <TouchableOpacity onPress={handleCancel} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -158,7 +158,6 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.35)',
   },
   sheet: {
     borderTopLeftRadius: Radius['2xl'],

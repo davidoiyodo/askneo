@@ -63,14 +63,6 @@ const BABY_MOODS: Array<{ value: BabyMood; emoji: string; label: string }> = [
   { value: 'unsettled', emoji: '😰', label: 'Unsettled' },
 ];
 
-// ─── Severity theme ───────────────────────────────────────────────────────────
-
-const SEV_THEME = {
-  mild:     { bg: '#ECFDF5', border: '#6EE7B7', text: '#065F46' },
-  moderate: { bg: '#FFFBEB', border: '#FCD34D', text: '#92400E' },
-  severe:   { bg: '#FEF2F2', border: '#FCA5A5', text: '#991B1B' },
-};
-
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function SectionHeader({ children }: { children: string }) {
@@ -516,7 +508,7 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
                     <View style={styles.pillRow}>
                       {SEVERITY.map(sv => {
                         const active = symptomSeverity === sv.value;
-                        const sc = SEV_THEME[sv.value];
+                        const sc = theme.severity[sv.value];
                         return (
                           <TouchableOpacity
                             key={sv.value}
@@ -844,7 +836,7 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
                         <View style={styles.pillRow}>
                           {SEVERITY.map(sv => {
                             const active = babySymSeverity === sv.value;
-                            const sc = SEV_THEME[sv.value];
+                            const sc = theme.severity[sv.value];
                             return (
                               <TouchableOpacity
                                 key={sv.value}
@@ -970,7 +962,7 @@ export default function SymptomLogScreen({ navigation }: { navigation: any }) {
             const energyObj = log.energy ? ENERGY.find(e => e.value === log.energy) : null;
             const medsTaken = log.medications.filter(m => m.taken).length;
             const medsTotal = log.medications.length;
-            const sc        = log.symptomSeverity ? SEV_THEME[log.symptomSeverity] : null;
+            const sc        = log.symptomSeverity ? theme.severity[log.symptomSeverity] : null;
 
             return (
               <View style={[styles.dayCard, { backgroundColor: theme.bg.surface, borderColor: theme.border.subtle }]}>

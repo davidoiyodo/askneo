@@ -54,7 +54,7 @@ export default function AddContactModal({ visible, onClose }: Props) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
       <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={handleClose} />
+        <TouchableOpacity style={[styles.backdrop, { backgroundColor: theme.overlay.scrim }]} activeOpacity={1} onPress={handleClose} />
         <View style={[styles.sheet, { backgroundColor: theme.bg.surface }]}>
           <View style={[styles.handle, { backgroundColor: theme.border.default }]} />
 
@@ -120,7 +120,6 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.4)',
   },
   sheet: {
     borderTopLeftRadius: 24,

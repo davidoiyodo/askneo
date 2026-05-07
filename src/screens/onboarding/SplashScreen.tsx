@@ -26,7 +26,7 @@ export default function SplashScreen({ navigation }: Props) {
   return (
     <View style={[styles.container, { backgroundColor: Colors.brand[900] }]}>
       <Animated.View style={[styles.logoWrap, { opacity, transform: [{ scale }] }]}>
-        <Text style={styles.logo}>AskNeo</Text>
+        <Text style={[styles.logo, { color: theme.text.inverse }]}>AskNeo</Text>
         <Text style={styles.tagline}>Your care companion</Text>
       </Animated.View>
       <Text style={styles.ecosystem}>Neonatal DAO</Text>
@@ -47,7 +47,6 @@ const styles = StyleSheet.create({
   logo: {
     fontFamily: Typography.fontFamily.display,
     fontSize: 48,
-    color: '#FFF6F7',
     letterSpacing: -1,
   },
   tagline: {

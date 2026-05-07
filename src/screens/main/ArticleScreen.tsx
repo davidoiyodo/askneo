@@ -85,7 +85,7 @@ export default function ArticleScreen({ navigation, route }: Props) {
           {/* Author */}
           <View style={[styles.authorRow, { borderTopColor: theme.border.subtle, borderBottomColor: theme.border.subtle }]}>
             <View style={[styles.avatarWrap, { backgroundColor: article.author.avatarBg }]}>
-              <Text style={styles.avatarInitials}>{article.author.initials}</Text>
+          <Text style={[styles.avatarInitials, { color: theme.text.brand }]}>{article.author.initials}</Text>
               <Image
                 source={{ uri: article.author.image }}
                 style={StyleSheet.absoluteFillObject}
@@ -207,7 +207,6 @@ const styles = StyleSheet.create({
   avatarInitials: {
     fontFamily: Typography.fontFamily.bodyBold,
     fontSize: Typography.size.sm,
-    color: '#5C0217',
   },
   authorInfo: { flex: 1, gap: 2 },
   authorName: {

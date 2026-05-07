@@ -57,9 +57,9 @@ export default function BBTChart({ points, currentCD, avgCycleLength, ovulationC
 
   // Phase background bands
   const phases = [
-    { from: 1,  to: 5,             color: 'rgba(201,90,104,0.12)' }, // period
-    { from: 10, to: 16,            color: 'rgba(90,187,138,0.13)' }, // fertile
-    { from: 17, to: avgCycleLength, color: 'rgba(80,160,210,0.09)' }, // TWW
+    { from: 1,  to: 5,              color: theme.dataViz.cyclePeriodSoft }, // period
+    { from: 10, to: 16,             color: theme.dataViz.fertileSoft },     // fertile
+    { from: 17, to: avgCycleLength, color: theme.dataViz.twwSoft },         // TWW
   ];
 
   // Grid Y values: steps of 0.2°C rounded to 1dp
@@ -196,7 +196,7 @@ export default function BBTChart({ points, currentCD, avgCycleLength, ovulationC
           <Line
             x1={xAt(ovulationCD)} y1={PAD_TOP}
             x2={xAt(ovulationCD)} y2={PAD_TOP + plotH}
-            stroke="#F4B740"
+            stroke={theme.dataViz.opkPeak}
             strokeWidth={1.5}
             strokeDasharray="4 2"
             opacity={0.8}
@@ -245,20 +245,20 @@ export default function BBTChart({ points, currentCD, avgCycleLength, ovulationC
       {/* Legend */}
       <View style={styles.legend}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: 'rgba(201,90,104,0.4)' }]} />
+          <View style={[styles.legendDot, { backgroundColor: theme.dataViz.cyclePeriodFill }]} />
           <Text style={[styles.legendLabel, { color: theme.text.tertiary }]}>Period</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: 'rgba(90,187,138,0.5)' }]} />
+          <View style={[styles.legendDot, { backgroundColor: theme.dataViz.fertileFill }]} />
           <Text style={[styles.legendLabel, { color: theme.text.tertiary }]}>Fertile</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: 'rgba(80,160,210,0.4)' }]} />
+          <View style={[styles.legendDot, { backgroundColor: theme.dataViz.tww }]} />
           <Text style={[styles.legendLabel, { color: theme.text.tertiary }]}>Luteal</Text>
         </View>
         {ovulationCD != null && (
           <View style={styles.legendItem}>
-            <View style={[styles.legendLine, { backgroundColor: '#F4B740' }]} />
+            <View style={[styles.legendLine, { backgroundColor: theme.dataViz.opkPeak }]} />
             <Text style={[styles.legendLabel, { color: theme.text.tertiary }]}>Ovulation CD{ovulationCD}</Text>
           </View>
         )}

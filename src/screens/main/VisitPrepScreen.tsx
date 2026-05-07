@@ -505,13 +505,8 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
             </Text>
             <Card padding="none">
               {periodSymptomLogs.map((log, i) => {
-                const SEV_COLORS = {
-                  mild:     { bg: '#ECFDF5', border: '#6EE7B7', text: '#065F46' },
-                  moderate: { bg: '#FFFBEB', border: '#FCD34D', text: '#92400E' },
-                  severe:   { bg: '#FEF2F2', border: '#FCA5A5', text: '#991B1B' },
-                };
                 const sev = log.symptomSeverity;
-                const sevColors = sev ? SEV_COLORS[sev] : null;
+                const sevColors = sev ? theme.severity[sev] : null;
                 const MOOD_EMOJIS: Record<number, string> = { 1:'😞', 2:'😕', 3:'😐', 4:'🙂', 5:'😊' };
                 const displayText = log.symptoms.length > 0
                   ? log.symptoms.join(', ')
@@ -863,7 +858,7 @@ export default function VisitPrepScreen({ navigation }: { navigation: any }) {
                   calendarBackground: theme.bg.surface,
                   textSectionTitleColor: theme.text.secondary,
                   selectedDayBackgroundColor: theme.interactive.primary,
-                  selectedDayTextColor: '#ffffff',
+                  selectedDayTextColor: theme.text.inverse,
                   todayTextColor: theme.text.brand,
                   dayTextColor: theme.text.primary,
                   textDisabledColor: theme.text.tertiary,

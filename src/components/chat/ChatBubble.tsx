@@ -72,16 +72,16 @@ export default function ChatBubble({ message, onReply }: ChatBubbleProps) {
               style={[
                 styles.quotedBlock,
                 {
-                  backgroundColor: isUser ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.06)',
-                  borderLeftColor: isUser ? 'rgba(255,255,255,0.5)' : theme.interactive.primary,
+                  backgroundColor: isUser ? theme.overlay.inverseWeak : theme.bg.subtle,
+                  borderLeftColor: isUser ? theme.overlay.inverseStrong : theme.interactive.primary,
                 },
               ]}
             >
-              <Text style={[styles.quotedSender, { color: isUser ? 'rgba(255,255,255,0.75)' : theme.text.brand }]}>
+              <Text style={[styles.quotedSender, { color: isUser ? theme.overlay.inverseText : theme.text.brand }]}>
                 {message.replyTo.sender === 'user' ? 'You' : 'Neo'}
               </Text>
               <Text
-                style={[styles.quotedText, { color: isUser ? 'rgba(255,255,255,0.6)' : theme.text.secondary }]}
+                style={[styles.quotedText, { color: isUser ? theme.overlay.inverseTextMuted : theme.text.secondary }]}
                 numberOfLines={2}
               >
                 {message.replyTo.text}

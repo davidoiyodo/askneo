@@ -73,10 +73,10 @@ export default function QuickHelpScreen({ navigation }: { navigation: any }) {
           activeOpacity={0.85}
           style={[styles.sosBtn, { backgroundColor: Colors.danger[500] }]}
         >
-          <Icon name="alarm_1" size={32} color="#fff" />
+          <Icon name="alarm_1" size={32} color={theme.text.inverse} />
           <View>
-            <Text style={styles.sosLabel}>Emergency Alert</Text>
-            <Text style={styles.sosDesc}>
+            <Text style={[styles.sosLabel, { color: theme.text.inverse }]}>Emergency Alert</Text>
+            <Text style={[styles.sosDesc, { color: theme.overlay.inverseText }]}>
               {user?.emergencyContacts?.length
                 ? `Alerts ${user.emergencyContacts.length} contact${user.emergencyContacts.length > 1 ? 's' : ''} via WhatsApp/SMS`
                 : 'Add contacts in Profile to use this'}
@@ -206,12 +206,10 @@ const styles = StyleSheet.create({
   sosLabel: {
     fontFamily: Typography.fontFamily.bodyBold,
     fontSize: Typography.size.lg,
-    color: '#fff',
   },
   sosDesc: {
     fontFamily: Typography.fontFamily.body,
     fontSize: Typography.size.sm,
-    color: 'rgba(255,255,255,0.75)',
     marginTop: 2,
   },
   callBtn: {

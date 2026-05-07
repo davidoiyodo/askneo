@@ -101,8 +101,8 @@ export default function SignInScreen({ navigation }: Props) {
             </View>
 
             {error ? (
-              <View style={[styles.errorBox, { backgroundColor: '#FFF0F0', borderColor: '#D64545' }]}>
-                <Text style={[styles.errorText, { color: '#D64545' }]}>{error}</Text>
+              <View style={[styles.errorBox, { backgroundColor: theme.feedback.danger.bg, borderColor: theme.feedback.danger.border }]}>
+                <Text style={[styles.errorText, { color: theme.feedback.danger.text }]}>{error}</Text>
               </View>
             ) : null}
           </View>

@@ -40,10 +40,10 @@ const CM_OPTIONS: Array<{ value: CMType; label: string; emoji: string }> = [
   { value: 'egg-white', label: 'Egg-white', emoji: '✨' },
 ];
 
-const OPK_OPTIONS: Array<{ value: OPKResult; label: string; emoji: string; color: string }> = [
-  { value: 'negative', label: 'Negative', emoji: '⬜', color: '#5DBB8A' },
-  { value: 'positive', label: 'Positive', emoji: '🟡', color: '#F4B740' },
-  { value: 'peak',     label: 'Peak',     emoji: '🔥', color: '#C4566A' },
+const OPK_OPTIONS: Array<{ value: OPKResult; label: string; emoji: string }> = [
+  { value: 'negative', label: 'Negative', emoji: '⬜' },
+  { value: 'positive', label: 'Positive', emoji: '🟡' },
+  { value: 'peak',     label: 'Peak',     emoji: '🔥' },
 ];
 
 const MOOD_OPTIONS: Array<{ value: string; label: string; emoji: string }> = [
@@ -101,6 +101,7 @@ function phaseInfo(cd: number, avgLen: number): { label: string; emoji: string; 
 // ─── CycleRing ────────────────────────────────────────────────────────────────
 
 function CycleRing({ cd, avgLen }: { cd: number; avgLen: number }) {
+  const { theme } = useTheme();
   const SIZE = 96;
   const SW = 7;
   const r = (SIZE - SW) / 2;
@@ -112,11 +113,11 @@ function CycleRing({ cd, avgLen }: { cd: number; avgLen: number }) {
   return (
     <View style={{ width: SIZE, height: SIZE, alignItems: 'center', justifyContent: 'center' }}>
       <Svg width={SIZE} height={SIZE} style={[StyleSheet.absoluteFill, { transform: [{ rotate: '-90deg' }] }]}>
-        <SvgCircle cx={cx} cy={cx} r={r} stroke="rgba(255,255,255,0.2)" strokeWidth={SW} fill="none" />
+        <SvgCircle cx={cx} cy={cx} r={r} stroke={theme.overlay.inverseMedium} strokeWidth={SW} fill="none" />
         {progress > 0 && (
           <SvgCircle
             cx={cx} cy={cx} r={r}
-            stroke="rgba(255,255,255,0.85)"
+            stroke={theme.overlay.inverseTextStrong}
             strokeWidth={SW}
             fill="none"
             strokeDasharray={[dash, gap]}
@@ -124,10 +125,10 @@ function CycleRing({ cd, avgLen }: { cd: number; avgLen: number }) {
           />
         )}
       </Svg>
-      <Text style={{ color: '#fff', fontFamily: Typography.fontFamily.bodyBold, fontSize: 24, letterSpacing: -0.5, lineHeight: 28 }}>
+      <Text style={{ color: theme.text.inverse, fontFamily: Typography.fontFamily.bodyBold, fontSize: 24, letterSpacing: -0.5, lineHeight: 28 }}>
         {cd}
       </Text>
-      <Text style={{ color: 'rgba(255,255,255,0.65)', fontFamily: Typography.fontFamily.body, fontSize: 10, lineHeight: 14 }}>
+      <Text style={{ color: theme.overlay.inverseTextMuted, fontFamily: Typography.fontFamily.body, fontSize: 10, lineHeight: 14 }}>
         /{avgLen}
       </Text>
     </View>
@@ -162,25 +163,30 @@ function WeekStrip({
     const isFuture = dk > todayKey;
 
     if (entry?.isPeriodFlow) {
-      return { bg: '#C4566A', border: '#C4566A', dashed: false, textColor: '#fff' };
+      return { bg: theme.dataViz.cyclePeriod, border: theme.dataViz.cyclePeriod, dashed: false, textColor: theme.text.inverse };
     }
 
     if (!isFuture && anchor && entry) {
       const cd = Math.max(1, daysBetween(anchor, dk) + 1);
-      if (cd >= 13 && cd <= 15) return { bg: '#F4B740', border: '#F4B740', dashed: false, textColor: '#fff' };
-      if (cd >= 10 && cd <= 16) return { bg: '#5DBB8A', border: '#5DBB8A', dashed: false, textColor: '#fff' };
+      if (cd >= 13 && cd <= 15) return { bg: theme.dataViz.opkPeak, border: theme.dataViz.opkPeak, dashed: false, textColor: theme.text.inverse };
+      if (cd >= 10 && cd <= 16) return { bg: theme.dataViz.fertile, border: theme.dataViz.fertile, dashed: false, textColor: theme.text.inverse };
     }
 
     if (isFuture && fertileWindow) {
       if (dk >= fertileWindow.startKey && dk <= fertileWindow.endKey) {
         const isPeak = dk === fertileWindow.peakKey;
-        return { bg: 'transparent', border: isPeak ? '#F4B740' : '#5DBB8A', dashed: false, textColor: isPeak ? '#F4B740' : '#5DBB8A' };
+        return {
+          bg: 'transparent',
+          border: isPeak ? theme.dataViz.opkPeak : theme.dataViz.fertile,
+          dashed: false,
+          textColor: isPeak ? theme.dataViz.opkPeak : theme.dataViz.fertile,
+        };
       }
     }
 
     if (isFuture && anchor) {
       const pred = addDaysToKey(anchor, avgCycleLength);
-      if (dk === pred) return { bg: 'transparent', border: '#C4566A', dashed: true, textColor: '#C4566A' };
+      if (dk === pred) return { bg: 'transparent', border: theme.dataViz.cyclePeriod, dashed: true, textColor: theme.dataViz.cyclePeriod };
     }
 
     return {
@@ -223,7 +229,7 @@ function WeekStrip({
               </Text>
             </View>
             {hasHeart ? (
-              <View style={[styles.weekDayHeart, { backgroundColor: '#E8789A' }]}>
+              <View style={[styles.weekDayHeart, { backgroundColor: theme.dataViz.intimacy }]}>
                 <Text style={styles.weekDayHeartChar}>♥</Text>
               </View>
             ) : (
@@ -239,26 +245,27 @@ function WeekStrip({
 // ─── IconChip ─────────────────────────────────────────────────────────────────
 
 function IconChip({
-  emoji, label, active, onPress, color = '#9B5DE5', chipSize = 56,
+  emoji, label, active, onPress, color, chipSize = 56,
 }: {
   emoji: string; label: string; active: boolean; onPress: () => void;
   color?: string; chipSize?: number;
 }) {
   const { theme } = useTheme();
+  const accentColor = color ?? theme.dataViz.mood;
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.7} style={styles.iconChip}>
       <View style={[
         styles.iconChipCircle,
         {
           width: chipSize, height: chipSize, borderRadius: chipSize / 2,
-          backgroundColor: active ? color + '22' : theme.bg.app,
-          borderColor: active ? color : theme.border.default,
+          backgroundColor: active ? accentColor + '22' : theme.bg.app,
+          borderColor: active ? accentColor : theme.border.default,
           borderWidth: 1.5,
         },
       ]}>
         <Text style={{ fontSize: chipSize * 0.38 }}>{emoji}</Text>
       </View>
-      <Text style={[styles.iconChipLabel, { color: active ? color : theme.text.secondary }]} numberOfLines={1}>
+      <Text style={[styles.iconChipLabel, { color: active ? accentColor : theme.text.secondary }]} numberOfLines={1}>
         {label}
       </Text>
     </TouchableOpacity>
@@ -428,14 +435,14 @@ export default function CycleTrackerScreen({ navigation }: Props) {
                     Cycle Day {cd}
                   </Text>
                   {ttcCycleCount != null && (
-                    <View style={[styles.ttcCycleBadge, { backgroundColor: 'rgba(255,255,255,0.18)' }]}>
+                    <View style={[styles.ttcCycleBadge, { backgroundColor: theme.overlay.inverseSoft }]}>
                       <Text style={[styles.ttcCycleBadgeText, { color: theme.text.inverse }]}>
                         TTC Cycle {ttcCycleCount}
                       </Text>
                     </View>
                   )}
                 </View>
-                <View style={[styles.welcomePhasePill, { backgroundColor: 'rgba(255,255,255,0.18)' }]}>
+                <View style={[styles.welcomePhasePill, { backgroundColor: theme.overlay.inverseSoft }]}>
                   <Text style={[styles.welcomePhaseText, { color: theme.text.inverse }]}>
                     {phase.emoji}  {phase.label}
                   </Text>
@@ -452,7 +459,7 @@ export default function CycleTrackerScreen({ navigation }: Props) {
               </Text>
             )}
             {user?.cyclesIrregular && (
-              <View style={[styles.irregularNote, { backgroundColor: 'rgba(255,255,255,0.12)' }]}>
+              <View style={[styles.irregularNote, { backgroundColor: theme.overlay.inverseWeak }]}>
                 <Text style={[styles.irregularNoteText, { color: theme.text.inverse, opacity: 0.85 }]}>
                   ⚠️ Your cycles may be irregular — predictions are estimates. OPK testing and BBT charting give a more accurate picture.
                 </Text>
@@ -472,20 +479,20 @@ export default function CycleTrackerScreen({ navigation }: Props) {
             />
             <View style={styles.stripLegend}>
               <View style={styles.stripLegendItem}>
-                <View style={[styles.stripLegendDot, { backgroundColor: '#C4566A' }]} />
+                <View style={[styles.stripLegendDot, { backgroundColor: theme.dataViz.cyclePeriod }]} />
                 <Text style={[styles.stripLegendText, { color: theme.text.tertiary }]}>Period</Text>
               </View>
               <View style={styles.stripLegendItem}>
-                <View style={[styles.stripLegendDot, { backgroundColor: '#5DBB8A' }]} />
+                <View style={[styles.stripLegendDot, { backgroundColor: theme.dataViz.fertile }]} />
                 <Text style={[styles.stripLegendText, { color: theme.text.tertiary }]}>Fertile</Text>
               </View>
               <View style={styles.stripLegendItem}>
-                <View style={[styles.stripLegendRing, { borderColor: '#5DBB8A' }]} />
+                <View style={[styles.stripLegendRing, { borderColor: theme.dataViz.fertile }]} />
                 <Text style={[styles.stripLegendText, { color: theme.text.tertiary }]}>Predicted</Text>
               </View>
               <View style={styles.stripLegendItem}>
-                <View style={[styles.stripLegendHeart, { backgroundColor: '#E8789A' }]}>
-                  <Text style={{ fontSize: 7, color: '#fff' }}>♥</Text>
+                <View style={[styles.stripLegendHeart, { backgroundColor: theme.dataViz.intimacy }]}>
+                  <Text style={{ fontSize: 7, color: theme.text.inverse }}>♥</Text>
                 </View>
                 <Text style={[styles.stripLegendText, { color: theme.text.tertiary }]}>Intimacy</Text>
               </View>
@@ -525,7 +532,7 @@ export default function CycleTrackerScreen({ navigation }: Props) {
                   🌱 Conception timing
                 </Text>
                 {hadSex === true && !usedProtection && (
-                  <View style={[styles.bdBadge, { backgroundColor: 'rgba(46,138,90,0.18)' }]}>
+                  <View style={[styles.bdBadge, { backgroundColor: theme.accent.sage.bg }]}>
                     <Text style={[styles.bdBadgeText, { color: theme.accent.sage.text }]}>✓ BD today</Text>
                   </View>
                 )}
@@ -601,9 +608,9 @@ export default function CycleTrackerScreen({ navigation }: Props) {
               </Text>
               <View style={styles.chipRowCenter}>
                 {([
-                  { value: 'negative' as HPTResult,       label: 'Negative',       emoji: '➖', color: '#5DBB8A' },
-                  { value: 'faint-positive' as HPTResult, label: 'Faint line',     emoji: '〰️', color: '#F4B740' },
-                  { value: 'positive' as HPTResult,       label: 'Positive!',      emoji: '➕', color: '#C4566A' },
+                  { value: 'negative' as HPTResult,       label: 'Negative',       emoji: '➖', color: theme.dataViz.fertile },
+                  { value: 'faint-positive' as HPTResult, label: 'Faint line',     emoji: '〰️', color: theme.dataViz.opkPeak },
+                  { value: 'positive' as HPTResult,       label: 'Positive!',      emoji: '➕', color: theme.dataViz.cyclePeriod },
                 ]).map(opt => (
                   <IconChip
                     key={opt.value}
@@ -657,7 +664,7 @@ export default function CycleTrackerScreen({ navigation }: Props) {
                   label={opt.label}
                   active={mood === opt.value}
                   onPress={() => setMood(mood === opt.value ? null : opt.value)}
-                  color="#9B5DE5"
+                  color={theme.dataViz.mood}
                 />
               ))}
             </View>
@@ -674,7 +681,7 @@ export default function CycleTrackerScreen({ navigation }: Props) {
                   label={opt.label}
                   active={flowIntensity === opt.value}
                   onPress={() => handleFlowSelect(opt.value)}
-                  color="#C4566A"
+                  color={theme.dataViz.cyclePeriod}
                 />
               ))}
             </View>
@@ -707,7 +714,7 @@ export default function CycleTrackerScreen({ navigation }: Props) {
                   label={opt.label}
                   active={symptoms.includes(opt.value)}
                   onPress={() => toggleSymptom(opt.value)}
-                  color="#5B8ACA"
+                  color={theme.dataViz.symptoms}
                 />
               ))}
             </View>
@@ -728,7 +735,7 @@ export default function CycleTrackerScreen({ navigation }: Props) {
                   styles.bbtInput,
                   {
                     backgroundColor: theme.bg.app,
-                    borderColor: !bbtValid ? '#D64545' : bbtRaw.trim() ? theme.border.focus : theme.border.default,
+                    borderColor: !bbtValid ? theme.feedback.danger.border : bbtRaw.trim() ? theme.border.focus : theme.border.default,
                     color: theme.text.primary,
                   },
                 ]}
@@ -742,7 +749,7 @@ export default function CycleTrackerScreen({ navigation }: Props) {
               <Text style={[styles.bbtUnit, { color: theme.text.secondary }]}>°C</Text>
             </View>
             {!bbtValid && (
-              <Text style={[styles.errorText, { color: '#D64545' }]}>
+              <Text style={[styles.errorText, { color: theme.feedback.danger.text }]}>
                 Temperature should be between 35.0°C and 38.5°C
               </Text>
             )}
@@ -765,7 +772,7 @@ export default function CycleTrackerScreen({ navigation }: Props) {
                   label={opt.label}
                   active={cmType === opt.value}
                   onPress={() => setCmType(cmType === opt.value ? null : opt.value)}
-                  color="#5DBB8A"
+                  color={theme.dataViz.fertile}
                 />
               ))}
             </View>
@@ -783,7 +790,13 @@ export default function CycleTrackerScreen({ navigation }: Props) {
                   label={opt.label}
                   active={opkResult === opt.value}
                   onPress={() => setOpkResult(opkResult === opt.value ? null : opt.value)}
-                  color={opt.color}
+                  color={
+                    opt.value === 'peak'
+                      ? theme.dataViz.cyclePeriod
+                      : opt.value === 'positive'
+                        ? theme.dataViz.opkPeak
+                        : theme.dataViz.fertile
+                  }
                 />
               ))}
             </View>
@@ -801,7 +814,7 @@ export default function CycleTrackerScreen({ navigation }: Props) {
                   if (hadSex === true && usedProtection === false) { setHadSex(null); setUsedProtection(null); }
                   else { setHadSex(true); setUsedProtection(false); }
                 }}
-                color="#5DBB8A"
+                color={theme.dataViz.fertile}
               />
               <IconChip
                 emoji="🛡"
@@ -811,7 +824,7 @@ export default function CycleTrackerScreen({ navigation }: Props) {
                   if (hadSex === true && usedProtection === true) { setHadSex(null); setUsedProtection(null); }
                   else { setHadSex(true); setUsedProtection(true); }
                 }}
-                color="#8B9E9E"
+                color={theme.text.tertiary}
               />
               <IconChip
                 emoji="—"
@@ -821,7 +834,7 @@ export default function CycleTrackerScreen({ navigation }: Props) {
                   if (hadSex === false) { setHadSex(null); setUsedProtection(null); }
                   else { setHadSex(false); setUsedProtection(null); }
                 }}
-                color="#9B9B9B"
+                color={theme.border.strong}
               />
             </View>
             {hadSex === true && !usedProtection && isConceptionWindow && (
