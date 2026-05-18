@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
-import { loginUser, getMe, signOutUser } from '../services/auth';
+import { loginUser, getMe, signOutUser, updateMe } from '../services/auth';
 import { ApiError, TOKEN_KEY } from '../services/api';
 
 const TASKS_KEY = 'askneo_tasks';
@@ -316,6 +316,9 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       const updated = { ...(prev ?? defaultUser), ...partial };
       AsyncStorage.setItem('askneo_user', JSON.stringify(updated));
       return updated;
+    });
+    AsyncStorage.getItem(TOKEN_KEY).then(token => {
+      if (token) updateMe(partial).catch(() => {});
     });
   };
 

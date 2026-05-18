@@ -88,6 +88,30 @@ export function fromApiUser(data: Record<string, any>): Partial<AppUser> {
   };
 }
 
+// ── Partial update payload (only include keys that were passed) ────────────────
+
+function toUpdatePayload(partial: Partial<AppUser>): Record<string, unknown> {
+  const p: Record<string, unknown> = {};
+  if (partial.name               !== undefined) p.name                = partial.name;
+  if (partial.stage              !== undefined) p.stage               = partial.stage;
+  if (partial.dueDate            !== undefined) p.due_date            = partial.dueDate            ?? null;
+  if (partial.babyDOB            !== undefined) p.baby_dob            = partial.babyDOB            ?? null;
+  if (partial.inviteCode         !== undefined) p.invite_code         = partial.inviteCode         ?? null;
+  if (partial.partnerStage       !== undefined) p.partner_stage       = partial.partnerStage       ?? null;
+  if (partial.partnerDueDate     !== undefined) p.partner_due_date    = partial.partnerDueDate     ?? null;
+  if (partial.partnerBabyDOB     !== undefined) p.partner_baby_dob    = partial.partnerBabyDOB     ?? null;
+  if (partial.emergencyContacts  !== undefined) p.emergency_contacts  = partial.emergencyContacts;
+  if (partial.goals              !== undefined) p.goals               = partial.goals;
+  if (partial.subGoals           !== undefined) p.sub_goals           = partial.subGoals;
+  if (partial.birthIntention     !== undefined) p.birth_intention     = partial.birthIntention;
+  if (partial.feedingIntention   !== undefined) p.feeding_intention   = partial.feedingIntention;
+  if (partial.personalIntentions !== undefined) p.personal_intentions = partial.personalIntentions;
+  if (partial.ttcStartDate       !== undefined) p.ttc_start_date      = partial.ttcStartDate       ?? null;
+  if (partial.knownConditions    !== undefined) p.known_conditions    = partial.knownConditions;
+  if (partial.cyclesIrregular    !== undefined) p.irregular_cycles    = partial.cyclesIrregular;
+  return p;
+}
+
 // ── Auth functions ─────────────────────────────────────────────────────────────
 
 export async function registerUser(user: AppUser): Promise<void> {
@@ -111,8 +135,17 @@ export async function loginUser(email: string, password: string): Promise<void> 
 }
 
 export async function getMe(): Promise<Partial<AppUser>> {
-  const res = await apiFetch<{ status: string; data: Record<string, unknown> }>('/users/me');
+  const res = await apiFetch<{ status: string; data: Record<string, unknown> }>('/user/me');
   return fromApiUser(res.data);
+}
+
+export async function updateMe(partial: Partial<AppUser>): Promise<void> {
+  const payload = toUpdatePayload(partial);
+  if (Object.keys(payload).length === 0) return;
+  await apiFetch('/user/me', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function signOutUser(): Promise<void> {

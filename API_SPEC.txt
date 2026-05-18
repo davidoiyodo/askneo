@@ -33,7 +33,7 @@ Base conventions:
 
 
 ================================================================================
-  1. PATCH /users/me — Update user profile
+  1. PATCH /user/me — Update user profile
 ================================================================================
 
 PURPOSE
@@ -92,7 +92,7 @@ RESPONSE 200
   {
     "status": "ok",
     "data": {
-      // Full updated user object — same shape as GET /users/me
+      // Full updated user object — same shape as GET /user/me
       "name":                string,
       "email":               string,
       "stage":               string,
@@ -508,7 +508,7 @@ ERRORS
   If the same token is sent again, treat it as a no-op (idempotent).
 
 --------------------------------------------------------------------------------
-  POST /users/me/push-token
+  POST /user/me/push-token
 --------------------------------------------------------------------------------
 
 REQUEST BODY
@@ -663,7 +663,7 @@ ERRORS (all chat endpoints)
 
   Endpoint                        Method   Auth   Priority
   ─────────────────────────────────────────────────────────
-  /users/me                       PATCH    Yes    High
+  /user/me                       PATCH    Yes    High
   /cycle-logs                     POST     Yes    High
   /cycle-logs                     GET      Yes    High
   /anc-visits                     POST     Yes    High
@@ -671,7 +671,7 @@ ERRORS (all chat endpoints)
   /anc-visits/:id                 PATCH    Yes    High
   /daily-logs                     POST     Yes    High
   /daily-logs                     GET      Yes    High
-  /users/me/push-token            POST     Yes    Medium
+  /user/me/push-token            POST     Yes    Medium
   /chat/sessions                  GET      Yes    Low
   /chat/sessions                  POST     Yes    Low
   /chat/sessions/:id              GET      Yes    Low

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveANCVisit } from '../services/ancVisits';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -73,6 +74,7 @@ export function useANCVisits() {
       AsyncStorage.setItem(VISITS_KEY, JSON.stringify(next));
       return next;
     });
+    saveANCVisit(visit).catch(() => {});
   }, []);
 
   const deleteVisit = useCallback((id: string) => {

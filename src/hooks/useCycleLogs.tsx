@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveCycleLog, fetchCycleLogs } from '../services/cycleLogs';
 
 const STORAGE_KEY = 'askneo_cycle_logs';
 
@@ -123,8 +124,20 @@ export const CycleLogsProvider = ({ children }: { children: React.ReactNode }) =
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY).then(val => {
-      if (!val) return;
-      try { setLogs(JSON.parse(val)); } catch {}
+      const local: Record<string, CycleEntry> = val
+        ? (() => { try { return JSON.parse(val); } catch { return {}; } })()
+        : {};
+      setLogs(local);
+      // Merge with server data — server takes priority for existing keys
+      fetchCycleLogs().then(serverEntries => {
+        if (!serverEntries.length) return;
+        setLogs(prev => {
+          const merged = { ...prev };
+          for (const entry of serverEntries) merged[entry.dateKey] = entry;
+          AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+          return merged;
+        });
+      }).catch(() => {});
     });
   }, []);
 
@@ -168,6 +181,7 @@ export const CycleLogsProvider = ({ children }: { children: React.ReactNode }) =
       AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       return next;
     });
+    saveCycleLog(entry).catch(() => {});
   };
 
   const getEntry = (dateKey: string) => logs[dateKey] ?? null;

@@ -128,6 +128,7 @@ export const DailyLogsProvider = ({ children }: { children: React.ReactNode }) =
             babyNappies: field === 'babyNappies' ? by : null,
             babySleepHours: null, babyMood: null,
             babySymptoms: [], babySymptomSeverity: null,
+            waterGlasses: null,
             notes: '',
           };
       const next = { ...prev, [key]: updated };
